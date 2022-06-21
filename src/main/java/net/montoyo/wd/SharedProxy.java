@@ -5,12 +5,10 @@
 package net.montoyo.wd;
 
 import com.mojang.authlib.GameProfile;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.common.DimensionManager;
-import net.minecraftforge.fml.server.FMLServerHandler;
+import net.minecraft.world.level.Level;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
@@ -33,7 +31,7 @@ public class SharedProxy {
     public void postInit() {
     }
 
-    public World getWorld(int dim) {
+    public Level getWorld(int dim) {
         if(dim == CURRENT_DIMENSION)
             throw new RuntimeException("Current dimension not available server side...");
 

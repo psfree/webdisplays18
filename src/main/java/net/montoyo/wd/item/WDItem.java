@@ -4,9 +4,9 @@
 
 package net.montoyo.wd.item;
 
-import com.mojang.realmsclient.gui.ChatFormatting;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
 import javax.annotation.Nonnull;
@@ -20,7 +20,7 @@ public interface WDItem {
 
     static void addInformation(@Nullable List<String> tt) {
         if(tt != null && WebDisplays.PROXY.isShiftDown())
-            tt.add("" + ChatFormatting.GRAY + I18n.format("item.webdisplays.wiki"));
+            tt.add("" + ChatFormatting.GRAY + I18n.get("item.webdisplays.wiki"));
     }
 
 }
