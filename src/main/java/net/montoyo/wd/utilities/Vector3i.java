@@ -5,7 +5,7 @@
 package net.montoyo.wd.utilities;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 public final class Vector3i {
 
@@ -215,7 +215,7 @@ public final class Vector3i {
     }
 
     public void toBlock(BlockPos.MutableBlockPos bp) {
-        bp.setPos(x, y, z);
+        bp.set(x, y, z);
     }
 
     public int getChunkLocalPos()

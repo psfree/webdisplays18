@@ -4,11 +4,11 @@
 
 package net.montoyo.wd.data;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.net.client.CMessageOpenGui;
 
@@ -29,11 +29,11 @@ public abstract class GuiData {
         return dataTable.get(name);
     }
 
-    @SideOnly(Side.CLIENT)
-    public abstract GuiScreen createGui(GuiScreen old, World world);
+    @OnlyIn(Dist.CLIENT)
+    public abstract Screen createGui(Screen old, Level world);
     public abstract String getName();
 
-    public void sendTo(EntityPlayerMP player) {
+    public void sendTo(ServerPlayer player) {
         WebDisplays.NET_HANDLER.sendTo(new CMessageOpenGui(this), player);
     }
 

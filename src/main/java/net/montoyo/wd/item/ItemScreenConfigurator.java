@@ -4,17 +4,7 @@
 
 package net.montoyo.wd.item;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.world.item.Item;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.data.ScreenConfigData;
@@ -25,8 +15,6 @@ import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.util.List;
 
 public class ItemScreenConfigurator extends Item implements WDItem {
 
@@ -64,17 +52,6 @@ public class ItemScreenConfigurator extends Item implements WDItem {
             (new ScreenConfigData(origin, side, scr)).sendTo((EntityPlayerMP) player);
 
         return EnumActionResult.SUCCESS;
-    }
-
-    @Override
-    public void addInformation(ItemStack is, @Nullable World world, List<String> tt, ITooltipFlag ttFlags) {
-        WDItem.addInformation(tt);
-    }
-
-    @Nullable
-    @Override
-    public String getWikiName(@Nonnull ItemStack is) {
-        return "Screen_Configurator";
     }
 
 }

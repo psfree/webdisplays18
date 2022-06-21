@@ -4,26 +4,27 @@
 
 package net.montoyo.wd.core;
 
-import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonObject;
-import net.minecraft.advancements.ICriterionTrigger;
-import net.minecraft.advancements.PlayerAdvancements;
-import net.minecraft.advancements.critereon.AbstractCriterionInstance;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.advancements.CriterionTrigger;
+import net.minecraft.advancements.critereon.AbstractCriterionTriggerInstance;
+import net.minecraft.advancements.critereon.DeserializationContext;
+import net.minecraft.advancements.critereon.EntityPredicate;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.PlayerAdvancements;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
-public class Criterion implements ICriterionTrigger<Criterion.Instance> {
+public class Criterion implements CriterionTrigger<Criterion.Instance> {
 
-    public static class Instance extends AbstractCriterionInstance {
+    public static class Instance extends AbstractCriterionTriggerInstance {
 
-        public Instance(ResourceLocation id) {
-            super(id);
+        public Instance(ResourceLocation id, EntityPredicate.Composite arg2) {
+            super(id, arg2);
         }
-
     }
 
     private final ResourceLocation id;
@@ -40,12 +41,12 @@ public class Criterion implements ICriterionTrigger<Criterion.Instance> {
     }
 
     @Override
-    public void addListener(@Nonnull PlayerAdvancements adv, @Nonnull Listener<Instance> l) {
+    public void addPlayerListener(PlayerAdvancements adv, Listener<Instance> l) {
         map.computeIfAbsent(adv, k -> new ArrayList<>()).add(l);
     }
 
     @Override
-    public void removeListener(@Nonnull PlayerAdvancements adv, @Nonnull Listener<Instance> l) {
+    public void removePlayerListener(PlayerAdvancements adv, Listener<Instance> l) {
         map.computeIfPresent(adv, (k, v) -> {
             v.remove(l);
             return v.isEmpty() ? null : v;
@@ -53,14 +54,13 @@ public class Criterion implements ICriterionTrigger<Criterion.Instance> {
     }
 
     @Override
-    public void removeAllListeners(@Nonnull PlayerAdvancements adv) {
+    public void removePlayerListeners(PlayerAdvancements adv) {
         map.remove(adv);
     }
 
     @Override
-    @Nonnull
-    public Instance deserializeInstance(@Nonnull JsonObject json, @Nonnull JsonDeserializationContext ctx) {
-        return new Instance(id);
+    public @NotNull Instance createInstance(JsonObject json, DeserializationContext context) {
+        return new Instance(id, EntityPredicate.Composite.fromJson(json, "instance", context));
     }
 
     public void trigger(PlayerAdvancements ply) {
@@ -68,7 +68,7 @@ public class Criterion implements ICriterionTrigger<Criterion.Instance> {
 
         if(listeners != null) {
             Listener[] copy = listeners.toArray(new Listener[0]); //We need to make a copy, otherwise we get a ConcurrentModificationException
-            Arrays.stream(copy).forEach(l -> l.grantCriterion(ply));
+            Arrays.stream(copy).forEach(l -> l.run(ply));
         }
     }
 

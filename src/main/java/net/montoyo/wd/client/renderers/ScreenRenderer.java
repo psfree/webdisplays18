@@ -4,13 +4,10 @@
 
 package net.montoyo.wd.client.renderers;
 
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.AxisAlignedBB;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.world.phys.AABB;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -19,7 +16,7 @@ import net.montoyo.wd.utilities.Vector3i;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class ScreenRenderer extends TileEntitySpecialRenderer<TileEntityScreen> {
+public class ScreenRenderer extends BlockEntityRenderers<TileEntityScreen> {
 
     private final Vector3f mid = new Vector3f();
     private final Vector3i tmpi = new Vector3i();
@@ -31,8 +28,6 @@ public class ScreenRenderer extends TileEntitySpecialRenderer<TileEntityScreen> 
             return;
 
         //Disable lighting
-        RenderHelper.disableStandardItemLighting();
-        setLightmapDisabled(true);
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_CULL_FACE);
         glDisable(GL_BLEND);
@@ -123,7 +118,7 @@ public class ScreenRenderer extends TileEntitySpecialRenderer<TileEntityScreen> 
             glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(1.f, 0.f); glVertex3f( sw,  sh, 0.505f);
             glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(0.f, 0.f); glVertex3f(-sw,  sh, 0.505f);
             glEnd();
-            GlStateManager.bindTexture(0); //Minecraft does shit with mah texture otherwise...
+            RenderSystem.bindTexture(0); //Minecraft does shit with mah texture otherwise...
             glPopMatrix();
         }
 
@@ -136,12 +131,10 @@ public class ScreenRenderer extends TileEntitySpecialRenderer<TileEntityScreen> 
         */
 
         //Re-enable lighting
-        RenderHelper.enableStandardItemLighting();
-        setLightmapDisabled(false);
         glEnable(GL_CULL_FACE);
     }
 
-    public void renderAABB(AxisAlignedBB bb) {
+    public void renderAABB(AABB bb) {
         glDisable(GL_TEXTURE_2D);
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -149,46 +142,47 @@ public class ScreenRenderer extends TileEntitySpecialRenderer<TileEntityScreen> 
         glColor4f(0.f, 0.5f, 1.f, 0.75f);
         glDepthMask(false);
 
-        Tessellator t = Tessellator.getInstance();
-        BufferBuilder vb = t.getBuffer();
-        vb.begin(GL_QUADS, DefaultVertexFormats.POSITION);
+        Tesselator t = new Tesselator();
+        BufferBuilder vb = t.getBuilder();
+        VertexBuffer tb = new VertexBuffer();
+        vb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
         //Bottom
-        vb.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
 
         //Top
-        vb.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
 
         //Left
-        vb.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        vb.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        vb.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
 
         //Right
-        vb.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
 
         //Front
-        vb.pos(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        vb.pos(bb.minX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
 
         //Back
-        vb.pos(bb.minX, bb.minY, bb.maxZ).endVertex();
-        vb.pos(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.pos(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.pos(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        t.draw();
+        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
+        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
+        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
+        tb.draw();
 
         glDepthMask(true);
         glEnable(GL_CULL_FACE);

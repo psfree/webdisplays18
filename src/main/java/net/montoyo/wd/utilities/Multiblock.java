@@ -4,8 +4,8 @@
 
 package net.montoyo.wd.utilities;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.LevelAccessor;
 import net.montoyo.wd.WebDisplays;
 
 public abstract class Multiblock {
@@ -39,7 +39,7 @@ public abstract class Multiblock {
     public static final BlockOverride NULL_OVERRIDE = new BlockOverride(null, OverrideAction.NONE);
 
     //Modifies pos
-    public static void findOrigin(IBlockAccess world, Vector3i pos, BlockSide side, BlockOverride override)
+    public static void findOrigin(LevelAccessor world, Vector3i pos, BlockSide side, BlockOverride override)
     {
         if(override == null)
             override = NULL_OVERRIDE;
@@ -64,7 +64,7 @@ public abstract class Multiblock {
     }
 
     //Origin stays constant
-    public static Vector2i measure(IBlockAccess world, Vector3i origin, BlockSide side)
+    public static Vector2i measure(LevelAccessor world, Vector3i origin, BlockSide side)
     {
         Vector2i ret = new Vector2i();
         Vector3i pos = origin.clone();
@@ -93,7 +93,7 @@ public abstract class Multiblock {
 
     //Origin and size stays constant.
     //Returns null if structure is okay, otherwise the erroring block pos.
-    public static Vector3i check(IBlockAccess world, Vector3i origin, Vector2i size, BlockSide side)
+    public static Vector3i check(LevelAccessor world, Vector3i origin, Vector2i size, BlockSide side)
     {
         Vector3i pos = origin.clone();
         BlockPos.MutableBlockPos bp = new BlockPos.MutableBlockPos();

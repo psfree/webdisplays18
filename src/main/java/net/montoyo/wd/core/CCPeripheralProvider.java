@@ -4,14 +4,7 @@
 
 package net.montoyo.wd.core;
 
-import dan200.computercraft.api.ComputerCraftAPI;
-import dan200.computercraft.api.peripheral.IPeripheral;
-import dan200.computercraft.api.peripheral.IPeripheralProvider;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.Optional;
+/*
 import net.montoyo.wd.entity.TileEntityCCInterface;
 
 import javax.annotation.Nonnull;
@@ -37,3 +30,4 @@ public class CCPeripheralProvider implements IPeripheralProvider {
     }
 
 }
+ */

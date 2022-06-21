@@ -4,7 +4,7 @@
 
 package net.montoyo.wd.core;
 
-import io.netty.buffer.ByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.montoyo.wd.utilities.Util;
 
 public enum JSServerRequest {
@@ -23,7 +23,7 @@ public enum JSServerRequest {
         return (id >= 0 && id < values.length) ? values[id] : null;
     }
 
-    public boolean serialize(ByteBuf buf, Object[] data) {
+    public boolean serialize(FriendlyByteBuf buf, Object[] data) {
         if(data.length != requestTypes.length)
             return false;
 
@@ -37,7 +37,7 @@ public enum JSServerRequest {
         return true;
     }
 
-    public Object[] deserialize(ByteBuf buf) {
+    public Object[] deserialize(FriendlyByteBuf buf) {
         Object[] ret = new Object[requestTypes.length];
 
         try {

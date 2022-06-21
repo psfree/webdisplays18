@@ -4,7 +4,7 @@
 
 package net.montoyo.wd.utilities;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.Iterator;
 

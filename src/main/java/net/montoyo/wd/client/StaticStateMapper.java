@@ -2,15 +2,15 @@
  * Copyright (C) 2018 BARBOTIN Nicolas
  */
 
+/*
 package net.montoyo.wd.client;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.block.statemap.StateMapperBase;
+import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
 
 import javax.annotation.Nonnull;
 
-public class StaticStateMapper extends StateMapperBase {
+public class StaticStateMapper {
 
     private final ModelResourceLocation resLoc;
 
@@ -20,8 +20,8 @@ public class StaticStateMapper extends StateMapperBase {
 
     @Override
     @Nonnull
-    protected ModelResourceLocation getModelResourceLocation(@Nonnull IBlockState state) {
+    protected ModelResourceLocation getModelResourceLocation(@Nonnull BlockState state) {
         return resLoc;
     }
 
-}
+} */

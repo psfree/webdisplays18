@@ -4,11 +4,13 @@
 
 package net.montoyo.wd.utilities;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.text.*;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.NbtComponent;
+import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.world.entity.player.Player;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -18,7 +20,7 @@ import java.util.UUID;
 
 public abstract class Util {
 
-    public static void serialize(ByteBuf bb, Object f) {
+    public static void serialize(FriendlyByteBuf bb, Object f) {
         Class<?> cls = f.getClass();
 
         if(cls == Integer.class || cls == Integer.TYPE)
@@ -30,7 +32,7 @@ public abstract class Util {
         else if(cls == Boolean.class || cls == Boolean.TYPE)
             bb.writeBoolean((Boolean) f);
         else if(cls == String.class)
-            ByteBufUtils.writeUTF8String(bb, (String) f);
+            bb.writeUtf((String) f);
         else if(cls == NameUUIDPair.class)
             ((NameUUIDPair) f).writeTo(bb);
         else if(cls.isEnum())
@@ -57,7 +59,7 @@ public abstract class Util {
             throw new RuntimeException(String.format("Cannot transmit class %s over network!", cls.getName()));
     }
 
-    public static Object unserialize(ByteBuf bb, Class cls) {
+    public static Object unserialize(FriendlyByteBuf bb, Class cls) {
         if(cls == Integer.class || cls == Integer.TYPE)
             return bb.readInt();
         else if(cls == Float.class || cls == Float.TYPE)
@@ -67,7 +69,7 @@ public abstract class Util {
         else if(cls == Boolean.class || cls == Boolean.TYPE)
             return bb.readBoolean();
         else if(cls == String.class)
-            return ByteBufUtils.readUTF8String(bb);
+            return bb.readUtf();
         else if(cls == NameUUIDPair.class)
             return new NameUUIDPair(bb);
         else if(cls.isEnum())
@@ -128,16 +130,16 @@ public abstract class Util {
         return idx ^ (idx >> 16);
     }
 
-    public static void toast(EntityPlayer player, String key, Object... data) {
-        toast(player, TextFormatting.RED, key, data);
+    public static void toast(Player player, String key, Object... data) {
+        toast(player, ChatFormatting.RED, key, data);
     }
 
-    public static void toast(EntityPlayer player, TextFormatting color, String key, Object... data) {
-        ITextComponent root = new TextComponentString("[WebDisplays] ");
-        root.setStyle((new Style()).setColor(color));
-        root.appendSibling(new TextComponentTranslation("webdisplays.message." + key, data));
+    public static void toast(Player player, ChatFormatting color, String key, Object... data) {
+        NbtComponent root = (NbtComponent) FormattedText.of("[WebDisplays] ");
+        root.withStyle(color);
+        root.append(new TranslatableComponent("webdisplays.message." + key, data));
 
-        player.sendMessage(root);
+        player.sendMessage(root, player.getUUID());
     }
 
     public static void silentClose(Object obj) {
@@ -175,17 +177,17 @@ public abstract class Util {
         return j.toString();
     }
 
-    public static NBTTagCompound writeOwnerToNBT(NBTTagCompound tag, NameUUIDPair owner) {
+    public static CompoundTag writeOwnerToNBT(CompoundTag tag, NameUUIDPair owner) {
         if(owner != null) {
-            tag.setLong("OwnerMSB", owner.uuid.getMostSignificantBits());
-            tag.setLong("OwnerLSB", owner.uuid.getLeastSignificantBits());
-            tag.setString("OwnerName", owner.name);
+            tag.putLong("OwnerMSB", owner.uuid.getMostSignificantBits());
+            tag.putLong("OwnerLSB", owner.uuid.getLeastSignificantBits());
+            tag.putString("OwnerName", owner.name);
         }
 
         return tag;
     }
 
-    public static NameUUIDPair readOwnerFromNBT(NBTTagCompound tag) {
+    public static NameUUIDPair readOwnerFromNBT(CompoundTag tag) {
         long msb = tag.getLong("OwnerMSB");
         long lsb = tag.getLong("OwnerLSB");
         String str = tag.getString("OwnerName");

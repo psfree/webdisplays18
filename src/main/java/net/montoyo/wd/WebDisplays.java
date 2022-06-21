@@ -5,40 +5,34 @@
 package net.montoyo.wd;
 
 import com.google.gson.Gson;
+import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.block.Block;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.SoundEvent;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.capabilities.CapabilityManager;
-import net.minecraftforge.common.config.Configuration;
-import net.minecraftforge.common.config.Property;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.*;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraftforge.network.NetworkRegistry;
+import net.montoyo.mcef.easy_forge_compat.Configuration;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.block.BlockScreen;
@@ -46,8 +40,8 @@ import net.montoyo.wd.core.*;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.item.*;
 import net.montoyo.wd.miniserv.server.Server;
-import net.montoyo.wd.net.client.CMessageServerInfo;
 import net.montoyo.wd.net.Messages;
+import net.montoyo.wd.net.client.CMessageServerInfo;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
 
@@ -57,15 +51,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.UUID;
 
-@Mod(modid = "webdisplays", version = WebDisplays.MOD_VERSION, dependencies = "required-after:mcef@[1.0,2.0);after:opencomputers;after:computercraft;")
+@Mod("webdisplays")
 public class WebDisplays {
 
     public static final String MOD_VERSION = "1.1";
 
-    @Mod.Instance(owner = "webdisplays")
     public static WebDisplays INSTANCE;
 
-    @SidedProxy(serverSide = "net.montoyo.wd.SharedProxy", clientSide = "net.montoyo.wd.client.ClientProxy")
     public static SharedProxy PROXY;
 
     public static SimpleNetworkWrapper NET_HANDLER;
@@ -128,10 +120,8 @@ public class WebDisplays {
     public float avDist100;
     public float avDist0;
 
-    @Mod.EventHandler
-    public void onPreInit(FMLPreInitializationEvent ev) {
-        //Load config
-        Configuration cfg = new Configuration(ev.getSuggestedConfigurationFile());
+    public WebDisplays() {
+        Configuration cfg = new Configuration();
         cfg.load();
 
         //CAT: Main
@@ -238,16 +228,12 @@ public class WebDisplays {
         itemLaserPointer = new ItemLaserPointer();
         itemCraftComp = new ItemCraftComponent();
 
-        itemAdvIcon = new ItemMulti(AdvancementIcon.class);
-        itemAdvIcon.setUnlocalizedName("webdisplays.advicon");
+        itemAdvIcon = new ItemMulti(AdvancementIcon.class, new Item.Properties());
         itemAdvIcon.setRegistryName("advicon");
 
         PROXY.preInit();
         MinecraftForge.EVENT_BUS.register(this);
-    }
 
-    @Mod.EventHandler
-    public void onInit(FMLInitializationEvent ev) {
         //Register tile entities
         GameRegistry.registerTileEntity(TileEntityScreen.class, new ResourceLocation("webdisplays", "screen"));
         for(DefaultPeripheral dp: DefaultPeripheral.values()) {
@@ -260,13 +246,10 @@ public class WebDisplays {
         PROXY.init();
         NET_HANDLER = NetworkRegistry.INSTANCE.newSimpleChannel("webdisplays");
         Messages.registerAll(NET_HANDLER);
-    }
 
-    @Mod.EventHandler
-    public void onPostInit(FMLPostInitializationEvent ev) {
         PROXY.postInit();
-        hasOC = Loader.isModLoaded("opencomputers");
-        hasCC = Loader.isModLoaded("computercraft");
+        hasOC = ModList.get().isLoaded("opencomputers");
+        hasCC = ModList.get().isLoaded("computercraft");
 
         if(hasCC) {
             try {
@@ -302,7 +285,7 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onWorldLoad(WorldEvent.Load ev) {
-        if(ev.getWorld().isRemote || ev.getWorld().provider.getDimension() != 0)
+        if(ev.getWorld().isClientSide() || ev.getWorld().provider.getDimension() != 0)
             return;
 
         File worldDir = ev.getWorld().getSaveHandler().getWorldDirectory();
@@ -337,7 +320,7 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onWorldSave(WorldEvent.Save ev) {
-        if(ev.getWorld().isRemote || ev.getWorld().provider.getDimension() != 0)
+        if(ev.getWorld().isClientSide() || ev.getWorld().provider.getDimension() != 0)
             return;
 
         File f = new File(ev.getWorld().getSaveHandler().getWorldDirectory(), "wd_next.txt");
@@ -367,40 +350,40 @@ public class WebDisplays {
                 UUID thrower = ev.getPlayer().getGameProfile().getId();
                 tag.setLong("ThrowerMSB", thrower.getMostSignificantBits());
                 tag.setLong("ThrowerLSB", thrower.getLeastSignificantBits());
-                tag.setDouble("ThrowHeight", ev.getPlayer().posY + ev.getPlayer().getEyeHeight());
+                tag.setDouble("ThrowHeight", ev.getPlayer().getY() + ev.getPlayer().getEyeHeight());
             }
         }
     }
 
     @SubscribeEvent
     public void onPlayerCraft(PlayerEvent.ItemCraftedEvent ev) {
-        if(doHardRecipe && ev.crafting.getItem() == itemCraftComp && ev.crafting.getMetadata() == CraftComponent.EXTENSION_CARD.ordinal()) {
-            if((ev.player instanceof EntityPlayerMP && !hasPlayerAdvancement((EntityPlayerMP) ev.player, ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
-                ev.crafting.setItemDamage(CraftComponent.BAD_EXTENSION_CARD.ordinal());
+        if(doHardRecipe && ev.getCrafting().getItem() == itemCraftComp && ev.getCrafting().is(CraftComponent.EXTENSION_CARD.makeItemStack()) {
+            if((ev.getCrafting() instanceof ServerPlayer && !hasPlayerAdvancement((ServerPlayer) ev.getPlayer(), ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
+                ev.getCrafting().setDamageValue(CraftComponent.BAD_EXTENSION_CARD.ordinal());
 
-                if(!ev.player.world.isRemote)
-                    ev.player.world.playSound(null, ev.player.posX, ev.player.posY, ev.player.posZ, SoundEvents.ENTITY_ITEM_BREAK, SoundCategory.MASTER, 1.0f, 1.0f);
+                if(!ev.getPlayer().getLevel().isClientSide)
+                    ev.getPlayer().getLevel().playSound(null, ev.getPlayer().getX(), ev.getPlayer().getY(), ev.getPlayer().getZ(), SoundEvents.ENTITY_ITEM_BREAK, SoundSource.MASTER, 1.0f, 1.0f);
             }
         }
     }
 
-    @Mod.EventHandler
-    public void onServerStop(FMLServerStoppingEvent ev) {
+    @SubscribeEvent
+    public static void onServerStop(ServerStoppingEvent ev) {
         Server.getInstance().stopServer();
     }
 
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
-        if(!ev.player.world.isRemote && ev.player instanceof EntityPlayerMP) {
-            WebDisplays.NET_HANDLER.sendTo(new CMessageServerInfo(miniservPort), (EntityPlayerMP) ev.player);
-            IWDDCapability cap = ev.player.getCapability(WDDCapability.INSTANCE, null);
+        if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
+            WebDisplays.NET_HANDLER.sendTo(new CMessageServerInfo(miniservPort), (ServerPlayer) ev.getPlayer());
+            IWDDCapability cap = ev.getPlayer().getCapability(WDDCapability.INSTANCE, null);
 
             if(cap == null)
-                Log.warning("Player %s (%s) has null IWDDCapability!", ev.player.getName(), ev.player.getGameProfile().getId().toString());
+                Log.warning("Player %s (%s) has null IWDDCapability!", ev.getPlayer().getName(), ev.getPlayer().getGameProfile().getId().toString());
             else if(cap.isFirstRun()) {
-                Util.toast(ev.player, TextFormatting.LIGHT_PURPLE, "welcome1");
-                Util.toast(ev.player, TextFormatting.LIGHT_PURPLE, "welcome2");
-                Util.toast(ev.player, TextFormatting.LIGHT_PURPLE, "welcome3");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome1");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome2");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome3");
 
                 cap.clearFirstRun();
             }
@@ -409,20 +392,20 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onLogOut(PlayerEvent.PlayerLoggedOutEvent ev) {
-        if(!ev.player.world.isRemote)
-            Server.getInstance().getClientManager().revokeClientKey(ev.player.getGameProfile().getId());
+        if(!ev.getPlayer().getLevel().isClientSide)
+            Server.getInstance().getClientManager().revokeClientKey(ev.getPlayer().getGameProfile().getId());
     }
 
     @SubscribeEvent
     public void attachEntityCaps(AttachCapabilitiesEvent<Entity> ev) {
-        if(ev.getObject() instanceof EntityPlayer)
+        if(ev.getObject() instanceof Player)
             ev.addCapability(CAPABILITY, new WDDCapability.Provider());
     }
 
     @SubscribeEvent
     public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone ev) {
         IWDDCapability src = ev.getOriginal().getCapability(WDDCapability.INSTANCE, null);
-        IWDDCapability dst = ev.getEntityPlayer().getCapability(WDDCapability.INSTANCE, null);
+        IWDDCapability dst = ev.getPlayer().getCapability(WDDCapability.INSTANCE, null);
 
         if(src == null) {
             Log.error("src is null");
@@ -449,8 +432,8 @@ public class WebDisplays {
         }
 
         if(sb.toString().equals("ironic he could save others from death but not himself")) {
-            EntityPlayer ply = ev.getPlayer();
-            ply.world.playSound(null, ply.posX, ply.posY, ply.posZ, soundIronic, SoundCategory.PLAYERS, 1.0f, 1.0f);
+            Player ply = ev.getPlayer();
+            ply.getLevel().playSound(null, ply.getX(), ply.getY(), ply.getZ(), soundIronic, SoundSource.PLAYERS, 1.0f, 1.0f);
         }
     }
 
@@ -460,13 +443,13 @@ public class WebDisplays {
             PROXY.renderRecipes();
     }
 
-    private boolean hasPlayerAdvancement(EntityPlayerMP ply, ResourceLocation rl) {
+    private boolean hasPlayerAdvancement(ServerPlayer ply, ResourceLocation rl) {
         MinecraftServer server = PROXY.getServer();
         if(server == null)
             return false;
 
-        Advancement adv = server.getAdvancementManager().getAdvancement(rl);
-        return adv != null && ply.getAdvancements().getProgress(adv).isDone();
+        Advancement adv = server.getAdvancements().getAdvancement(rl);
+        return adv != null && ply.getAdvancements().getOrStartProgress(adv).isDone();
     }
 
     public static int getNextAvailablePadID() {

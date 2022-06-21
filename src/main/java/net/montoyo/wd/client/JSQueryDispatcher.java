@@ -5,11 +5,10 @@
 package net.montoyo.wd.client;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IJSQueryCallback;
 import net.montoyo.wd.WebDisplays;
@@ -24,7 +23,7 @@ import net.montoyo.wd.utilities.*;
 
 import java.util.*;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public final class JSQueryDispatcher {
 
     private static final class QueryData {
@@ -86,7 +85,7 @@ public final class JSQueryDispatcher {
     private final ClientProxy.ScreenSidePair lookupResult = new ClientProxy.ScreenSidePair();
     private final HashMap<String, IScreenQueryHandler> handlers = new HashMap<>();
     private final ArrayList<ServerQuery> serverQueries = new ArrayList<>();
-    private final Minecraft mc = Minecraft.getMinecraft();
+    private final Minecraft mc = Minecraft.getInstance();
 
     public JSQueryDispatcher(ClientProxy proxy) {
         this.proxy = proxy;

@@ -1,5 +1,6 @@
 plugins {
-    id 'fabric-loom' version '0.12-SNAPSHOT'
+    id 'dev.architectury.loom' version '0.12.0-SNAPSHOT'
+    id 'io.github.juuxel.loom-quiltflower' version '1.6.0'
     id 'maven-publish'
 }
 
@@ -18,17 +19,21 @@ repositories {
     // for more information about repositories.
     maven { url "https://maven.shedaniel.me/" }
     maven { url 'https://jitpack.io' }
+    maven {
+        url = "https://maven.parchmentmc.org"
+    }
 }
 
 dependencies {
     // To change the versions see the gradle.properties file
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    mappings loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.18.2:2022.05.02@zip")
+    }
+    forge "net.minecraftforge:forge:${project.forge_version}"
 
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "com.github.Mysticpasta1:mcef-fabric:master-SNAPSHOT"
+    modImplementation "com.github.Mysticpasta1:mcef-forge:master-SNAPSHOT"
     modApi("me.shedaniel.cloth:cloth-config-fabric:6.2.62") {
         exclude(group: "net.fabricmc.fabric-api")
     }
@@ -36,6 +41,14 @@ dependencies {
     // These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
 
     // modImplementation "net.fabricmc.fabric-api:fabric-api-deprecated:${project.fabric_version}"
+}
+
+loom {
+    forge {
+        mixinConfigs = [
+                "webdisplays.mixins.json"
+        ]
+    }
 }
 
 processResources {

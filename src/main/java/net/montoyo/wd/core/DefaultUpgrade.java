@@ -4,7 +4,7 @@
 
 package net.montoyo.wd.core;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
 public enum DefaultUpgrade {
@@ -28,12 +28,6 @@ public enum DefaultUpgrade {
     }
 
     public boolean matches(ItemStack is) {
-        return is.getItem() == WebDisplays.INSTANCE.itemUpgrade && is.getMetadata() == ordinal();
+        return is.getItem() == WebDisplays.INSTANCE.itemUpgrade;
     }
-
-    public static String getWikiName(int meta) {
-        DefaultUpgrade[] values = values();
-        return (meta >= 0 && meta < values.length) ? values[meta].wikiName : null;
-    }
-
 }

@@ -6,20 +6,20 @@ package net.montoyo.wd.core;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
 import javax.annotation.Nonnull;
 
-public class WDCreativeTab extends CreativeTabs {
+public class WDCreativeTab extends CreativeModeTab {
 
     public WDCreativeTab() {
         super("webdisplays");
     }
 
     @Override
-    @Nonnull
-    public ItemStack getTabIconItem() {
-        return new ItemStack(WebDisplays.INSTANCE.blockScreen);
+    public ItemStack makeIcon() {
+        return WebDisplays.INSTANCE.blockScreen.getItem();
     }
-
 }

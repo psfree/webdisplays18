@@ -5,8 +5,13 @@
 package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.montoyo.wd.client.gui.GuiServer;
@@ -26,9 +31,9 @@ public class ServerData extends GuiData {
         this.owner = owner;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public GuiScreen createGui(GuiScreen old, World world) {
+    public Screen createGui(Screen old, Level world) {
         return new GuiServer(pos, owner);
     }
 

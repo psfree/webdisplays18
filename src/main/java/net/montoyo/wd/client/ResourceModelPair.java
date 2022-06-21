@@ -4,7 +4,7 @@
 
 package net.montoyo.wd.client;
 
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.montoyo.wd.client.renderers.IModelBaker;
 
 public class ResourceModelPair {

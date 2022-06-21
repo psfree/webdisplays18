@@ -4,14 +4,14 @@
 
 package net.montoyo.wd.core;
 
-import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.level.ServerPlayer;
 
 public class MissingPermissionException extends Exception {
 
     private final int permission;
-    private final EntityPlayerMP player;
+    private final ServerPlayer player;
 
-    public MissingPermissionException(int p, EntityPlayerMP ply) {
+    public MissingPermissionException(int p, ServerPlayer ply) {
         super("Player " + ply.getName() + " is missing permission " + p);
         permission = p;
         player = ply;
@@ -21,7 +21,7 @@ public class MissingPermissionException extends Exception {
         return permission;
     }
 
-    public EntityPlayerMP getPlayer() {
+    public ServerPlayer getPlayer() {
         return player;
     }
 

@@ -4,13 +4,10 @@
 
 package net.montoyo.wd.core;
 
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.IStringSerializable;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.montoyo.wd.entity.*;
 
-import javax.annotation.Nonnull;
-
-public enum DefaultPeripheral implements IStringSerializable {
+public enum DefaultPeripheral {
 
     KEYBOARD("keyboard", "Keyboard", TileEntityKeyboard.class),                          //WITH FACING (< 3)
     CC_INTERFACE("ccinterface", "ComputerCraft_Interface", TileEntityCCInterface.class),
@@ -21,9 +18,9 @@ public enum DefaultPeripheral implements IStringSerializable {
 
     private final String name;
     private final String wikiName;
-    private final Class<? extends TileEntity> teClass;
+    private final Class<? extends BlockEntity> teClass;
 
-    DefaultPeripheral(String name, String wname, Class<? extends TileEntity> te) {
+    DefaultPeripheral(String name, String wname, Class<? extends BlockEntity> te) {
         this.name = name;
         wikiName = wname;
         teClass = te;
@@ -36,13 +33,7 @@ public enum DefaultPeripheral implements IStringSerializable {
             return values()[meta & 3]; //With facing
     }
 
-    @Override
-    @Nonnull
-    public String getName() {
-        return name;
-    }
-
-    public Class<? extends TileEntity> getTEClass() {
+    public Class<? extends BlockEntity> getTEClass() {
         return teClass;
     }
 
@@ -58,10 +49,6 @@ public enum DefaultPeripheral implements IStringSerializable {
             ret = (((ret + 1) & 3) << 2) | 3;
 
         return ret;
-    }
-
-    public String getWikiName() {
-        return wikiName;
     }
 
 }

@@ -4,12 +4,12 @@
 
 package net.montoyo.wd.data;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.NetworkRegistry;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.GuiScreenConfig;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -40,9 +40,9 @@ public class ScreenConfigData extends GuiData {
         onlyUpdate = false;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public GuiScreen createGui(GuiScreen old, World world) {
+    public Screen createGui(Screen old, Level world) {
         if(old != null && old instanceof GuiScreenConfig) {
             GuiScreenConfig gsc = (GuiScreenConfig) old;
 
@@ -59,7 +59,7 @@ public class ScreenConfigData extends GuiData {
         if(onlyUpdate)
             return null;
 
-        TileEntity te = world.getTileEntity(pos.toBlock());
+        BlockEntity te = world.getBlockEntity(pos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen)) {
             Log.error("TileEntity at %s is not a screen; can't open gui!", pos.toString());
             return null;

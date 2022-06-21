@@ -5,9 +5,16 @@
 package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.montoyo.wd.client.gui.GuiKeyboard;
@@ -35,10 +42,10 @@ public class KeyboardData extends GuiData {
         kbZ = kbPos.getZ();
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public GuiScreen createGui(GuiScreen old, World world) {
-        TileEntity te = world.getTileEntity(pos.toBlock());
+    public Screen createGui(Screen old, Level world) {
+        BlockEntity te = world.getBlockEntity(pos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen)) {
             Log.error("TileEntity at %s is not a screen; can't open keyboard!", pos.toString());
             return null;

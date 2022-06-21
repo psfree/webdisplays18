@@ -5,6 +5,8 @@
 package net.montoyo.wd.core;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
 public enum CraftComponent {
@@ -32,13 +34,8 @@ public enum CraftComponent {
         return name;
     }
 
-    public static String getWikiName(int meta) {
-        CraftComponent[] values = values();
-        return (meta >= 0 && meta < values.length) ? values[meta].wikiName : null;
-    }
-
-    public ItemStack makeItemStack() {
-        return new ItemStack(WebDisplays.INSTANCE.itemCraftComp, 1, ordinal());
+    public ItemStack makeItemStack(CompoundTag compoundTag) {
+        return new ItemStack(WebDisplays.INSTANCE.itemCraftComp, 1, compoundTag);
     }
 
 }

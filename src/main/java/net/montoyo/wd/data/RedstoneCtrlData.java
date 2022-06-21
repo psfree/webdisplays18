@@ -4,11 +4,11 @@
 
 package net.montoyo.wd.data;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.client.gui.GuiRedstoneCtrl;
 import net.montoyo.wd.utilities.Vector3i;
 
@@ -29,9 +29,9 @@ public class RedstoneCtrlData extends GuiData {
         fallingEdgeURL = f;
     }
 
-    @SideOnly(Side.CLIENT)
+    @OnlyIn(Dist.CLIENT)
     @Override
-    public GuiScreen createGui(GuiScreen old, World world) {
+    public Screen createGui(Screen old, Level world) {
         return new GuiRedstoneCtrl(dimension, pos, risingEdgeURL, fallingEdgeURL);
     }
 

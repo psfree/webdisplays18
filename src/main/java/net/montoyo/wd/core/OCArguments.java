@@ -3,11 +3,10 @@
  */
 
 package net.montoyo.wd.core;
-
-import li.cil.oc.api.machine.Arguments;
-import net.minecraftforge.fml.common.Optional;
+/*
 
 import java.util.Map;
+import java.util.Optional;
 
 @Optional.Interface(iface = "net.montoyo.wd.core.IComputerArgs", modid = "opencomputers")
 public class OCArguments implements IComputerArgs {
@@ -43,4 +42,4 @@ public class OCArguments implements IComputerArgs {
         return ((Arguments) args).count();
     }
 
-}
+} */
