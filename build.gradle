@@ -22,6 +22,10 @@ repositories {
     maven {
         url = "https://maven.parchmentmc.org"
     }
+    maven {
+        name = "cursemaven"
+        url = "https://www.cursemaven.com"
+    }
 }
 
 dependencies {
@@ -34,9 +38,7 @@ dependencies {
     forge "net.minecraftforge:forge:${project.forge_version}"
 
     modImplementation "com.github.Mysticpasta1:mcef-forge:master-SNAPSHOT"
-    modApi("me.shedaniel.cloth:cloth-config-fabric:6.2.62") {
-        exclude(group: "net.fabricmc.fabric-api")
-    }
+    modImplementation "curse.maven:cloth_config_forge-348521:3546623"
     // Uncomment the following line to enable the deprecated Fabric API modules.
     // These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
 
