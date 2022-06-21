@@ -6,7 +6,7 @@ package net.montoyo.wd.utilities;
 
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.ByteBuf;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.fml.common.network.ByteBufUtils;
 
 import java.util.UUID;
 
@@ -30,8 +30,8 @@ public final class NameUUIDPair {
         uuid = profile.getId();
     }
 
-    public NameUUIDPair(FriendlyByteBuf bb) {
-        name = bb.readUtf();
+    public NameUUIDPair(ByteBuf bb) {
+        name = ByteBufUtils.readUTF8String(bb);
 
         long msb = bb.readLong();
         long lsb = bb.readLong();
@@ -63,8 +63,8 @@ public final class NameUUIDPair {
         return name.isEmpty() && uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() == 0L;
     }
 
-    public void writeTo(FriendlyByteBuf bb) {
-        bb.writeUtf(name);
+    public void writeTo(ByteBuf bb) {
+        ByteBufUtils.writeUTF8String(bb, name);
         bb.writeLong(uuid.getMostSignificantBits());
         bb.writeLong(uuid.getLeastSignificantBits());
     }

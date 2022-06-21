@@ -4,6 +4,8 @@
 
 package net.montoyo.wd.utilities;
 
+import net.minecraft.util.math.AxisAlignedBB;
+
 public final class AABB {
 
     public final Vector3i start;
@@ -31,7 +33,7 @@ public final class AABB {
         end.z = Math.max(a.z, b.z);
     }
 
-    public AABB(net.minecraft.world.phys.AABB bb) {
+    public AABB(AxisAlignedBB bb) {
         start = new Vector3i();
         end = new Vector3i();
 
@@ -68,8 +70,8 @@ public final class AABB {
         return this;
     }
 
-    public net.minecraft.world.phys.AABB toMc() {
-        return new net.minecraft.world.phys.AABB(start.x, start.y, start.z, end.x, end.y, end.z);
+    public AxisAlignedBB toMc() {
+        return new AxisAlignedBB((double) start.x, (double) start.y, (double) start.z, (double) end.x, (double) end.y, (double) end.z);
     }
 
 }

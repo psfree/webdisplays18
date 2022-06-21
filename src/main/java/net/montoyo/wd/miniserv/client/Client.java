@@ -43,7 +43,7 @@ public class Client extends AbstractClient implements Runnable {
     private volatile boolean connected;
     private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(8192);
     private volatile Thread thread;
-    private final UUID clientUUID = Minecraft.getInstance().player.getGameProfile().getId();
+    private final UUID clientUUID = Minecraft.getMinecraft().player.getGameProfile().getId();
     private final ArrayDeque<ClientTask> tasks = new ArrayDeque<>();
     private ClientTask currentTask;
     private volatile boolean authenticated;
