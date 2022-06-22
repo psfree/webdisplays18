@@ -8,6 +8,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.IResource;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.util.ResourceLocation;
 import net.montoyo.wd.client.gui.controls.*;
 import net.montoyo.wd.utilities.Log;
@@ -65,10 +67,10 @@ public class GuiLoader {
     public static JsonObject getJson(ResourceLocation resLoc) {
         JsonObject ret = RESOURCES.get(resLoc);
         if(ret == null) {
-            IResource resource;
+            Resource resource;
 
             try {
-                resource = Minecraft.getMinecraft().getResourceManager().getResource(resLoc);
+                resource = Minecraft.getInstance().getResourceManager().getResource(resLoc);
             } catch(IOException e) {
                 Log.errorEx("Couldn't load JSON UI from file", e);
                 throw new RuntimeException(e);

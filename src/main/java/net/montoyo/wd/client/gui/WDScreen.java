@@ -7,11 +7,17 @@ package net.montoyo.wd.client.gui;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.BlockPos;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Container;
 import net.montoyo.wd.client.gui.controls.Control;
@@ -39,7 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class WDScreen extends GuiScreen {
+public abstract class WDScreen extends Screen {
 
     public static WDScreen CURRENT_SCREEN = null;
 
@@ -51,7 +57,8 @@ public abstract class WDScreen extends GuiScreen {
     protected int syncTicks = 40;
     private int syncTicksLeft = -1;
 
-    public WDScreen() {
+    public WDScreen(Component component) {
+        super(component);
         Method[] methods = getClass().getMethods();
 
         for(Method m : methods) {
@@ -74,22 +81,22 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     public int screen2DisplayX(int x) {
-        double ret = ((double) x) / ((double) width) * ((double) mc.displayWidth);
+        double ret = ((double) x) / ((double) width) * ((double) minecraft.getWindow().getWidth());
         return (int) ret;
     }
 
     public int screen2DisplayY(int y) {
-        double ret = ((double) y) / ((double) height) * ((double) mc.displayHeight);
+        double ret = ((double) y) / ((double) height) * ((double) minecraft.getWindow().getHeight();
         return (int) ret;
     }
 
     public int display2ScreenX(int x) {
-        double ret = ((double) x) / ((double) mc.displayWidth) * ((double) width);
+        double ret = ((double) x) / ((double) minecraft.getWindow().getWidth()) * ((double) width);
         return (int) ret;
     }
 
     public int display2ScreenY(int y) {
-        double ret = ((double) y) / ((double) mc.displayHeight) * ((double) height);
+        double ret = ((double) y) / ((double) minecraft.getWindow().getHeight()) * ((double) height);
         return (int) ret;
     }
 
@@ -111,9 +118,9 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float ptt) {
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(defaultBackground)
-            drawDefaultBackground();
+            renderBackground(poseStack);
 
         for(Control ctrl: controls)
             ctrl.draw(mouseX, mouseY, ptt);
@@ -123,26 +130,38 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        if(quitOnEscape && keyCode == Keyboard.KEY_ESCAPE) {
-            mc.displayGuiScreen(null);
-            return;
+    public boolean charTyped(char codePoint, int modifiers) {
+        if(quitOnEscape && codePoint == Keyboard.KEY_ESCAPE) {
+            minecraft.setScreen(null);
+            return false;
         }
 
+        boolean typed = false;
+
         for(Control ctrl: controls)
-            ctrl.keyTyped(typedChar, keyCode);
+            typed = typed || ctrl.keyTyped(codePoint, modifiers);
+
+        return typed;
     }
 
     @Override
-    protected void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        boolean clicked = false;
+
         for(Control ctrl: controls)
-            ctrl.mouseClicked(mouseX, mouseY, mouseButton);
+            clicked = clicked || ctrl.mouseClicked(mouseX, mouseY, button);
+
+        return clicked;
     }
 
     @Override
-    protected void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        boolean mouseReleased = false;
+
         for(Control ctrl: controls)
-            ctrl.mouseReleased(mouseX, mouseY, state);
+            mouseReleased = mouseReleased || ctrl.mouseReleased(mouseX, mouseY, button);
+
+        return mouseReleased;
     }
 
     @Override
@@ -152,13 +171,13 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    public void initGui() {
+    protected void init() {
         CURRENT_SCREEN = this;
-        Keyboard.enableRepeatEvents(true);
+        minecraft.keyboardHandler.setSendRepeatsToGui(true);
     }
 
     @Override
-    public void onGuiClosed() {
+    public void onClose() {
         if(syncTicksLeft >= 0) {
             sync();
             syncTicksLeft = -1;
@@ -167,8 +186,20 @@ public abstract class WDScreen extends GuiScreen {
         for(Control ctrl : controls)
             ctrl.destroy();
 
-        Keyboard.enableRepeatEvents(false);
+        minecraft.keyboardHandler.setSendRepeatsToGui(false);
         CURRENT_SCREEN = null;
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+
+
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        onMouseMove(mouseX, mouseY);
     }
 
     @Override
@@ -184,7 +215,7 @@ public abstract class WDScreen extends GuiScreen {
         else if(Mouse.getEventButton() == -1)
             onMouseMove(x, y);
     }
-
+    
     @Override
     public void handleKeyboardInput() throws IOException {
         super.handleKeyboardInput();
@@ -207,8 +238,7 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     public void onMouseMove(int mouseX, int mouseY) {
-        for(Control ctrl : controls)
-            ctrl.mouseMove(mouseX, mouseY);
+
     }
 
     public Object actionPerformed(Event ev) {
@@ -257,8 +287,8 @@ public abstract class WDScreen extends GuiScreen {
         HashMap<String, Double> vars = new HashMap<>();
         vars.put("width", (double) width);
         vars.put("height", (double) height);
-        vars.put("displayWidth", (double) mc.displayWidth);
-        vars.put("displayHeight", (double) mc.displayHeight);
+        vars.put("displayWidth", (double) minecraft.getWindow().getWidth());
+        vars.put("displayHeight", (double) minecraft.getWindow().getHeight());
         addLoadCustomVariables(vars);
 
         JsonArray content = root.get("controls").getAsJsonArray();
@@ -298,12 +328,12 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    public void onResize(@Nonnull Minecraft mcIn, int w, int h) {
+    public void resize(Minecraft minecraft, int width, int height) {
         for(Control ctrl : controls)
             ctrl.destroy();
 
         controls.clear();
-        super.onResize(mcIn, w, h);
+        super.resize(minecraft, width, height);
     }
 
     protected void requestAutocomplete(String beginning, boolean matchExact) {
@@ -332,7 +362,7 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    public void updateScreen() {
+    public void tick() {
         if(syncTicksLeft >= 0) {
             if(--syncTicksLeft < 0)
                 sync();
@@ -340,11 +370,12 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     public void drawItemStackTooltip(ItemStack is, int x, int y) {
+
         renderToolTip(is, x, y); //Since it's protected...
     }
 
     public void drawTooltip(java.util.List<String> lines, int x, int y) {
-        drawHoveringText(lines, x, y, fontRenderer); //This is also protected...
+        drawHoveringText(lines, x, y, font); //This is also protected...
     }
 
     public void requirePostDraw(Control ctrl) {
@@ -353,7 +384,7 @@ public abstract class WDScreen extends GuiScreen {
     }
 
     @Override
-    public boolean doesGuiPauseGame() {
+    public boolean isPauseScreen() {
         return false;
     }
 

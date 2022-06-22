@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.relauncher.Side;

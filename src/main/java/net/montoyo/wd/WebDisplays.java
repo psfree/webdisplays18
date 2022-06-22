@@ -5,6 +5,9 @@
 package net.montoyo.wd;
 
 import com.google.gson.Gson;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.ConfigHolder;
+import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
@@ -29,13 +32,15 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.NetworkRegistry;
-import net.montoyo.mcef.easy_forge_compat.Configuration;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.block.BlockScreen;
+import net.montoyo.wd.client.ClientProxy;
+import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.item.*;
@@ -49,6 +54,7 @@ import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @Mod("webdisplays")
@@ -58,7 +64,7 @@ public class WebDisplays {
 
     public static WebDisplays INSTANCE;
 
-    public static SharedProxy PROXY;
+    public static SharedProxy PROXY = DistExecutor.<SharedProxy>runForDist(() -> ClientProxy::new, () -> SharedProxy::new);
 
     public static SimpleNetworkWrapper NET_HANDLER;
     public static WDCreativeTab CREATIVE_TAB;
@@ -105,7 +111,7 @@ public class WebDisplays {
     public boolean doHardRecipe;
     private boolean hasOC;
     private boolean hasCC;
-    private String[] blacklist;
+    private List<String> blacklist;
     public boolean disableOwnershipThief;
     public double unloadDistance2;
     public double loadDistance2;
@@ -121,81 +127,86 @@ public class WebDisplays {
     public float avDist0;
 
     public WebDisplays() {
-        Configuration cfg = new Configuration();
-        cfg.load();
+        AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
+        ConfigHolder<ModConfig> configHolder = AutoConfig.getConfigHolder(ModConfig.class);
+//        Configuration cfg = new Configuration();
+//        cfg.load();
+//
+//        //CAT: Main
+//        Property blacklist = cfg.get("main", "blacklist", new String[0]);
+//        Property padHeight = cfg.get("main", "padHeight", 480);
+//        Property hardRecipe = cfg.get("main", "hardRecipes", true);
+//        Property homePage = cfg.get("main", "homepage", "mod://webdisplays/main.html");
+//        Property disableOT = cfg.get("main", "disableOwnershipThief", false);
+//        Property maxResX = cfg.get("main", "maxResolutionX", 1920);
+//        Property maxResY = cfg.get("main", "maxResolutionY", 1080);
+//        Property miniservPort = cfg.get("main", "miniservPort", 25566);
+//        Property miniservQuota = cfg.get("main", "miniservQuota", 1024); //It's stored as a string anyway
+//        Property maxScreenX = cfg.get("main", "maxScreenSizeX", 16);
+//        Property maxScreenY = cfg.get("main", "maxScreenSizeY", 16);
+//
+//        //CAT: Client options
+//        Property loadDistance = cfg.get("client", "loadDistance", 30.0);
+//        Property unloadDistance = cfg.get("client", "unloadDistance", 32.0);
+//
+//        //CAT: Auto volume config (client-side)
+//        Property enableAutoVol = cfg.get("clientAutoVolume", "enableAutoVolume", true);
+//        Property ytVolume = cfg.get("clientAutoVolume", "ytVolume", 100.0);
+//        Property dist100 = cfg.get("clientAutoVolume", "dist100", 10.0);
+//        Property dist0 = cfg.get("clientAutoVolume", "dist0", 30.0);
+//
+//
+//        //Comments & shit
+//        blacklist.setComment("An array of domain names you don't want to load.");
+//        padHeight.setComment("The minePad Y resolution in pixels. padWidth = padHeight * " + PAD_RATIO);
+//        hardRecipe.setComment("If true, breaking the minePad is required to craft upgrades.");
+//        homePage.setComment("The URL that will be loaded each time you create a screen");
+//        disableOT.setComment("If true, the ownership thief item will be disabled");
+//        loadDistance.setComment("All screens outside this range will be unloaded");
+//        unloadDistance.setComment("All unloaded screens inside this range will be loaded");
+//        maxResX.setComment("Maximum horizontal screen resolution, in pixels");
+//        maxResY.setComment("Maximum vertical screen resolution, in pixels");
+//        miniservPort.setComment("The port used by miniserv. 0 to disable.");
+//        miniservPort.setMaxValue(Short.MAX_VALUE);
+//        miniservQuota.setComment("The amount of data that can be uploaded to miniserv, in KiB (so 1024 = 1 MiO)");
+//        maxScreenX.setComment("Maximum screen width, in blocks. Resolution will be clamped by maxResolutionX.");
+//        maxScreenY.setComment("Maximum screen height, in blocks. Resolution will be clamped by maxResolutionY.");
+//        enableAutoVol.setComment("If true, the volume of YouTube videos will change depending on how far you are");
+//        ytVolume.setComment("Volume for YouTube videos. This will have no effect if enableSoundDistance is set to false");
+//        ytVolume.setMinValue(0.0);
+//        ytVolume.setMaxValue(100.0);
+//        dist100.setComment("Distance after which the sound starts dropping (in blocks)");
+//        dist100.setMinValue(0.0);
+//        dist0.setComment("Distance after which you can't hear anything (in blocks)");
+//        dist0.setMinValue(0.0);
+//
+//        if(unloadDistance.getDouble() < loadDistance.getDouble() + 2.0)
+//            unloadDistance.set(loadDistance.getDouble() + 2.0);
+//
+//        if(dist0.getDouble() < dist100.getDouble() + 0.1)
+//            dist0.set(dist100.getDouble() + 0.1);
+//
+//        cfg.save();
 
-        //CAT: Main
-        Property blacklist = cfg.get("main", "blacklist", new String[0]);
-        Property padHeight = cfg.get("main", "padHeight", 480);
-        Property hardRecipe = cfg.get("main", "hardRecipes", true);
-        Property homePage = cfg.get("main", "homepage", "mod://webdisplays/main.html");
-        Property disableOT = cfg.get("main", "disableOwnershipThief", false);
-        Property maxResX = cfg.get("main", "maxResolutionX", 1920);
-        Property maxResY = cfg.get("main", "maxResolutionY", 1080);
-        Property miniservPort = cfg.get("main", "miniservPort", 25566);
-        Property miniservQuota = cfg.get("main", "miniservQuota", 1024); //It's stored as a string anyway
-        Property maxScreenX = cfg.get("main", "maxScreenSizeX", 16);
-        Property maxScreenY = cfg.get("main", "maxScreenSizeY", 16);
+        ModConfig config = configHolder.getConfig();
+        configHolder.save();
 
-        //CAT: Client options
-        Property loadDistance = cfg.get("client", "loadDistance", 30.0);
-        Property unloadDistance = cfg.get("client", "unloadDistance", 32.0);
-
-        //CAT: Auto volume config (client-side)
-        Property enableAutoVol = cfg.get("clientAutoVolume", "enableAutoVolume", true);
-        Property ytVolume = cfg.get("clientAutoVolume", "ytVolume", 100.0);
-        Property dist100 = cfg.get("clientAutoVolume", "dist100", 10.0);
-        Property dist0 = cfg.get("clientAutoVolume", "dist0", 30.0);
-
-
-        //Comments & shit
-        blacklist.setComment("An array of domain names you don't want to load.");
-        padHeight.setComment("The minePad Y resolution in pixels. padWidth = padHeight * " + PAD_RATIO);
-        hardRecipe.setComment("If true, breaking the minePad is required to craft upgrades.");
-        homePage.setComment("The URL that will be loaded each time you create a screen");
-        disableOT.setComment("If true, the ownership thief item will be disabled");
-        loadDistance.setComment("All screens outside this range will be unloaded");
-        unloadDistance.setComment("All unloaded screens inside this range will be loaded");
-        maxResX.setComment("Maximum horizontal screen resolution, in pixels");
-        maxResY.setComment("Maximum vertical screen resolution, in pixels");
-        miniservPort.setComment("The port used by miniserv. 0 to disable.");
-        miniservPort.setMaxValue(Short.MAX_VALUE);
-        miniservQuota.setComment("The amount of data that can be uploaded to miniserv, in KiB (so 1024 = 1 MiO)");
-        maxScreenX.setComment("Maximum screen width, in blocks. Resolution will be clamped by maxResolutionX.");
-        maxScreenY.setComment("Maximum screen height, in blocks. Resolution will be clamped by maxResolutionY.");
-        enableAutoVol.setComment("If true, the volume of YouTube videos will change depending on how far you are");
-        ytVolume.setComment("Volume for YouTube videos. This will have no effect if enableSoundDistance is set to false");
-        ytVolume.setMinValue(0.0);
-        ytVolume.setMaxValue(100.0);
-        dist100.setComment("Distance after which the sound starts dropping (in blocks)");
-        dist100.setMinValue(0.0);
-        dist0.setComment("Distance after which you can't hear anything (in blocks)");
-        dist0.setMinValue(0.0);
-
-        if(unloadDistance.getDouble() < loadDistance.getDouble() + 2.0)
-            unloadDistance.set(loadDistance.getDouble() + 2.0);
-
-        if(dist0.getDouble() < dist100.getDouble() + 0.1)
-            dist0.set(dist100.getDouble() + 0.1);
-
-        cfg.save();
-
-        this.blacklist = blacklist.getStringList();
-        doHardRecipe = hardRecipe.getBoolean();
-        this.homePage = homePage.getString();
-        disableOwnershipThief = disableOT.getBoolean();
-        unloadDistance2 = unloadDistance.getDouble() * unloadDistance.getDouble();
-        loadDistance2 = loadDistance.getDouble() * loadDistance.getDouble();
-        this.maxResX = maxResX.getInt();
-        this.maxResY = maxResY.getInt();
-        this.miniservPort = miniservPort.getInt();
-        this.miniservQuota = miniservQuota.getLong() * 1024L;
-        this.maxScreenX = maxScreenX.getInt();
-        this.maxScreenY = maxScreenY.getInt();
-        enableSoundDistance = enableAutoVol.getBoolean();
-        this.ytVolume = (float) ytVolume.getDouble();
-        avDist100 = (float) dist100.getDouble();
-        avDist0 = (float) dist0.getDouble();
+        this.blacklist = config.main.blacklist;
+        doHardRecipe = config.main.hardRecipes;
+        this.homePage = config.main.homepage;
+        disableOwnershipThief = config.main.disableOwnershipThief;
+        unloadDistance2 = config.client.unloadDistance * config.client.unloadDistance;
+        loadDistance2 = config.client.loadDistance * config.client.loadDistance;
+        this.maxResX = config.main.maxResolutionX;
+        this.maxResY = config.main.maxResolutionY;
+        this.miniservPort = config.main.miniservPort;
+        this.miniservQuota = config.main.miniservQuota * 1024L;
+        this.maxScreenX = config.main.maxScreenSizeX;
+        this.maxScreenY = config.main.maxScreenSizeY;
+        enableSoundDistance = config.client.autoVolumeControl.enableAutoVolume;
+        this.ytVolume = (float) config.client.autoVolumeControl.ytVolume;
+        avDist100 = (float) config.client.autoVolumeControl.dist100;
+        avDist0 = (float) config.client.autoVolumeControl.dist0;
 
         CREATIVE_TAB = new WDCreativeTab();
 
@@ -207,7 +218,7 @@ public class WebDisplays {
         registerTrigger(criterionPadBreak, criterionUpgradeScreen, criterionLinkPeripheral, criterionKeyboardCat);
 
         //Read configuration
-        padResY = (double) padHeight.getInt();
+        padResY = config.main.padHeight;
         padResX = padResY * PAD_RATIO;
 
         //Init blocks

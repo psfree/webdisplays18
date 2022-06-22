@@ -8,6 +8,7 @@ import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraftforge.server.ServerLifecycleHooks;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
@@ -16,6 +17,8 @@ import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
+
+import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 
 public class SharedProxy {
 
@@ -38,7 +41,7 @@ public class SharedProxy {
     }
 
     public void enqueue(Runnable r) {
-        FMLServerHandler.instance().getServer().addScheduledTask(r);
+        ServerLifecycleHooks.getCurrentServer().addTickable(r);
     }
 
     public void displayGui(GuiData data) {
@@ -86,7 +89,7 @@ public class SharedProxy {
     }
 
     public MinecraftServer getServer() {
-        return FMLServerHandler.instance().getServer();
+        return ServerLifecycleHooks.getCurrentServer();CLIENT
     }
 
     public void setMiniservClientPort(int port) {

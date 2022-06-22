@@ -11,6 +11,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.client.renderer.texture.TextureMap;
@@ -91,7 +92,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
     private MinePadRenderer minePadRenderer;
     private JSQueryDispatcher jsDispatcher;
     private LaserPointerRenderer laserPointerRenderer;
-    private GuiScreen nextScreen;
+    private Screen nextScreen;
     private boolean isF1Down;
 
     //Miniserv handling

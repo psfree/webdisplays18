@@ -17,6 +17,7 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.wd.WebDisplays;
@@ -39,7 +40,7 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 
-public class TileEntityScreen extends TileEntity {
+public class TileEntityScreen extends BlockEntity {
 
     public static class Screen {
 

@@ -35,7 +35,7 @@ public class KeyboardData extends GuiData {
     }
 
     public KeyboardData(TileEntityScreen tes, BlockSide side, BlockPos kbPos) {
-        pos = new Vector3i(tes.getPos());
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         kbX = kbPos.getX();
         kbY = kbPos.getY();

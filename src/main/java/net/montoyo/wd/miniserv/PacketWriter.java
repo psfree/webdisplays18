@@ -34,7 +34,7 @@ public final class PacketWriter {
 
     private boolean writeByteArray(ByteBuffer dst, byte[] src) {
         int remaining = src.length - pos;
-        int written = (dst.remaining() >= remaining) ? remaining : dst.remaining();
+        int written = Math.min(dst.remaining(), remaining);
         dst.put(src, pos, written);
 
         pos += written;

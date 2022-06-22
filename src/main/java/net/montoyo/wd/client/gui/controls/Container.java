@@ -24,10 +24,10 @@ public abstract class Container extends BasicControl {
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
+    public void keyTyped(int keyCode, int scanCode, int modifiers) throws IOException {
         if(!disabled) {
             for(Control ctrl : childs)
-                ctrl.keyTyped(typedChar, keyCode);
+                ctrl.keyTyped(keyCode, scanCode, modifiers);
         }
     }
 

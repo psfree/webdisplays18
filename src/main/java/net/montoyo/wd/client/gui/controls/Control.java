@@ -4,7 +4,12 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.Tesselator;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -33,18 +38,18 @@ public abstract class Control {
     public static final int COLOR_YELLOW   = 0xFFFFFF00;
 
     protected final Minecraft mc;
-    protected final FontRenderer font;
-    protected final Tessellator tessellator;
+    protected final Font font;
+    protected final Tesselator tessellator;
     protected final BufferBuilder vBuffer;
     protected final WDScreen parent;
     protected String name;
     protected Object userdata;
 
     public Control() {
-        mc = Minecraft.getMinecraft();
-        font = mc.fontRenderer;
-        tessellator = Tessellator.getInstance();
-        vBuffer = tessellator.getBuffer();
+        mc = Minecraft.getInstance();
+        font = mc.font;
+        tessellator = Tesselator.getInstance();
+        vBuffer = tessellator.getBuilder();
         parent = WDScreen.CURRENT_SCREEN;
     }
 
@@ -56,28 +61,32 @@ public abstract class Control {
         this.userdata = userdata;
     }
 
-    public void keyTyped(char typedChar, int keyCode) throws IOException {
+    public boolean keyTyped(char typedChar, int keyCode) {
     }
 
-    public void keyUp(int key) {
+    public boolean keyUp(int key) {
     }
 
-    public void keyDown(int key) {
+    public boolean keyDown(int key) {
     }
 
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
     }
 
-    public void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
+        return false;
     }
 
-    public void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+    public boolean mouseClickMove(double mouseX, double mouseY, int clickedMouseButton, long timeSinceLastClick) {
+        return false;
     }
 
-    public void mouseMove(int mouseX, int mouseY) {
+    public boolean mouseMove(double mouseX, double mouseY) {
+        return false;
     }
 
-    public void mouseScroll(int mouseX, int mouseY, int amount) {
+    public boolean mouseScroll(int mouseX, int mouseY, int amount) {
+        return false;
     }
 
     public void draw(int mouseX, int mouseY, float ptt) {
@@ -114,12 +123,12 @@ public abstract class Control {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        vBuffer.begin(GL_QUADS, DefaultVertexFormats.POSITION);
-        vBuffer.pos(x1, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y1, 0.0).endVertex();
-        vBuffer.pos(x1, y1, 0.0).endVertex();
-        tessellator.draw();
+        vBuffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        vBuffer.vertex(x1, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y1, 0.0).endVertex();
+        vBuffer.vertex(x1, y1, 0.0).endVertex();
+        tessellator.end();
 
         glDisable(GL_BLEND);
         glEnable(GL_TEXTURE_2D);
