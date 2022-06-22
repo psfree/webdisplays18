@@ -13,16 +13,21 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.multiplayer.ClientAdvancementManager;
+import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.resources.IResourceManager;
 import net.minecraft.client.resources.SimpleReloadableResourceManager;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.NonNullList;
@@ -31,15 +36,16 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraftforge.client.event.*;
+import net.minecraftforge.client.ClientRegistry;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.client.resource.IResourceType;
-import net.minecraftforge.client.resource.ISelectiveResourceReloadListener;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.fml.client.registry.ClientRegistry;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.montoyo.mcef.api.*;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
@@ -55,11 +61,10 @@ import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.item.ItemMulti;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.miniserv.client.Client;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessagePadCtrl;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
-import org.lwjgl.input.Keyboard;
-import paulscode.sound.SoundSystemConfig;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
@@ -68,7 +73,7 @@ import java.net.SocketAddress;
 import java.util.*;
 import java.util.function.Predicate;
 
-public class ClientProxy extends SharedProxy implements ISelectiveResourceReloadListener, IDisplayHandler, IJSQueryHandler {
+public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQueryHandler {
 
     public class PadData {
 
@@ -101,7 +106,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
 
     //Client-side advancement hack
     private final Field advancementToProgressField = findAdvancementToProgressField();
-    private ClientAdvancementManager lastAdvMgr;
+    private ClientAdvancements lastAdvMgr;
     private Map advancementToProgress;
 
     //Laser pointer
@@ -122,7 +127,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
 
     @Override
     public void preInit() {
-        mc = Minecraft.getMinecraft();
+        mc = Minecraft.getInstance();
         MinecraftForge.EVENT_BUS.register(this);
         registerCustomBlockBaker(new ScreenBaker(), WebDisplays.INSTANCE.blockScreen);
 
@@ -293,7 +298,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
 
     @Override
     public MinecraftServer getServer() {
-        return mc.getIntegratedServer();
+        return mc.getSingleplayerServer();
     }
 
     @Override
@@ -337,7 +342,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
             return;
         }
 
-        SocketAddress saddr = mc.player.connection.getNetworkManager().channel().remoteAddress();
+        SocketAddress saddr = mc.player.connection.getConnection().channel().remoteAddress();
         if(saddr == null || !(saddr instanceof InetSocketAddress)) {
             Log.warning("Miniserv client: remote address is not inet, assuming local address");
             saddr = new InetSocketAddress("127.0.0.1", 1234);
@@ -355,11 +360,11 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
 
     @Override
     public void closeGui(BlockPos bp, BlockSide bs) {
-        if(mc.currentScreen instanceof WDScreen) {
-            WDScreen scr = (WDScreen) mc.currentScreen;
+        if(mc.screen instanceof WDScreen) {
+            WDScreen scr = (WDScreen) mc.screen;
 
             if(scr.isForBlock(bp, bs))
-                mc.displayGuiScreen(null);
+                mc.setScreen(null);
         }
     }
 
@@ -376,7 +381,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
     /**************************************** RESOURCE MANAGER METHODS ****************************************/
 
     @Override
-    public void onResourceManagerReload(IResourceManager resourceManager, Predicate<IResourceType> resourcePredicate) {
+    public void onResourceManagerReload(ResourceManager resourceManager, Predicate<ExistingFileHelper.ResourceType> resourcePredicate) {
         Log.info("Resource manager reload: clearing GUI cache...");
         GuiLoader.clearCache();
     }
@@ -394,7 +399,7 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
                         pd.view.loadURL(WebDisplays.BLACKLIST_URL);
                     else {
                         pd.lastURLSent = t; //Avoid spamming the server with porn URLs
-                        WebDisplays.NET_HANDLER.sendToServer(new SMessagePadCtrl(pd.id, url));
+                        Messages.INSTANCE.sendToServer(new SMessagePadCtrl(pd.id, url));
                     }
 
                     break;
@@ -462,9 +467,9 @@ public class ClientProxy extends SharedProxy implements ISelectiveResourceReload
 
     @SubscribeEvent
     public void onStitchTextures(TextureStitchEvent.Pre ev) {
-        TextureMap texMap = ev.getMap();
+        TextureAtlas texMap = ev.getAtlas();
 
-        if(texMap == mc.getTextureMapBlocks()) {
+        if(texMap == mc.getTextureAtlas()) {
             for(ResourceModelPair pair : modelBakers)
                 pair.getModel().loadTextures(texMap);
         }

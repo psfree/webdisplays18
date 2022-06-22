@@ -4,11 +4,11 @@
 
 package net.montoyo.wd.client.renderers;
 
-import net.minecraft.client.renderer.block.model.IBakedModel;
-import net.minecraft.client.renderer.texture.TextureMap;
+import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.resources.model.BakedModel;
 
-public interface IModelBaker extends IBakedModel {
+public interface IModelBaker extends BakedModel {
 
-    void loadTextures(TextureMap texMap);
+    void loadTextures(TextureAtlas texMap);
 
 }

@@ -5,43 +5,39 @@
 package net.montoyo.wd.net.client;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.miniserv.client.Client;
-import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.Log;
 
-@Message(messageId = 11, side = Side.CLIENT)
-public class CMessageMiniservKey implements IMessage, Runnable {
+import java.util.function.Supplier;
+
+public class CMessageMiniservKey {
 
     private byte[] encryptedKey;
-
-    public CMessageMiniservKey() {
-    }
 
     public CMessageMiniservKey(byte[] key) {
         encryptedKey = key;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public void decode(FriendlyByteBuf buf) {
         encryptedKey = new byte[buf.readShort() & 0xFFFF];
         buf.readBytes(encryptedKey);
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public CMessageMiniservKey encode(FriendlyByteBuf buf) {
         buf.writeShort(encryptedKey.length);
         buf.writeBytes(encryptedKey);
+        return new CMessageMiniservKey(encryptedKey);
     }
 
-    @Override
-    public void run() {
-        if(Client.getInstance().decryptKey(encryptedKey)) {
-            Log.info("Successfully received and decrypted key, starting miniserv client...");
-            WebDisplays.PROXY.startMiniservClient();
-        }
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        contextSupplier.get().enqueueWork(() -> {
+            if (Client.getInstance().decryptKey(encryptedKey)) {
+                Log.info("Successfully received and decrypted key, starting miniserv client...");
+                WebDisplays.PROXY.startMiniservClient();
+            }
+        });
     }
-
 }

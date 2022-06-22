@@ -4,23 +4,20 @@
 
 package net.montoyo.wd.net.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.item.ItemStack;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.relauncher.Side;
-import net.montoyo.wd.SharedProxy;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.function.Supplier;
 
-@Message(messageId = 4, side = Side.CLIENT)
-public class CMessageScreenUpdate implements IMessage, Runnable {
+public class CMessageScreenUpdate {
 
     public static final int UPDATE_URL = 0;
     public static final int UPDATE_RESOLUTION = 1;
@@ -56,7 +53,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate setURL(TileEntityScreen tes, BlockSide side, String url) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_URL;
         ret.string = url;
@@ -66,7 +63,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate setResolution(TileEntityScreen tes, BlockSide side, Vector2i res) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_RESOLUTION;
         ret.vec2i = res;
@@ -76,7 +73,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate click(TileEntityScreen tes, BlockSide side, int mouseEvent, @Nullable Vector2i pos) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_MOUSE;
         ret.mouseEvent = mouseEvent;
@@ -86,14 +83,14 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
     }
 
     public CMessageScreenUpdate(TileEntityScreen tes, BlockSide side) {
-        pos = new Vector3i(tes.getPos());
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         action = UPDATE_DELETE;
     }
 
     public static CMessageScreenUpdate type(TileEntityScreen tes, BlockSide side, String text) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.string = text;
         ret.action = UPDATE_TYPE;
@@ -103,7 +100,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate js(TileEntityScreen tes, BlockSide side, String code) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.string = code;
         ret.action = UPDATE_RUN_JS;
@@ -113,7 +110,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate upgrade(TileEntityScreen tes, BlockSide side) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_UPGRADES;
 
@@ -128,7 +125,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate jsRedstone(TileEntityScreen tes, BlockSide side, Vector2i vec, int level) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_JS_REDSTONE;
         ret.vec2i = vec;
@@ -139,7 +136,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate owner(TileEntityScreen tes, BlockSide side, NameUUIDPair owner) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_OWNER;
         ret.owner = owner;
@@ -149,7 +146,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate rotation(TileEntityScreen tes, BlockSide side, Rotation rot) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_ROTATION;
         ret.rotation = rot;
@@ -159,7 +156,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
 
     public static CMessageScreenUpdate autoVolume(TileEntityScreen tes, BlockSide side, boolean av) {
         CMessageScreenUpdate ret = new CMessageScreenUpdate();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_AUTO_VOL;
         ret.autoVolume = av;
@@ -167,14 +164,13 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
         return ret;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public void decode(FriendlyByteBuf buf) {
         pos = new Vector3i(buf);
         side = BlockSide.values()[buf.readByte()];
         action = buf.readByte();
 
         if(action == UPDATE_URL || action == UPDATE_TYPE || action == UPDATE_RUN_JS)
-            string = ByteBufUtils.readUTF8String(buf);
+            string = buf.readUtf();
         else if(action == UPDATE_MOUSE) {
             mouseEvent = buf.readByte();
 
@@ -186,7 +182,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
             upgrades = new ItemStack[buf.readByte()];
 
             for(int i = 0; i < upgrades.length; i++)
-                upgrades[i] = ByteBufUtils.readItemStack(buf);
+                upgrades[i] = buf.readItem();
         } else if(action == UPDATE_JS_REDSTONE) {
             vec2i = new Vector2i(buf);
             redstoneLevel = buf.readByte();
@@ -198,14 +194,14 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
             autoVolume = buf.readBoolean();
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+
+    public CMessageScreenUpdate encode(FriendlyByteBuf buf) {
         pos.writeTo(buf);
         buf.writeByte(side.ordinal());
         buf.writeByte(action);
 
         if(action == UPDATE_URL || action == UPDATE_TYPE || action == UPDATE_RUN_JS)
-            ByteBufUtils.writeUTF8String(buf, string);
+            buf.writeUtf(string);
         else if(action == UPDATE_MOUSE) {
             buf.writeByte(mouseEvent);
 
@@ -217,7 +213,7 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
             buf.writeByte(upgrades.length);
 
             for(ItemStack is: upgrades)
-                ByteBufUtils.writeItemStack(buf, is);
+                buf.writeItem(is);
         } else if(action == UPDATE_JS_REDSTONE) {
             vec2i.writeTo(buf);
             buf.writeByte(redstoneLevel);
@@ -227,22 +223,18 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
             buf.writeByte(rotation.ordinal());
         else if(action == UPDATE_AUTO_VOL)
             buf.writeBoolean(autoVolume);
+        return new CMessageScreenUpdate();
     }
 
-    @Override
-    public void run() {
-        TileEntity te = WebDisplays.PROXY.getWorld(SharedProxy.CURRENT_DIMENSION).getTileEntity(pos.toBlock());
-        if(te == null || !(te instanceof TileEntityScreen)) {
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        contextSupplier.get().enqueueWork(() -> {
+        BlockEntity te = WebDisplays.PROXY.getWorld(Level.OVERWORLD).getBlockEntity(pos.toBlock());
+        if(!(te instanceof TileEntityScreen)) {
             Log.error("CMessageScreenUpdate: TileEntity at %s is not a screen!", pos.toString());
             return;
         }
 
         TileEntityScreen tes = (TileEntityScreen) te;
-        /*TileEntityScreen.Screen scr = tes.getScreen(side);
-        if(scr == null) {
-            Log.error("CMessageScreenUpdate: No screen on side %s at %s", side.toString(), pos.toString());
-            return;
-        }*/
 
         if(action == UPDATE_URL)
             tes.setScreenURL(side, string);
@@ -271,6 +263,6 @@ public class CMessageScreenUpdate implements IMessage, Runnable {
             tes.setAutoVolume(side, autoVolume);
         else
             Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
+        });
     }
-
 }

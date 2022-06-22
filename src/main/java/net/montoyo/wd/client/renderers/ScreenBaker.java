@@ -5,15 +5,20 @@
 package net.montoyo.wd.client.renderers;
 
 import com.google.common.collect.ImmutableList;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.utilities.BlockSide;
@@ -30,12 +35,12 @@ public class ScreenBaker implements IModelBaker {
     private static final List<BakedQuad> noQuads = ImmutableList.of();
     private final TextureAtlasSprite[] texs = new TextureAtlasSprite[16];
     private final BlockSide[] blockSides = BlockSide.values();
-    private final EnumFacing[] blockFacings = EnumFacing.values();
+    private final Direction[] blockFacings = Direction.values();
 
     @Override
-    public void loadTextures(TextureMap texMap) {
+    public void loadTextures(TextureAtlas texMap) {
         for(int i = 0; i < texs.length; i++)
-            texs[i] = texMap.registerSprite(new ResourceLocation("webdisplays", "blocks/screen" + i));
+            texs[i] = texMap.getSprite(new ResourceLocation("webdisplays", "blocks/screen" + i));
     }
 
     private void putVertex(int[] buf, int pos, Vector3f vpos, TextureAtlasSprite tex, Vector3f uv, Vector3i normal) {
@@ -43,8 +48,8 @@ public class ScreenBaker implements IModelBaker {
         buf[pos * 7 + 1] = Float.floatToRawIntBits(vpos.y);
         buf[pos * 7 + 2] = Float.floatToRawIntBits(vpos.z);
         buf[pos * 7 + 3] = 0xFFFFFFFF; //Color, let this white...
-        buf[pos * 7 + 4] = Float.floatToRawIntBits(tex.getInterpolatedU(uv.x));
-        buf[pos * 7 + 5] = Float.floatToRawIntBits(tex.getInterpolatedV(uv.y));
+        buf[pos * 7 + 4] = Float.floatToRawIntBits(tex.getU(uv.x));
+        buf[pos * 7 + 5] = Float.floatToRawIntBits(tex.getV(uv.y));
 
         int nx = (normal.x * 127) & 0xFF;
         int ny = (normal.y * 127) & 0xFF;
@@ -86,16 +91,14 @@ public class ScreenBaker implements IModelBaker {
         putVertex(data, 1, rotateVec(new Vector3f(1.0f, 0.0f, 1.0f), side), tex, rotateTex(side, 16.0f, 16.0f), side.backward);
         putVertex(data, 0, rotateVec(new Vector3f(1.0f, 0.0f, 0.0f), side), tex, rotateTex(side, 16.0f, 0.0f ), side.backward);
 
-        return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true, DefaultVertexFormats.ITEM);
+        return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true, DefaultVertexFormat.ITEM);
     }
 
-    @Override
     @Nonnull
-    public List<BakedQuad> getQuads(@Nullable IBlockState state, @Nullable EnumFacing side, long rand) {
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, long rand) {
         if(side == null)
             return noQuads;
-
-        IExtendedBlockState bs = (IExtendedBlockState) state;
+        BlockState bs = state;
         List<BakedQuad> ret = new ArrayList<>();
 
         int sid = BlockSide.reverse(side.ordinal());

@@ -4,17 +4,15 @@
 
 package net.montoyo.wd.net.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.JSServerRequest;
-import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.Log;
 
-@Message(messageId = 9, side = Side.CLIENT)
-public class CMessageJSResponse implements IMessage, Runnable {
+import java.util.function.Supplier;
+
+public class CMessageJSResponse {
 
     private int id;
     private JSServerRequest type;
@@ -22,9 +20,6 @@ public class CMessageJSResponse implements IMessage, Runnable {
     private byte[] data;
     private int errCode;
     private String errString;
-
-    public CMessageJSResponse() {
-    }
 
     public CMessageJSResponse(int id, JSServerRequest t, byte[] d) {
         this.id = id;
@@ -41,8 +36,7 @@ public class CMessageJSResponse implements IMessage, Runnable {
         errString = err;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public void decode(FriendlyByteBuf buf) {
         id = buf.readInt();
         type = JSServerRequest.fromID(buf.readByte());
         success = buf.readBoolean();
@@ -52,12 +46,11 @@ public class CMessageJSResponse implements IMessage, Runnable {
             buf.readBytes(data);
         } else {
             errCode = buf.readInt();
-            errString = ByteBufUtils.readUTF8String(buf);
+            errString = buf.readUtf();
         }
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public CMessageJSResponse encode(FriendlyByteBuf buf) {
         buf.writeInt(id);
         buf.writeByte(type.ordinal());
         buf.writeBoolean(success);
@@ -67,20 +60,21 @@ public class CMessageJSResponse implements IMessage, Runnable {
             buf.writeBytes(data); //TODO: Eventually compress this data
         } else {
             buf.writeInt(errCode);
-            ByteBufUtils.writeUTF8String(buf, errString);
+            buf.writeUtf(errString);
         }
+        return this;
     }
 
-    @Override
-    public void run() {
-        try {
-            if(success)
-                WebDisplays.PROXY.handleJSResponseSuccess(id, type, data);
-            else
-                WebDisplays.PROXY.handleJSResponseError(id, type, errCode, errString);
-        } catch(Throwable t) {
-            Log.warningEx("Could not handle JS response", t);
-        }
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        contextSupplier.get().enqueueWork(() -> {
+            try {
+                if (success)
+                    WebDisplays.PROXY.handleJSResponseSuccess(id, type, data);
+                else
+                    WebDisplays.PROXY.handleJSResponseError(id, type, errCode, errString);
+            } catch (Throwable t) {
+                Log.warningEx("Could not handle JS response", t);
+            }
+        });
     }
-
 }

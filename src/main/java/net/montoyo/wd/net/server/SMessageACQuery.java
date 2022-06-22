@@ -7,6 +7,9 @@ package net.montoyo.wd.net.server;
 import com.mojang.authlib.GameProfile;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -20,36 +23,31 @@ import net.montoyo.wd.utilities.NameUUIDPair;
 
 import java.util.Arrays;
 
-@Message(messageId = 5, side = Side.SERVER)
-public class SMessageACQuery implements IMessage, Runnable {
+public class SMessageACQuery {
 
-    private EntityPlayerMP player;
+    private ServerPlayer player;
     private String beginning;
     private boolean matchExact;
-
-    public SMessageACQuery() {
-    }
 
     public SMessageACQuery(String beg, boolean exact) {
         beginning = beg;
         matchExact = exact;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        beginning = ByteBufUtils.readUTF8String(buf);
+    public void decode(FriendlyByteBuf buf) {
+        beginning = buf.readUtf();
         matchExact = buf.readBoolean();
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, beginning);
+    public SMessageACQuery encode(FriendlyByteBuf buf) {
+        buf.writeUtf(beginning);
         buf.writeBoolean(matchExact);
+        return new SMessageACQuery(beginning, matchExact);
     }
 
     @Override
     public void run() {
-        GameProfile[] profiles = WebDisplays.PROXY.getOnlineGameProfiles();
+        GameProfile[] profiles = ;
         NameUUIDPair[] result;
 
         if(matchExact)

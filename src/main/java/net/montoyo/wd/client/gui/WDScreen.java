@@ -9,20 +9,15 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Container;
 import net.montoyo.wd.client.gui.controls.Control;
 import net.montoyo.wd.client.gui.controls.Event;
-import net.montoyo.wd.client.gui.controls.List;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
@@ -31,10 +26,8 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Bounds;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.NameUUIDPair;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -86,7 +79,7 @@ public abstract class WDScreen extends Screen {
     }
 
     public int screen2DisplayY(int y) {
-        double ret = ((double) y) / ((double) height) * ((double) minecraft.getWindow().getHeight();
+        double ret = ((double) y) / ((double) height) * ((double) minecraft.getWindow().getHeight());
         return (int) ret;
     }
 
@@ -131,7 +124,7 @@ public abstract class WDScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if(quitOnEscape && codePoint == Keyboard.KEY_ESCAPE) {
+        if(quitOnEscape && codePoint == GLFW.GLFW_KEY_ESCAPE) {
             minecraft.setScreen(null);
             return false;
         }

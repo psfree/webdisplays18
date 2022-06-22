@@ -4,21 +4,25 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.item.EntityItem;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagList;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.*;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
@@ -27,20 +31,26 @@ import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.ScreenConfigData;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageAddScreen;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import net.montoyo.wd.net.client.CMessageJSResponse;
 import net.montoyo.wd.net.client.CMessageScreenUpdate;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
 import net.montoyo.wd.utilities.*;
-import net.montoyo.wd.utilities.Rotation;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.UUID;
 import java.util.function.Consumer;
 
-public class TileEntityScreen extends BlockEntity {
+public class TileEntityScreen extends BlockEntity{
+
+    public TileEntityScreen(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
 
     public static class Screen {
 
@@ -58,16 +68,16 @@ public class TileEntityScreen extends BlockEntity {
         public ArrayList<ItemStack> upgrades;
         public boolean doTurnOnAnim;
         public long turnOnTime;
-        public EntityPlayer laserUser;
+        public Player laserUser;
         public final Vector2i lastMousePos = new Vector2i();
         public NibbleArray redstoneStatus; //null on client
         public boolean autoVolume = true;
 
-        public static Screen deserialize(NBTTagCompound tag) {
+        public static Screen deserialize(CompoundTag tag) {
             Screen ret = new Screen();
             ret.side = BlockSide.values()[tag.getByte("Side")];
-            ret.size = new Vector2i(tag.getInteger("Width"), tag.getInteger("Height"));
-            ret.resolution = new Vector2i(tag.getInteger("ResolutionX"), tag.getInteger("ResolutionY"));
+            ret.size = new Vector2i(tag.getInt("Width"), tag.getInt("Height"));
+            ret.resolution = new Vector2i(tag.getInt("ResolutionX"), tag.getInt("ResolutionY"));
             ret.rotation = Rotation.values()[tag.getByte("Rotation")];
             ret.url = tag.getString("URL");
             ret.videoType = VideoType.getTypeFromURL(ret.url);
@@ -82,76 +92,76 @@ public class TileEntityScreen extends BlockEntity {
                 ret.resolution.y = (int) psy;
             }
 
-            if(tag.hasKey("OwnerName")) {
+            if(tag.contains("OwnerName")) {
                 String name = tag.getString("OwnerName");
-                UUID uuid = tag.getUniqueId("OwnerUUID");
+                UUID uuid = tag.getUUID("OwnerUUID");
                 ret.owner = new NameUUIDPair(name, uuid);
             }
 
-            NBTTagList friends = tag.getTagList("Friends", 10);
-            ret.friends = new ArrayList<>(friends.tagCount());
+            ListTag friends = tag.getList("Friends", 10);
+            ret.friends = new ArrayList<>(friends.size());
 
-            for(int i = 0; i < friends.tagCount(); i++) {
-                NBTTagCompound nf = friends.getCompoundTagAt(i);
-                NameUUIDPair pair = new NameUUIDPair(nf.getString("Name"), nf.getUniqueId("UUID"));
+            for(int i = 0; i < friends.size(); i++) {
+                CompoundTag nf = friends.getCompound(i);
+                NameUUIDPair pair = new NameUUIDPair(nf.getString("Name"), nf.getUUID("UUID"));
                 ret.friends.add(pair);
             }
 
             ret.friendRights = tag.getByte("FriendRights");
             ret.otherRights = tag.getByte("OtherRights");
 
-            NBTTagList upgrades = tag.getTagList("Upgrades", 10);
+            ListTag upgrades = tag.getList("Upgrades", 10);
             ret.upgrades = new ArrayList<>();
 
-            for(int i = 0; i < upgrades.tagCount(); i++)
-                ret.upgrades.add(new ItemStack(upgrades.getCompoundTagAt(i)));
+            for(int i = 0; i < upgrades.size(); i++)
+                ret.upgrades.add(new ItemStack((ItemLike) upgrades.getCompound(i)));
 
-            if(tag.hasKey("AutoVolume"))
+            if(tag.contains("AutoVolume"))
                 ret.autoVolume = tag.getBoolean("AutoVolume");
 
             return ret;
         }
 
-        public NBTTagCompound serialize() {
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setByte("Side", (byte) side.ordinal());
-            tag.setInteger("Width", size.x);
-            tag.setInteger("Height", size.y);
-            tag.setInteger("ResolutionX", resolution.x);
-            tag.setInteger("ResolutionY", resolution.y);
-            tag.setByte("Rotation", (byte) rotation.ordinal());
-            tag.setString("URL", url);
+        public CompoundTag serialize() {
+            CompoundTag tag = new CompoundTag();
+            tag.putByte("Side", (byte) side.ordinal());
+            tag.putInt("Width", size.x);
+            tag.putInt("Height", size.y);
+            tag.putInt("ResolutionX", resolution.x);
+            tag.putInt("ResolutionY", resolution.y);
+            tag.putByte("Rotation", (byte) rotation.ordinal());
+            tag.putString("URL", url);
 
             if(owner == null)
                 Log.warning("Found TES with NO OWNER!!");
             else {
-                tag.setString("OwnerName", owner.name);
-                tag.setUniqueId("OwnerUUID", owner.uuid);
+                tag.putString("OwnerName", owner.name);
+                tag.putUUID("OwnerUUID", owner.uuid);
             }
 
-            NBTTagList list = new NBTTagList();
+            ListTag list = new ListTag();
             for(NameUUIDPair f: friends) {
-                NBTTagCompound nf = new NBTTagCompound();
-                nf.setString("Name", f.name);
-                nf.setUniqueId("UUID", f.uuid);
+                CompoundTag nf = new CompoundTag();
+                nf.putString("Name", f.name);
+                nf.putUUID("UUID", f.uuid);
 
-                list.appendTag(nf);
+                list.add(nf);
             }
 
-            tag.setTag("Friends", list);
-            tag.setByte("FriendRights", (byte) friendRights);
-            tag.setByte("OtherRights", (byte) otherRights);
+            tag.put("Friends", list);
+            tag.putByte("FriendRights", (byte) friendRights);
+            tag.putByte("OtherRights", (byte) otherRights);
 
-            list = new NBTTagList();
+            list = new ListTag();
             for(ItemStack is: upgrades)
-                list.appendTag(is.writeToNBT(new NBTTagCompound()));
+                list.add(is.save(new CompoundTag()));
 
-            tag.setTag("Upgrades", list);
-            tag.setBoolean("AutoVolume", autoVolume);
+            tag.put("Upgrades", list);
+            tag.putBoolean("AutoVolume", autoVolume);
             return tag;
         }
 
-        public int rightsFor(EntityPlayer ply) {
+        public int rightsFor(Player ply) {
             return rightsFor(ply.getGameProfile().getId());
         }
 
@@ -162,8 +172,8 @@ public class TileEntityScreen extends BlockEntity {
             return friends.stream().anyMatch(f -> f.uuid.equals(uuid)) ? friendRights : otherRights;
         }
 
-        public void setupRedstoneStatus(World world, BlockPos start) {
-            if(world.isRemote) {
+        public void setupRedstoneStatus(Level world, BlockPos start) {
+            if(world.isClientSide()) {
                 Log.warning("Called Screen.setupRedstoneStatus() on client.");
                 return;
             }
@@ -173,15 +183,18 @@ public class TileEntityScreen extends BlockEntity {
                 return;
             }
 
+            Direction[] VALUES = Direction.values();
             redstoneStatus = new NibbleArray(size.x * size.y);
-            final EnumFacing facing = EnumFacing.VALUES[side.reverse().ordinal()];
+            final Direction facing = VALUES[side.reverse().ordinal()];
             final ScreenIterator it = new ScreenIterator(start, side, size);
 
             while(it.hasNext()) {
                 int idx = it.getIndex();
-                redstoneStatus.set(idx, world.getRedstonePower(it.next(), facing));
+                redstoneStatus.set(idx, world.getSignal(it.next(), facing));
             }
         }
+
+
 
         public void clampResolution() {
             if(resolution.x > WebDisplays.INSTANCE.maxResX) {
@@ -203,7 +216,7 @@ public class TileEntityScreen extends BlockEntity {
         Screen scr = getScreen(side);
 
         if(scr != null) {
-            ScreenIterator it = new ScreenIterator(pos, side, scr.size);
+            ScreenIterator it = new ScreenIterator(getBlockPos(), side, scr.size);
 
             while(it.hasNext())
                 func.accept(it.next());
@@ -211,7 +224,7 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     private final ArrayList<Screen> screens = new ArrayList<>();
-    private AxisAlignedBB renderBB = new AxisAlignedBB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    private net.minecraft.world.phys.AABB renderBB = new net.minecraft.world.phys.AABB(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
     private boolean loaded = true;
     public float ytVolume = Float.POSITIVE_INFINITY;
 
@@ -235,36 +248,33 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
 
-        NBTTagList list = tag.getTagList("WDScreens", 10);
-        if(list.hasNoTags())
+        ListTag list = tag.getList("WDScreens", 10);
+        if(list.isEmpty())
             return;
 
         screens.clear();
-        for(int i = 0; i < list.tagCount(); i++)
-            screens.add(Screen.deserialize(list.getCompoundTagAt(i)));
+        for(int i = 0; i < list.size(); i++)
+            screens.add(Screen.deserialize(list.getCompound(i)));
     }
 
     @Override
     @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        super.serializeNBT();
 
-        NBTTagList list = new NBTTagList();
+        ListTag list = new ListTag();
         for(Screen scr: screens)
-            list.appendTag(scr.serialize());
+            list.add(scr.serialize());
 
-        tag.setTag("WDScreens", list);
+        tag.put("WDScreens", list);
         return tag;
     }
 
-    private NetworkRegistry.TargetPoint point() {
-        return new NetworkRegistry.TargetPoint(world.provider.getDimension(), (double) pos.getX(), (double) pos.getY(), (double) pos.getZ(), 64.0);
-    }
-
-    public Screen addScreen(BlockSide side, Vector2i size, @Nullable Vector2i resolution, @Nullable EntityPlayer owner, boolean sendUpdate) {
+    public Screen addScreen(BlockSide side, Vector2i size, @Nullable Vector2i resolution, @Nullable Player owner, boolean sendUpdate) {
         for(Screen scr: screens) {
             if(scr.side == side)
                 return scr;
@@ -283,7 +293,7 @@ public class TileEntityScreen extends BlockEntity {
             ret.owner = new NameUUIDPair(owner.getGameProfile());
 
             if(side == BlockSide.TOP || side == BlockSide.BOTTOM) {
-                int rot = MathHelper.floor(((double) (owner.rotationYaw * 4.0f / 360.0f)) + 2.5) & 3;
+                int rot = (int) Math.floor(((double) (owner.getYRot() * 4.0f / 360.0f)) + 2.5) & 3;
 
                 if(side == BlockSide.TOP) {
                     if(rot == 1)
@@ -308,16 +318,16 @@ public class TileEntityScreen extends BlockEntity {
 
         ret.clampResolution();
 
-        if(!world.isRemote) {
-            ret.setupRedstoneStatus(world, pos);
+        if(!level.isClientSide) {
+            ret.setupRedstoneStatus(level, getBlockPos());
 
             if(sendUpdate)
-                WebDisplays.NET_HANDLER.sendToAllAround(new CMessageAddScreen(this, ret), point());
+                Messages.INSTANCE.sendTo(new CMessageAddScreen(this, ret), point());
         }
 
         screens.add(ret);
 
-        if(world.isRemote)
+        if(level.isClientSide)
             updateAABB();
         else
             markDirty();
@@ -345,13 +355,13 @@ public class TileEntityScreen extends BlockEntity {
     public void clear() {
         screens.clear();
 
-        if(!world.isRemote)
+        if(!level.isClientSide)
             markDirty();
     }
 
-    public void requestData(EntityPlayerMP ep) {
-        if(!world.isRemote)
-            WebDisplays.NET_HANDLER.sendTo(new CMessageAddScreen(this), ep);
+    public void requestData(ServerPlayer ep) {
+        if(!level.isClientSide)
+            Messages.INSTANCE.sendTo(new CMessageAddScreen(this), ep);
     }
 
     public void setScreenURL(BlockSide side, String url) {
@@ -365,11 +375,11 @@ public class TileEntityScreen extends BlockEntity {
         scr.url = url;
         scr.videoType = VideoType.getTypeFromURL(url);
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             if(scr.browser != null)
                 scr.browser.loadURL(url);
         } else {
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.setURL(this, side, url), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.setURL(this, side, url), point());
             markDirty();
         }
     }
@@ -388,19 +398,19 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             if(screens.get(idx).browser != null) {
                 screens.get(idx).browser.close();
                 screens.get(idx).browser = null;
             }
         } else
-            WebDisplays.NET_HANDLER.sendToAllAround(new CMessageScreenUpdate(this, side), point()); //Delete the screen
+            Messages.INSTANCE(new CMessageScreenUpdate(this, side), point()); //Delete the screen
 
         screens.remove(idx);
 
-        if(!world.isRemote) {
+        if(!level.isClientSide) {
             if(screens.isEmpty()) //No more screens: remove tile entity
-                world.setBlockState(pos, WebDisplays.INSTANCE.blockScreen.getDefaultState().withProperty(BlockScreen.hasTE, false));
+                level.setBlock(getBlockPos(), WebDisplays.INSTANCE.blockScreen.getDefaultInstance().withProperty(BlockScreen.hasTE, false));
             else
                 markDirty();
         }
@@ -421,22 +431,22 @@ public class TileEntityScreen extends BlockEntity {
         scr.resolution = res;
         scr.clampResolution();
 
-        if(world.isRemote) {
-            WebDisplays.PROXY.screenUpdateResolutionInGui(new Vector3i(pos), side, res);
+        if(level.isClientSide) {
+            WebDisplays.PROXY.screenUpdateResolutionInGui(new Vector3i(getBlockPos()), side, res);
 
             if(scr.browser != null) {
                 scr.browser.close();
                 scr.browser = null; //Will be re-created by renderer
             }
         } else {
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.setResolution(this, side, res), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.setResolution(this, side, res), point());
             markDirty();
         }
     }
 
-    private static EntityPlayer getLaserUser(Screen scr) {
+    private static Player getLaserUser(Screen scr) {
         if(scr.laserUser != null) {
-            if(scr.laserUser.isDead || scr.laserUser.getHeldItem(EnumHand.MAIN_HAND).getItem() != WebDisplays.INSTANCE.itemLaserPointer)
+            if(scr.laserUser.isRemoved() || scr.laserUser.getItemInHand(InteractionHand.MAIN_HAND).getItem() != WebDisplays.INSTANCE.itemLaserPointer)
                 scr.laserUser = null;
         }
 
@@ -462,16 +472,16 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote)
+        if(level.isClientSide)
             Log.warning("TileEntityScreen.click() from client side is useless...");
         else if(getLaserUser(scr) == null)
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_CLICK, vec), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_CLICK, vec), point());
     }
 
     void clickUnsafe(BlockSide side, int action, int x, int y) {
-        if(world.isRemote) {
+        if(level.isClientSide) {
             Vector2i vec = (action == CMessageScreenUpdate.MOUSE_UP) ? null : new Vector2i(x, y);
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.click(this, side, action, vec), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, action, vec), point());
         }
     }
 
@@ -509,14 +519,14 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             if(scr.browser != null)
                 scr.browser.runJS("if(typeof webdisplaysRedstoneCallback == \"function\") webdisplaysRedstoneCallback(" + vec.x + ", " + vec.y + ", " + redstoneLevel + ");", "");
         } else {
             boolean sendMsg = false;
 
             if(scr.redstoneStatus == null) {
-                scr.setupRedstoneStatus(world, pos);
+                scr.setupRedstoneStatus(level, getBlockPos());
                 sendMsg = true;
             } else {
                 int idx = vec.y * scr.size.x + vec.x;
@@ -528,12 +538,12 @@ public class TileEntityScreen extends BlockEntity {
             }
 
             if(sendMsg)
-                WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel), point());
+               Messages.INSTANCE.sendTo(CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel), point());
         }
     }
 
-    public void handleJSRequest(EntityPlayerMP src, BlockSide side, int reqId, JSServerRequest req, Object[] data) {
-        if(world.isRemote) {
+    public void handleJSRequest(ServerPlayer src, BlockSide side, int reqId, JSServerRequest req, Object[] data) {
+        if(level.isClientSide) {
             Log.error("Called handleJSRequest client-side");
             return;
         }
@@ -541,24 +551,24 @@ public class TileEntityScreen extends BlockEntity {
         Screen scr = getScreen(side);
         if(scr == null) {
             Log.error("Called handleJSRequest on non-existing side %s", side.toString());
-            WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, 403, "Invalid side"), src);
+            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Invalid side"), src);
             return;
         }
 
         if(!scr.owner.uuid.equals(src.getGameProfile().getId())) {
             Log.warning("Player %s (UUID %s) tries to use the redstone output API on a screen he doesn't own!", src.getName(), src.getGameProfile().getId().toString());
-            WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, 403, "Only the owner can do that"), src);
+            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Only the owner can do that"), src);
             return;
         }
 
         if(scr.upgrades.stream().noneMatch(DefaultUpgrade.REDSTONE_OUTPUT::matches)) {
-            WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, 403, "Missing upgrade"), src);
+            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Missing upgrade"), src);
             return;
         }
 
         if(req == JSServerRequest.CLEAR_REDSTONE) {
             final BlockPos.MutableBlockPos mbp = new BlockPos.MutableBlockPos();
-            final Vector3i vec1 = new Vector3i(pos);
+            final Vector3i vec1 = new Vector3i(getBlockPos());
             final Vector3i vec2 = new Vector3i();
 
             for(int y = 0; y < scr.size.y; y++) {
@@ -567,9 +577,9 @@ public class TileEntityScreen extends BlockEntity {
                 for(int x = 0; x < scr.size.x; x++) {
                     vec2.toBlock(mbp);
 
-                    IBlockState bs = world.getBlockState(mbp);
+                    BlockState bs = level.getBlockState(mbp);
                     if(bs.getValue(BlockScreen.emitting))
-                        world.setBlockState(mbp, bs.withProperty(BlockScreen.emitting, false));
+                        level.setBlock(mbp, bs.setValue(BlockScreen.emitting, false), Block.UPDATE_ALL_IMMEDIATE);
 
                     vec2.add(side.right.x, side.right.y, side.right.z);
                 }
@@ -577,38 +587,38 @@ public class TileEntityScreen extends BlockEntity {
                 vec1.add(side.up.x, side.up.y, side.up.z);
             }
 
-            WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
+            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
         } else if(req == JSServerRequest.SET_REDSTONE_AT) {
             int x = (Integer) data[0];
             int y = (Integer) data[1];
             boolean state = (Boolean) data[2];
 
             if(x < 0 || x >= scr.size.x || y < 0 || y >= scr.size.y)
-                WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, 403, "Out of range"), src);
+                Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Out of range"), src);
             else {
-                BlockPos bp = (new Vector3i(pos)).addMul(side.right, x).addMul(side.up, y).toBlock();
-                IBlockState bs = world.getBlockState(bp);
+                BlockPos bp = (new Vector3i(getBlockPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
+                BlockState bs = level.getBlockState(bp);
 
-                if(bs.getValue(BlockScreen.emitting) != state)
-                    world.setBlockState(bp, bs.withProperty(BlockScreen.emitting, state));
+                if(!bs.getValue(BlockScreen.emitting).equals(state))
+                    level.setBlock(bp, bs.setValue(BlockScreen.emitting, state));
 
-                WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
+                Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
             }
         } else
-            WebDisplays.NET_HANDLER.sendTo(new CMessageJSResponse(reqId, req, 400, "Invalid request"), src);
+            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 400, "Invalid request"), src);
     }
 
     @Override
     public void onLoad() {
-        if(world.isRemote) {
-            WebDisplays.NET_HANDLER.sendToServer(new SMessageRequestTEData(this));
+        if(level.isClientSide) {
+            Messages.INSTANCE.sendToServer(new SMessageRequestTEData(this));
             WebDisplays.PROXY.trackScreen(this, true);
         }
     }
 
     @Override
-    public void onChunkUnload() {
-        if(world.isRemote) {
+    public void onChunkUnloaded() {
+        if(level.isClientSide) {
             WebDisplays.PROXY.trackScreen(this, false);
 
             for(Screen scr: screens) {
@@ -621,7 +631,7 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     private void updateAABB() {
-        Vector3i origin = new Vector3i(pos);
+        Vector3i origin = new Vector3i(getBlockPos());
         Vector3i tmp = new Vector3i();
         AABB aabb = new AABB(origin);
 
@@ -634,12 +644,12 @@ public class TileEntityScreen extends BlockEntity {
             aabb.expand(tmp);
         }
 
-        renderBB = aabb.toMc().expand(0.1, 0.1, 0.1);
+        renderBB = aabb.toMc().expandTowards(0.1, 0.1, 0.1);
     }
 
     @Override
     @Nonnull
-    public AxisAlignedBB getRenderBoundingBox() {
+    public net.minecraft.world.phys.AABB getRenderBoundingBox() {
         return renderBB;
     }
 
@@ -694,15 +704,15 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     @Override
-    public void invalidate() {
-        super.invalidate();
+    public void invalidateCaps() {
+        super.invalidateCaps();
 
-        if(world.isRemote)
-            onChunkUnload();
+        if(level.isClientSide)
+            onChunkUnloaded();
     }
 
-    public void addFriend(EntityPlayerMP ply, BlockSide side, NameUUIDPair pair) {
-        if(!world.isRemote) {
+    public void addFriend(ServerPlayer ply, BlockSide side, NameUUIDPair pair) {
+        if(!level.isClientSide) {
             Screen scr = getScreen(side);
             if(scr == null) {
                 Log.error("Tried to add friend to invalid screen side %s", side.toString());
@@ -711,14 +721,14 @@ public class TileEntityScreen extends BlockEntity {
 
             if(!scr.friends.contains(pair)) {
                 scr.friends.add(pair);
-                (new ScreenConfigData(new Vector3i(pos), side, scr)).updateOnly().sendTo(point());
+                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
                 markDirty();
             }
         }
     }
 
-    public void removeFriend(EntityPlayerMP ply, BlockSide side, NameUUIDPair pair) {
-        if(!world.isRemote) {
+    public void removeFriend(ServerPlayer ply, BlockSide side, NameUUIDPair pair) {
+        if(!level.isClientSide) {
             Screen scr = getScreen(side);
             if(scr == null) {
                 Log.error("Tried to remove friend from invalid screen side %s", side.toString());
@@ -727,14 +737,14 @@ public class TileEntityScreen extends BlockEntity {
 
             if(scr.friends.remove(pair)) {
                 checkLaserUserRights(scr);
-                (new ScreenConfigData(new Vector3i(pos), side, scr)).updateOnly().sendTo(point());
+                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
                 markDirty();
             }
         }
     }
 
-    public void setRights(EntityPlayerMP ply, BlockSide side, int fr, int or) {
-        if(!world.isRemote) {
+    public void setRights(ServerPlayer ply, BlockSide side, int fr, int or) {
+        if(!level.isClientSide) {
             Screen scr = getScreen(side);
             if(scr == null) {
                 Log.error("Tried to change rights of invalid screen on side %s", side.toString());
@@ -745,7 +755,7 @@ public class TileEntityScreen extends BlockEntity {
             scr.otherRights = or;
 
             checkLaserUserRights(scr);
-            (new ScreenConfigData(new Vector3i(pos), side, scr)).updateOnly().sendTo(point());
+            (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
             markDirty();
         }
     }
@@ -757,7 +767,7 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             if(scr.browser != null) {
                 try {
                     if(text.startsWith("t")) {
@@ -795,7 +805,7 @@ public class TileEntityScreen extends BlockEntity {
                 }
             }
         } else {
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.type(this, side, text), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.type(this, side, text), point());
 
             if(soundPos != null)
                 playSoundAt(WebDisplays.INSTANCE.soundTyping, soundPos, 0.25f, 1.f);
@@ -803,11 +813,11 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     private void playSoundAt(SoundEvent snd, BlockPos at, float vol, float pitch) {
-        double x = (double) at.getX();
-        double y = (double) at.getY();
-        double z = (double) at.getZ();
+        double x = at.getX();
+        double y = at.getY();
+        double z = at.getZ();
 
-        world.playSound(null, x + 0.5, y + 0.5, z + 0.5, snd, SoundCategory.BLOCKS, vol, pitch);
+        level.playSound(null, x + 0.5, y + 0.5, z + 0.5, snd, SoundSource.BLOCKS, vol, pitch);
     }
 
     public void updateUpgrades(BlockSide side, ItemStack[] upgrades) {
@@ -835,8 +845,8 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     //If equal is null, no duplicate check is preformed
-    public boolean addUpgrade(BlockSide side, ItemStack is, @Nullable EntityPlayer player, boolean abortIfExisting) {
-        if(world.isRemote)
+    public boolean addUpgrade(BlockSide side, ItemStack is, @Nullable Player player, boolean abortIfExisting) {
+        if(level.isClientSide)
             return false;
 
         Screen scr = getScreen(side);
@@ -863,9 +873,9 @@ public class TileEntityScreen extends BlockEntity {
         isCopy.setCount(1);
 
         scr.upgrades.add(isCopy);
-        WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.upgrade(this, side), point());
+        Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
         itemAsUpgrade.onInstall(this, side, player, isCopy);
-        playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, pos, 1.0f, 1.0f);
+        playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
         markDirty();
         return true;
     }
@@ -887,8 +897,8 @@ public class TileEntityScreen extends BlockEntity {
         return scr != null && scr.upgrades.stream().anyMatch(du::matches);
     }
 
-    public void removeUpgrade(BlockSide side, ItemStack is, @Nullable EntityPlayer player) {
-        if(world.isRemote)
+    public void removeUpgrade(BlockSide side, ItemStack is, @Nullable Player player) {
+        if(level.isClientSide)
             return;
 
         Screen scr = getScreen(side);
@@ -915,33 +925,35 @@ public class TileEntityScreen extends BlockEntity {
         if(idxToRemove >= 0) {
             dropUpgrade(scr.upgrades.get(idxToRemove), side, player);
             scr.upgrades.remove(idxToRemove);
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.upgrade(this, side), point());
-            playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, pos, 1.0f, 1.0f);
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
+            playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
             markDirty();
         } else
             Log.warning("Tried to remove non-existing upgrade %s to screen %s at %s", safeName(is), side.toString(), pos.toString());
     }
 
-    private void dropUpgrade(ItemStack is, BlockSide side, @Nullable EntityPlayer ply) {
+    private void dropUpgrade(ItemStack is, BlockSide side, @Nullable Player ply) {
         if(!((IUpgrade) is.getItem()).onRemove(this, side, ply, is)) { //Drop upgrade item
             boolean spawnDrop = true;
 
             if(ply != null) {
-                if(ply.isCreative() || ply.addItemStackToInventory(is))
+                if(ply.isCreative() || ply.addItem(is))
                     spawnDrop = false; //If in creative or if the item was added to the player's inventory, don't spawn drop entity
             }
 
             if(spawnDrop) {
-                Vector3f pos = new Vector3f((float) this.pos.getX(), (float) this.pos.getY(), (float) this.pos.getZ());
+                Vector3f pos = new Vector3f((float) this.getBlockPos().getX(), (float) this.getBlockPos().getY(), (float) this.getBlockPos().getZ());
                 pos.addMul(side.backward.toFloat(), 1.5f);
 
-                world.spawnEntity(new EntityItem(world, (double) pos.x, (double) pos.y, (double) pos.z, is));
+                if(level != null) {
+                    level.addFreshEntity(new ItemEntity(level, pos.x, pos.y, pos.z, is));
+                }
             }
         }
     }
 
-    private Screen getScreenForLaserOp(BlockSide side, EntityPlayer ply) {
-        if(world.isRemote)
+    private Screen getScreenForLaserOp(BlockSide side, Player ply) {
+        if(level.isClientSide)
             return null;
 
         Screen scr = getScreen(side);
@@ -961,7 +973,7 @@ public class TileEntityScreen extends BlockEntity {
         return scr; //Okay, go for it...
     }
 
-    public void laserDownMove(BlockSide side, EntityPlayer ply, Vector2i pos, boolean down) {
+    public void laserDownMove(BlockSide side, Player ply, Vector2i pos, boolean down) {
         Screen scr = getScreenForLaserOp(side, ply);
 
         if(scr != null) {
@@ -969,35 +981,35 @@ public class TileEntityScreen extends BlockEntity {
                 //Try to acquire laser lock
                 if(getLaserUser(scr) == null) {
                     scr.laserUser = ply;
-                    WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_DOWN, pos), point());
+                    Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_DOWN, pos), point());
                 }
             } else if(getLaserUser(scr) == ply)
-                WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_MOVE, pos), point());
+                Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_MOVE, pos), point());
         }
     }
 
-    public void laserUp(BlockSide side, EntityPlayer ply) {
+    public void laserUp(BlockSide side, Player ply) {
         Screen scr = getScreenForLaserOp(side, ply);
 
         if(scr != null) {
             if(getLaserUser(scr) == ply) {
                 scr.laserUser = null;
-                WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_UP, null), point());
+                Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_UP, null), point());
             }
         }
     }
 
-    public void onDestroy(@Nullable EntityPlayer ply) {
+    public void onDestroy(@Nullable Player ply) {
         for(Screen scr: screens) {
             scr.upgrades.forEach(is -> dropUpgrade(is, scr.side, ply));
             scr.upgrades.clear();
         }
 
-        WebDisplays.NET_HANDLER.sendToAllAround(new CMessageCloseGui(pos), point());
+        Messages.INSTANCE.sendTo(new CMessageCloseGui(getBlockPos()), point());
     }
 
-    public void setOwner(BlockSide side, EntityPlayer newOwner) {
-        if(world.isRemote) {
+    public void setOwner(BlockSide side, Player newOwner) {
+        if(level.isClientSide) {
             Log.error("Called TileEntityScreen.setOwner() on client...");
             return;
         }
@@ -1014,7 +1026,7 @@ public class TileEntityScreen extends BlockEntity {
         }
 
         scr.owner = new NameUUIDPair(newOwner.getGameProfile());
-        WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.owner(this, side, scr.owner), point());
+        Messages.INSTANCE.sendTo(CMessageScreenUpdate.owner(this, side, scr.owner), point());
         checkLaserUserRights(scr);
         markDirty();
     }
@@ -1026,11 +1038,11 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             boolean oldWasVertical = scr.rotation.isVertical;
             scr.rotation = rot;
 
-            WebDisplays.PROXY.screenUpdateRotationInGui(new Vector3i(pos), side, rot);
+            WebDisplays.PROXY.screenUpdateRotationInGui(new Vector3i(getBlockPos()), side, rot);
 
             if(scr.browser != null && oldWasVertical != rot.isVertical) {
                 scr.browser.close();
@@ -1038,7 +1050,7 @@ public class TileEntityScreen extends BlockEntity {
             }
         } else {
             scr.rotation = rot;
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.rotation(this, side, rot), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.rotation(this, side, rot), point());
             markDirty();
         }
     }
@@ -1050,11 +1062,11 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if(world.isRemote) {
+        if(level.isClientSide) {
             if(scr.browser != null)
                 scr.browser.runJS(code, "");
         } else
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.js(this, side, code), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.js(this, side, code), point());
     }
 
     public void setAutoVolume(BlockSide side, boolean av) {
@@ -1066,16 +1078,17 @@ public class TileEntityScreen extends BlockEntity {
 
         scr.autoVolume = av;
 
-        if(world.isRemote)
-            WebDisplays.PROXY.screenUpdateAutoVolumeInGui(new Vector3i(pos), side, av);
+        if(level.isClientSide)
+            WebDisplays.PROXY.screenUpdateAutoVolumeInGui(new Vector3i(getBlockPos()), side, av);
         else {
-            WebDisplays.NET_HANDLER.sendToAllAround(CMessageScreenUpdate.autoVolume(this, side, av), point());
+            Messages.INSTANCE.sendTo(CMessageScreenUpdate.autoVolume(this, side, av), point());
             markDirty();
         }
     }
 
+
     @Override
-    public boolean shouldRefresh(World world, BlockPos pos, @Nonnull IBlockState oldState, @Nonnull IBlockState newState) {
+    public boolean shouldRefresh(Level world, BlockPos pos, @Nonnull BlockState oldState, @Nonnull BlockState newState) {
         if(oldState.getBlock() != WebDisplays.INSTANCE.blockScreen || newState.getBlock() != WebDisplays.INSTANCE.blockScreen)
             return true;
 

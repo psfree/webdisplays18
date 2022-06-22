@@ -4,7 +4,7 @@
 
 package net.montoyo.wd.client.renderers;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.ItemStack;
 
 public interface IItemRenderer {
 

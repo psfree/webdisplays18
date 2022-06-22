@@ -5,26 +5,21 @@
 package net.montoyo.wd.client.renderers;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.renderer.OpenGlHelper;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.entity.RenderPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.MathHelper;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL12.GL_RESCALE_NORMAL;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public final class MinePadRenderer implements IItemRenderer {
 
     private static final float PI = (float) Math.PI;
-    private final Minecraft mc = Minecraft.getMinecraft();
+    private final Minecraft mc = Minecraft.getInstance();
     private final ResourceLocation tex = new ResourceLocation("webdisplays", "textures/models/minepad.png");
     private final ModelMinePad model = new ModelMinePad();
     private final ClientProxy clientProxy = (ClientProxy) WebDisplays.PROXY;
@@ -50,11 +45,11 @@ public final class MinePadRenderer implements IItemRenderer {
     @Override
     public final void render(ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
         //Pre-compute values
-        float sqrtSwingProg = (float) Math.sqrt((double) swingProgress);
-        sinSqrtSwingProg1 = MathHelper.sin(sqrtSwingProg * PI);
-        sinSqrtSwingProg2 = MathHelper.sin(sqrtSwingProg * PI * 2.0f);
-        sinSwingProg1 = MathHelper.sin(swingProgress * PI);
-        sinSwingProg2 = MathHelper.sin(swingProgress * swingProgress * PI);
+        float sqrtSwingProg = (float) Math.sqrt(swingProgress);
+        sinSqrtSwingProg1 = (float) Math.sin(sqrtSwingProg * PI);
+        sinSqrtSwingProg2 = (float) Math.sin(sqrtSwingProg * PI * 2.0f);
+        sinSwingProg1 = (float) Math.sin(swingProgress * PI);
+        sinSwingProg2 = (float) Math.sin(swingProgress * swingProgress * PI);
 
         glDisable(GL_CULL_FACE);
         glEnable(GL_RESCALE_NORMAL);
@@ -86,20 +81,17 @@ public final class MinePadRenderer implements IItemRenderer {
         glPushMatrix();
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        mc.renderEngine.bindTexture(tex);
+//TODO        mc.renderEngine.bindTexture(tex);
         model.render(1.f / 16.f);
         glPopMatrix();
 
         //Render web view
-        if(is.getTagCompound() != null && is.getTagCompound().hasKey("PadID")) {
-            ClientProxy.PadData pd = clientProxy.getPadByID(is.getTagCompound().getInteger("PadID"));
+        if(is.getTag() != null && is.getTag().contains("PadID")) {
+            ClientProxy.PadData pd = clientProxy.getPadByID(is.getTag().getInt("PadID"));
 
             if(pd != null) {
                 glTranslatef(0.063f, 0.28f, 0.001f);
-                RenderHelper.disableStandardItemLighting();
-                OpenGlHelper.setActiveTexture(OpenGlHelper.lightmapTexUnit);
                 glDisable(GL_TEXTURE_2D);
-                OpenGlHelper.setActiveTexture(OpenGlHelper.defaultTexUnit);
                 pd.view.draw(0.0, 0.0, 27.65 / 32.0 + 0.01, 14.0 / 32.0 + 0.002);
             }
         }
@@ -124,13 +116,13 @@ public final class MinePadRenderer implements IItemRenderer {
         glRotatef(handSideSign * -135.0f, 0.0f, 1.0f, 0.0f);
         glTranslatef(handSideSign * 5.6f, 0.0f, 0.0f);
 
-        RenderPlayer playerRenderer = (RenderPlayer) mc.getRenderManager().<AbstractClientPlayer>getEntityRenderObject(mc.player);
+        /*RenderPlayer playerRenderer = (RenderPlayer) mc.getRenderManager().<AbstractClientPlayer>getEntityRenderObject(mc.player);
         mc.getTextureManager().bindTexture(mc.player.getLocationSkin());
 
         if(handSideSign >= 0.0f)
             playerRenderer.renderRightArm(mc.player);
         else
-            playerRenderer.renderLeftArm(mc.player);
+            playerRenderer.renderLeftArm(mc.player);*/
     }
 
 }

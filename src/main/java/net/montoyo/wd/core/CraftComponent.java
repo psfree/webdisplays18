@@ -6,6 +6,8 @@ package net.montoyo.wd.core;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
@@ -34,8 +36,8 @@ public enum CraftComponent {
         return name;
     }
 
-    public ItemStack makeItemStack(CompoundTag compoundTag) {
-        return new ItemStack(WebDisplays.INSTANCE.itemCraftComp, 1, compoundTag);
+    public ItemStack makeItemStack() {
+        return new ItemStack(WebDisplays.INSTANCE.itemCraftComp, 1);
     }
 
 }

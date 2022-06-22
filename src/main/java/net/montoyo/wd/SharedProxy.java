@@ -6,8 +6,11 @@ package net.montoyo.wd;
 
 import com.mojang.authlib.GameProfile;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.core.HasAdvancement;
@@ -20,10 +23,7 @@ import javax.annotation.Nonnull;
 
 import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 
-public class SharedProxy {
-
-    public static final int CURRENT_DIMENSION = Integer.MAX_VALUE;
-
+public abstract class SharedProxy {
     public void preInit() {
     }
 
@@ -33,11 +33,8 @@ public class SharedProxy {
     public void postInit() {
     }
 
-    public World getWorld(int dim) {
-        if(dim == CURRENT_DIMENSION)
-            throw new RuntimeException("Current dimension not available server side...");
-
-        return DimensionManager.getWorld(dim);
+    public Level getWorld(ResourceKey<Level> dim) {
+        return getServer().getLevel(dim);
     }
 
     public void enqueue(Runnable r) {
@@ -54,9 +51,7 @@ public class SharedProxy {
     public void onAutocompleteResult(NameUUIDPair pairs[]) {
     }
 
-    public GameProfile[] getOnlineGameProfiles() {
-        return FMLServerHandler.instance().getServer().getOnlinePlayerProfiles();
-    }
+    public abstract GameProfile[] getOnlineGameProfiles();
 
     public void screenUpdateResolutionInGui(Vector3i pos, BlockSide side, Vector2i res) {
     }
@@ -89,7 +84,7 @@ public class SharedProxy {
     }
 
     public MinecraftServer getServer() {
-        return ServerLifecycleHooks.getCurrentServer();CLIENT
+        return ServerLifecycleHooks.getCurrentServer();
     }
 
     public void setMiniservClientPort(int port) {

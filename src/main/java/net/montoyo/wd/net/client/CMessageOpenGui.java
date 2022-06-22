@@ -4,31 +4,22 @@
 
 package net.montoyo.wd.net.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.network.FriendlyByteBuf;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.data.GuiData;
-import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.Util;
 
-@Message(messageId = 3, side = Side.CLIENT)
-public class CMessageOpenGui implements IMessage, Runnable {
+public class CMessageOpenGui {
 
     private GuiData data;
-
-    public CMessageOpenGui() {
-    }
 
     public CMessageOpenGui(GuiData data) {
         this.data = data;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        String name = ByteBufUtils.readUTF8String(buf);
+    public void decode(FriendlyByteBuf buf) {
+        String name = buf.readUtf();
         Class<? extends GuiData> cls = GuiData.classOf(name);
 
         if(cls == null) {
@@ -40,7 +31,7 @@ public class CMessageOpenGui implements IMessage, Runnable {
     }
 
     @Override
-    public void toBytes(ByteBuf buf) {
+    public CMessageOpenGui encode(FriendlyByteBuf buf) {
         ByteBufUtils.writeUTF8String(buf, data.getName());
         Util.serialize(buf, data);
     }

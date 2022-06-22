@@ -4,45 +4,42 @@
 
 package net.montoyo.wd.net.client;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
-import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.NameUUIDPair;
 
-@Message(messageId = 6, side = Side.CLIENT)
-public class CMessageACResult implements IMessage, Runnable {
+import java.util.function.Supplier;
 
-    private NameUUIDPair[] result;
+public class CMessageACResult {
 
-    public CMessageACResult() {
-    }
+    private static NameUUIDPair[] result;
 
     public CMessageACResult(NameUUIDPair[] pairs) {
         result = pairs;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
+    public static CMessageACResult decode(FriendlyByteBuf buf) {
         int cnt = buf.readByte();
         result = new NameUUIDPair[cnt];
 
         for(int i = 0; i < cnt; i++)
             result[i] = new NameUUIDPair(buf);
+
+        return new CMessageACResult(result);
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeByte(result.length);
 
         for(NameUUIDPair pair : result)
             pair.writeTo(buf);
     }
 
-    @Override
-    public void run() {
-        WebDisplays.PROXY.onAutocompleteResult(result);
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        contextSupplier.get().enqueueWork(() -> {
+            WebDisplays.PROXY.onAutocompleteResult(result);
+        });
     }
 
 }
