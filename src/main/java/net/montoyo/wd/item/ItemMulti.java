@@ -24,5 +24,4 @@ public class ItemMulti extends Item {
     public Enum[] getEnumValues() {
         return values;
     }
-
 }

@@ -4,9 +4,12 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.EnumHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.SetURLData;
 import net.montoyo.wd.utilities.BlockSide;
@@ -14,9 +17,13 @@ import net.montoyo.wd.utilities.Util;
 
 public class TileEntityRCtrl extends TileEntityPeripheralBase {
 
+    public TileEntityRCtrl(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
+
     @Override
-    public boolean onRightClick(EntityPlayer player, EnumHand hand, BlockSide side) {
-        if(world.isRemote)
+    public boolean onRightClick(Player player, InteractionHand hand, BlockSide side) {
+        if(level.isClientSide)
             return true;
 
         if(!isScreenChunkLoaded()) {
@@ -36,7 +43,7 @@ public class TileEntityRCtrl extends TileEntityPeripheralBase {
             return true;
         }
 
-        (new SetURLData(screenPos, screenSide, scr.url, pos)).sendTo((EntityPlayerMP) player);
+        (new SetURLData(screenPos, screenSide, scr.url, getBlockPos())).sendTo((ServerPlayer) player);
         return true;
     }
 

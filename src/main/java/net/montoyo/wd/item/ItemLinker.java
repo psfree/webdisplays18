@@ -4,23 +4,15 @@
 
 package net.montoyo.wd.item;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.ChatFormatting;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.core.IPeripheral;
@@ -33,125 +25,100 @@ import net.montoyo.wd.utilities.Vector3i;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
 public class ItemLinker extends Item implements WDItem {
 
-    public ItemLinker() {
-        setUnlocalizedName("webdisplays.linker");
-        setRegistryName("linker");
-        setMaxStackSize(1);
-        setCreativeTab(WebDisplays.CREATIVE_TAB);
+    public ItemLinker(Properties properties) {
+        super(properties
+        //setRegistryName("linker");
+            .stacksTo(1)
+            .tab(WebDisplays.CREATIVE_TAB));
     }
 
     @Override
-    @Nonnull
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos_, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(world.isRemote)
-            return EnumActionResult.SUCCESS;
+    public InteractionResult useOn(UseOnContext context) {
+        if(context.getLevel().isClientSide())
+            return InteractionResult.SUCCESS;
 
-        ItemStack stack = player.getHeldItem(hand);
-        NBTTagCompound tag = stack.getTagCompound();
+        ItemStack stack = context.getPlayer().getItemInHand(context.getHand());
+        CompoundTag tag = stack.getTag();
 
         if(tag != null) {
-            if(tag.hasKey("ScreenX") && tag.hasKey("ScreenY") && tag.hasKey("ScreenZ") && tag.hasKey("ScreenSide")) {
-                IBlockState state = world.getBlockState(pos_);
+            if(tag.contains("ScreenX") && tag.contains("ScreenY") && tag.contains("ScreenZ") && tag.contains("ScreenSide")) {
+                BlockState state = context.getLevel().getBlockState(context.getClickedPos());
                 IPeripheral target;
 
                 if(state.getBlock() instanceof IPeripheral)
                     target = (IPeripheral) state.getBlock();
                 else {
-                    TileEntity te = world.getTileEntity(pos_);
+                    BlockEntity te = context.getLevel().getBlockEntity(context.getClickedPos());
                     if(te == null || !(te instanceof IPeripheral)) {
-                        if(player.isSneaking()) {
-                            Util.toast(player, TextFormatting.GOLD, "linkAbort");
-                            stack.setTagCompound(null);
+                        if(context.getPlayer().isShiftKeyDown()) {
+                            Util.toast(context.getPlayer(), ChatFormatting.GOLD, "linkAbort");
+                            stack.setTag(null);
                         } else
-                            Util.toast(player, "peripheral");
+                            Util.toast(context.getPlayer(), "peripheral");
 
-                        return EnumActionResult.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
 
                     target = (IPeripheral) te;
                 }
 
-                Vector3i tePos = new Vector3i(tag.getInteger("ScreenX"), tag.getInteger("ScreenY"), tag.getInteger("ScreenZ"));
+                Vector3i tePos = new Vector3i(tag.getInt("ScreenX"), tag.getInt("ScreenY"), tag.getInt("ScreenZ"));
                 BlockSide scrSide = BlockSide.values()[tag.getByte("ScreenSide")];
 
-                if(target.connect(world, pos_, state, tePos, scrSide)) {
-                    Util.toast(player, TextFormatting.AQUA, "linked");
+                if(target.connect(context.getLevel(), context.getClickedPos(), state, tePos, scrSide)) {
+                    Util.toast(context.getPlayer(), ChatFormatting.AQUA, "linked");
 
-                    if(player instanceof EntityPlayerMP)
-                        WebDisplays.INSTANCE.criterionLinkPeripheral.trigger(((EntityPlayerMP) player).getAdvancements());
+                    if(context.getPlayer() instanceof ServerPlayer)
+                        WebDisplays.INSTANCE.criterionLinkPeripheral.trigger(((ServerPlayer) context.getPlayer()).getAdvancements());
                 } else
-                    Util.toast(player, "linkError");
+                    Util.toast(context.getPlayer(), "linkError");
 
-                stack.setTagCompound(null);
-                return EnumActionResult.SUCCESS;
+                stack.setTag(null);
+                return InteractionResult.SUCCESS;
             }
         }
 
-        if(!(world.getBlockState(pos_).getBlock() instanceof BlockScreen)) {
-            Util.toast(player, "notAScreen");
-            return EnumActionResult.SUCCESS;
+        if(!(context.getLevel().getBlockState(context.getClickedPos()).getBlock() instanceof BlockScreen)) {
+            Util.toast(context.getPlayer(), "notAScreen");
+            return InteractionResult.SUCCESS;
         }
 
-        Vector3i pos = new Vector3i(pos_);
-        BlockSide side = BlockSide.values()[facing.ordinal()];
-        Multiblock.findOrigin(world, pos, side, null);
+        Vector3i pos = new Vector3i(context.getClickedPos());
+        BlockSide side = BlockSide.values()[context.getHorizontalDirection().ordinal()];
+        Multiblock.findOrigin(context.getLevel(), pos, side, null);
 
-        TileEntity te = world.getTileEntity(pos.toBlock());
+        BlockEntity te = context.getLevel().getBlockEntity(pos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen)) {
-            Util.toast(player, "turnOn");
-            return EnumActionResult.SUCCESS;
+            Util.toast(context.getPlayer(), "turnOn");
+            return InteractionResult.SUCCESS;
         }
 
         TileEntityScreen.Screen scr = ((TileEntityScreen) te).getScreen(side);
         if(scr == null)
-            Util.toast(player, "turnOn");
-        else if((scr.rightsFor(player) & ScreenRights.MANAGE_UPGRADES) == 0)
-            Util.toast(player, "restrictions");
+            Util.toast(context.getPlayer(), "turnOn");
+        else if((scr.rightsFor(context.getPlayer()) & ScreenRights.MANAGE_UPGRADES) == 0)
+            Util.toast(context.getPlayer(), "restrictions");
         else {
-            tag = new NBTTagCompound();
-            tag.setInteger("ScreenX", pos.x);
-            tag.setInteger("ScreenY", pos.y);
-            tag.setInteger("ScreenZ", pos.z);
-            tag.setByte("ScreenSide", (byte) side.ordinal());
+            tag = new CompoundTag();
+            tag.putInt("ScreenX", pos.x);
+            tag.putInt("ScreenY", pos.y);
+            tag.putInt("ScreenZ", pos.z);
+            tag.putByte("ScreenSide", (byte) side.ordinal());
 
-            stack.setTagCompound(tag);
-            Util.toast(player, TextFormatting.AQUA, "screenSet2");
+            stack.setTag(tag);
+            Util.toast(context.getPlayer(), ChatFormatting.AQUA, "screenSet2");
         }
 
-        return EnumActionResult.SUCCESS;
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tt, ITooltipFlag ttFlag) {
-        NBTTagCompound tag = stack.getTagCompound();
-
-        if(tag != null) {
-            if(tag.hasKey("ScreenX") && tag.hasKey("ScreenY") && tag.hasKey("ScreenZ") && tag.hasKey("ScreenSide")) {
-                BlockSide side = BlockSide.fromInt(tag.getByte("ScreenSide"));
-                if(side == null)
-                    side = BlockSide.BOTTOM;
-
-                tt.add(I18n.format("webdisplays.linker.selectPeripheral"));
-                tt.add(I18n.format("webdisplays.linker.posInfo", tag.getInteger("ScreenX"), tag.getInteger("ScreenY"), tag.getInteger("ScreenZ")));
-                tt.add(I18n.format("webdisplays.linker.sideInfo", I18n.format("webdisplays.side." + side.toString().toLowerCase())));
-                WDItem.addInformation(tt);
-                return;
-            }
-        }
-
-        tt.add(I18n.format("webdisplays.linker.selectScreen"));
-        WDItem.addInformation(tt);
+        return InteractionResult.SUCCESS;
     }
 
     @Nullable
     @Override
     public String getWikiName(@Nonnull ItemStack is) {
-        return "Linking_Tool";
+        return is.getItem().getName(is).getString();
     }
 
 }

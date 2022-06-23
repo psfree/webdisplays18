@@ -6,24 +6,26 @@ package net.montoyo.wd.client.renderers;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.world.phys.AABB;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
+import org.jetbrains.annotations.NotNull;
 
 import static org.lwjgl.opengl.GL11.*;
 
-public class ScreenRenderer extends BlockEntityRenderers<TileEntityScreen> {
+public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
     private final Vector3f mid = new Vector3f();
     private final Vector3i tmpi = new Vector3i();
     private final Vector3f tmpf = new Vector3f();
 
     @Override
-    public void render(TileEntityScreen te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+    public void render(TileEntityScreen te, float partialTick, @NotNull PoseStack poseStack, @NotNull MultiBufferSource bufferSource, int packedLight, int packedOverlay) {
         if(!te.isLoaded())
             return;
 
@@ -51,7 +53,7 @@ public class ScreenRenderer extends BlockEntityRenderers<TileEntityScreen> {
             tmpi.addMul(scr.side.up, scr.size.y);
             tmpf.set(tmpi);
 
-            mid.set(x + 0.5, y + 0.5, z + 0.5);
+            mid.set(tmpf.x + 0.5, tmpi.y + 0.5, tmpi.z + 0.5);
             mid.addMul(tmpf, 0.5f);
             tmpf.set(scr.side.left);
             mid.addMul(tmpf, 0.5f);
@@ -190,11 +192,10 @@ public class ScreenRenderer extends BlockEntityRenderers<TileEntityScreen> {
         glDisable(GL_BLEND);
     }
 
-    @Override
-    public boolean isGlobalRenderer(TileEntityScreen te) {
+  //  @Override
+  //  public boolean isGlobalRenderer(TileEntityScreen te) {
         //I don't like making it a global renderer for performance reasons,
         //but Minecraft's AABB-in-view-frustum checking is crappy as hell.
-        return te.isLoaded();
-    }
-
+  //      return te.isLoaded();
+  //  }
 }

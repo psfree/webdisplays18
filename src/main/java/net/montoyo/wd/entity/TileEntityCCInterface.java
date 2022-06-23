@@ -3,7 +3,7 @@
  */
 
 package net.montoyo.wd.entity;
-
+/*
 import dan200.computercraft.api.lua.ILuaContext;
 import dan200.computercraft.api.lua.LuaException;
 import dan200.computercraft.api.peripheral.IComputerAccess;
@@ -80,4 +80,4 @@ public class TileEntityCCInterface extends TileEntityInterfaceBase implements IP
         return periph == this;
     }
 
-}
+}*/

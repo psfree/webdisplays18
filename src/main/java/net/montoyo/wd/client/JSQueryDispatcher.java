@@ -6,6 +6,7 @@ package net.montoyo.wd.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -18,6 +19,7 @@ import net.montoyo.wd.core.IScreenQueryHandler;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
 
@@ -213,7 +215,7 @@ public final class JSQueryDispatcher {
         ServerQuery ret = new ServerQuery(tes, side, cb);
         serverQueries.add(ret);
 
-        WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.jsRequest(tes, side, ret.id, type, data));
+        Messages.INSTANCE.sendToServer(SMessageScreenCtrl.jsRequest(tes, side, ret.id, type, data));
     }
 
     private void registerDefaults() {
@@ -236,8 +238,8 @@ public final class JSQueryDispatcher {
                 if(x < 0 || x >= scr.size.x || y < 0 || y >= scr.size.y)
                     cb.failure(403, "Out of range");
                 else {
-                    BlockPos bpos = (new Vector3i(tes.getPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
-                    int level = tes.getWorld().getBlockState(bpos).getValue(BlockScreen.emitting) ? 0 : tes.getWorld().getRedstonePower(bpos, EnumFacing.VALUES[side.reverse().ordinal()]);
+                    BlockPos bpos = (new Vector3i(tes.getBlockPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
+                    int level = tes.getLevel().getBlockState(bpos).getValue(BlockScreen.emitting) ? 0 : tes.getLevel().getSignal(bpos, Direction.values()[side.reverse().ordinal()]);
                     cb.success("{\"level\":" + level + "}");
                 }
             } else
@@ -246,14 +248,14 @@ public final class JSQueryDispatcher {
 
         register("GetRedstoneArray", (cb, tes, side, args) -> {
             if(tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_INPUT)) {
-                final EnumFacing facing = EnumFacing.VALUES[side.reverse().ordinal()];
+                final Direction facing = Direction.values()[side.reverse().ordinal()];
                 final StringJoiner resp = new StringJoiner(",", "{\"levels\":[", "]}");
 
                 tes.forEachScreenBlocks(side, bp -> {
-                    if(tes.getWorld().getBlockState(bp).getValue(BlockScreen.emitting))
+                    if(tes.getLevel().getBlockState(bp).getValue(BlockScreen.emitting))
                         resp.add("0");
                     else
-                        resp.add("" + tes.getWorld().getRedstonePower(bp, facing));
+                        resp.add("" + tes.getLevel().getSignal(bp, facing));
                 });
 
                 cb.success(resp.toString());
@@ -314,8 +316,8 @@ public final class JSQueryDispatcher {
                 if(x < 0 || x >= scr.size.x || y < 0 || y >= scr.size.y)
                     cb.failure(403, "Out of range");
                 else {
-                    BlockPos bpos = (new Vector3i(tes.getPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
-                    boolean e = tes.getWorld().getBlockState(bpos).getValue(BlockScreen.emitting);
+                    BlockPos bpos = (new Vector3i(tes.getBlockPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
+                    boolean e = tes.getLevel().getBlockState(bpos).getValue(BlockScreen.emitting);
                     cb.success("{\"emitting\":" + (e ? "true" : "false") + "}");
                 }
             } else
@@ -325,7 +327,7 @@ public final class JSQueryDispatcher {
         register("GetEmissionArray", (cb, tes, side, args) -> {
             if(tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_OUTPUT)) {
                 final StringJoiner resp = new StringJoiner(",", "{\"emission\":[", "]}");
-                tes.forEachScreenBlocks(side, bp -> resp.add(tes.getWorld().getBlockState(bp).getValue(BlockScreen.emitting) ? "1" : "0"));
+                tes.forEachScreenBlocks(side, bp -> resp.add(tes.getLevel().getBlockState(bp).getValue(BlockScreen.emitting) ? "1" : "0"));
                 cb.success(resp.toString());
             } else
                 cb.failure(403, "Missing upgrade");
@@ -337,7 +339,7 @@ public final class JSQueryDispatcher {
                 return;
             }
 
-            BlockPos bp = tes.getPos();
+            BlockPos bp = tes.getBlockPos();
             cb.success("{\"x\":" + bp.getX() + ",\"y\":" + bp.getY() + ",\"z\":" + bp.getZ() + ",\"side\":\"" + side + "\"}");
         });
 

@@ -4,14 +4,15 @@
 
 package net.montoyo.wd.core;
 
+import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.montoyo.wd.entity.*;
 
-public enum DefaultPeripheral {
+public enum DefaultPeripheral implements StringRepresentable {
 
     KEYBOARD("keyboard", "Keyboard", TileEntityKeyboard.class),                          //WITH FACING (< 3)
-    CC_INTERFACE("ccinterface", "ComputerCraft_Interface", TileEntityCCInterface.class),
-    OC_INTERFACE("cointerface", "OpenComputers_Interface", TileEntityOCInterface.class),
+//    CC_INTERFACE("ccinterface", "ComputerCraft_Interface", TileEntityCCInterface.class),
+//    OC_INTERFACE("cointerface", "OpenComputers_Interface", TileEntityOCInterface.class),
     REMOTE_CONTROLLER("remotectrl", "Remote_Controller", TileEntityRCtrl.class),         //WITHOUT FACING (>= 3)
     REDSTONE_CONTROLLER("redstonectrl", "Redstone_Controller", TileEntityRedCtrl.class),
     SERVER("server", "Server", TileEntityServer.class);
@@ -51,4 +52,8 @@ public enum DefaultPeripheral {
         return ret;
     }
 
+    @Override
+    public String getSerializedName() {
+        return "DefaultPeripheral";
+    }
 }

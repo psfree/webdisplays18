@@ -4,8 +4,11 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.IComputerArgs;
 import net.montoyo.wd.core.IUpgrade;
@@ -23,6 +26,10 @@ import java.util.Map;
 
 public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
 
+    public TileEntityInterfaceBase(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
+
     @Target(ElementType.METHOD)
     @Retention(RetentionPolicy.RUNTIME)
     public @interface ComputerFunc {}
@@ -32,21 +39,22 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
     private static final Object[] FALSE = new Object[] { false };
 
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
         owner = Util.readOwnerFromNBT(tag);
     }
 
     @Override
     @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        super.serializeNBT();
         return Util.writeOwnerToNBT(tag, owner);
     }
 
-    public void setOwner(EntityPlayer ep) {
+    public void setOwner(Player ep) {
         owner = new NameUUIDPair(ep.getGameProfile());
-        markDirty();
+        setChanged();
     }
 
     @ComputerFunc
@@ -392,7 +400,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
         if(isLinked()) {
             screenPos = null;
             screenSide = null;
-            markDirty();
+            setChanged();
         }
 
         return null;

@@ -4,12 +4,14 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.RedstoneCtrlData;
 import net.montoyo.wd.utilities.BlockSide;
@@ -23,9 +25,13 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     private String fallingEdgeURL = "";
     private boolean state = false;
 
+    public TileEntityRedCtrl(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
+
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
 
         risingEdgeURL = tag.getString("RisingEdgeURL");
         fallingEdgeURL = tag.getString("FallingEdgeURL");
@@ -34,18 +40,19 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
 
     @Override
     @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        super.serializeNBT();
 
-        tag.setString("RisingEdgeURL", risingEdgeURL);
-        tag.setString("FallingEdgeURL", fallingEdgeURL);
-        tag.setBoolean("Powered", state);
+        tag.putString("RisingEdgeURL", risingEdgeURL);
+        tag.putString("FallingEdgeURL", fallingEdgeURL);
+        tag.putBoolean("Powered", state);
         return tag;
     }
 
     @Override
-    public boolean onRightClick(EntityPlayer player, EnumHand hand, BlockSide side) {
-        if(world.isRemote)
+    public boolean onRightClick(Player player, InteractionHand hand, BlockSide side) {
+        if(level.isClientSide)
             return true;
 
         if(!isScreenChunkLoaded()) {
@@ -65,13 +72,13 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
             return true;
         }
 
-        (new RedstoneCtrlData(world.provider.getDimension(), pos, risingEdgeURL, fallingEdgeURL)).sendTo((EntityPlayerMP) player);
+        (new RedstoneCtrlData(level.dimension().location(), getBlockPos(), risingEdgeURL, fallingEdgeURL)).sendTo((ServerPlayer) player);
         return true;
     }
 
     @Override
     public void onNeighborChange(Block neighborType, BlockPos neighborPos) {
-        boolean hasPower = (world.isBlockPowered(pos) || world.isBlockPowered(pos.up())); //Same as dispenser
+        boolean hasPower = (level.hasNeighborSignal(getBlockPos()) || level.hasNeighborSignal(getBlockPos().above())); //Same as dispenser
 
         if(hasPower != state) {
             state = hasPower;
@@ -86,11 +93,11 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     public void setURLs(String r, String f) {
         risingEdgeURL = r.trim();
         fallingEdgeURL = f.trim();
-        markDirty();
+        setChanged();
     }
 
     private void changeURL(String url) {
-        if(world.isRemote || url.isEmpty())
+        if(level.isClientSide || url.isEmpty())
             return;
 
         if(isScreenChunkLoaded()) {

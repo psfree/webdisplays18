@@ -4,6 +4,8 @@
 
 package net.montoyo.wd.client.gui;
 
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.montoyo.mcef.api.API;
@@ -21,7 +23,7 @@ import javax.annotation.Nullable;
 
 public class GuiRedstoneCtrl extends WDScreen {
 
-    private int dimension;
+    private ResourceLocation dimension;
     private Vector3i pos;
     private String risingEdgeURL;
     private String fallingEdgeURL;
@@ -38,7 +40,8 @@ public class GuiRedstoneCtrl extends WDScreen {
     public GuiRedstoneCtrl() {
     }
 
-    public GuiRedstoneCtrl(int d, Vector3i p, String r, String f) {
+    public GuiRedstoneCtrl(ResourceLocation d, Vector3i p, String r, String f) {
+        super(component);
         dimension = d;
         pos = p;
         risingEdgeURL = r;

@@ -6,6 +6,7 @@ package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -14,7 +15,7 @@ import net.montoyo.wd.utilities.Vector3i;
 
 public class RedstoneCtrlData extends GuiData {
 
-    public int dimension;
+    public ResourceLocation dimension;
     public Vector3i pos;
     public String risingEdgeURL;
     public String fallingEdgeURL;
@@ -22,7 +23,7 @@ public class RedstoneCtrlData extends GuiData {
     public RedstoneCtrlData() {
     }
 
-    public RedstoneCtrlData(int d, BlockPos p, String r, String f) {
+    public RedstoneCtrlData(ResourceLocation d, BlockPos p, String r, String f) {
         dimension = d;
         pos = new Vector3i(p);
         risingEdgeURL = r;

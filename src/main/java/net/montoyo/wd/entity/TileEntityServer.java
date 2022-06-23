@@ -4,10 +4,13 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.data.ServerData;
 import net.montoyo.wd.utilities.NameUUIDPair;
@@ -15,36 +18,41 @@ import net.montoyo.wd.utilities.Util;
 
 import javax.annotation.Nonnull;
 
-public class TileEntityServer extends TileEntity {
+public class TileEntityServer extends BlockEntity {
 
     private NameUUIDPair owner;
 
+    public TileEntityServer(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
+
     @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
         owner = Util.readOwnerFromNBT(tag);
     }
 
     @Override
     @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        super.serializeNBT();
         return Util.writeOwnerToNBT(tag, owner);
     }
 
-    public void setOwner(EntityPlayer ep) {
+    public void setOwner(Player ep) {
         owner = new NameUUIDPair(ep.getGameProfile());
-        markDirty();
+        setChanged();
     }
 
-    public void onPlayerRightClick(EntityPlayer ply) {
-        if(world.isRemote)
+    public void onPlayerRightClick(Player ply) {
+        if(level.isClientSide)
             return;
 
         if(WebDisplays.INSTANCE.miniservPort == 0)
             Util.toast(ply, "noMiniserv");
-        else if(owner != null && ply instanceof EntityPlayerMP)
-            (new ServerData(pos, owner)).sendTo((EntityPlayerMP) ply);
+        else if(owner != null && ply instanceof ServerPlayer)
+            (new ServerData(getBlockPos(), owner)).sendTo((ServerPlayer) ply);
     }
 
 }

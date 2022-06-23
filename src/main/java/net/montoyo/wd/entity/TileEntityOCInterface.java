@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.entity;
 
+/*
 import li.cil.oc.api.machine.Arguments;
 import li.cil.oc.api.machine.Callback;
 import li.cil.oc.api.machine.Context;
@@ -133,4 +134,4 @@ public class TileEntityOCInterface extends TileEntityInterfaceBase implements Si
         return unlink(new OCArguments(args));
     }
 
-}
+}*/

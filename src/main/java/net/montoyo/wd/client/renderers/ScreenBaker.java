@@ -6,21 +6,14 @@ package net.montoyo.wd.client.renderers;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.property.IExtendedBlockState;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3f;
@@ -121,6 +114,11 @@ public class ScreenBaker implements IModelBaker {
     @Override
     public boolean isGui3d() {
         return true;
+    }
+
+    @Override
+    public boolean usesBlockLight() {
+        return false;
     }
 
     @Override

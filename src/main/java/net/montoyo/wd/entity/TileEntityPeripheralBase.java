@@ -4,15 +4,17 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.chunk.Chunk;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
@@ -20,19 +22,24 @@ import net.montoyo.wd.utilities.Vector3i;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.Objects;
 
-public abstract class TileEntityPeripheralBase extends TileEntity implements IPeripheral {
+public abstract class TileEntityPeripheralBase extends BlockEntity implements IPeripheral {
 
     protected Vector3i screenPos;
     protected BlockSide screenSide;
 
-    @Override
-    public void readFromNBT(NBTTagCompound tag) {
-        super.readFromNBT(tag);
+    public TileEntityPeripheralBase(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
 
-        if(tag.hasKey("WDScreen", 10)) {
-            NBTTagCompound scr = tag.getCompoundTag("WDScreen");
-            screenPos = new Vector3i(scr.getInteger("X"), scr.getInteger("Y"), scr.getInteger("Z"));
+    @Override
+    public void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
+
+        if(tag.contains("WDScreen", 10)) {
+            CompoundTag scr = tag.getCompound("WDScreen");
+            screenPos = new Vector3i(scr.getInt("X"), scr.getInt("Y"), scr.getInt("Z"));
             screenSide = BlockSide.values()[scr.getByte("Side")];
         } else {
             screenPos = null;
@@ -42,25 +49,26 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
 
     @Override
     @Nonnull
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public CompoundTag serializeNBT() {
+        CompoundTag tag = new CompoundTag();
+        super.serializeNBT();
 
         if(screenPos != null && screenSide != null) {
-            NBTTagCompound scr = new NBTTagCompound();
-            scr.setInteger("X", screenPos.x);
-            scr.setInteger("Y", screenPos.y);
-            scr.setInteger("Z", screenPos.z);
-            scr.setByte("Side", (byte) screenSide.ordinal());
+            CompoundTag scr = new CompoundTag();
+            scr.putInt("X", screenPos.x);
+            scr.putInt("Y", screenPos.y);
+            scr.putInt("Z", screenPos.z);
+            scr.putByte("Side", (byte) screenSide.ordinal());
 
-            tag.setTag("WDScreen", scr);
+            tag.put("WDScreen", scr);
         }
 
         return tag;
     }
 
     @Override
-    public boolean connect(World world_, BlockPos blockPos, IBlockState blockState, Vector3i pos, BlockSide side) {
-        TileEntity te = world.getTileEntity(pos.toBlock());
+    public boolean connect(Level world_, BlockPos blockPos, BlockState blockState, Vector3i pos, BlockSide side) {
+        BlockEntity te = world_.getBlockEntity(pos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen)) {
             Log.error("TileEntityPeripheralBase.connect(): Tile entity at %s is not a screen!", pos.toString());
             return false;
@@ -73,7 +81,7 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
 
         screenPos = pos;
         screenSide = side;
-        markDirty();
+        setChanged();
         return true;
     }
 
@@ -82,10 +90,10 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
     }
 
     public boolean isScreenChunkLoaded() {
-        if(screenPos == null || screenSide == null)
+        if (screenPos == null || screenSide == null)
             return true;
 
-        Chunk chunk = world.getChunkProvider().getLoadedChunk(screenPos.x >> 4, screenPos.z >> 4);
+        LevelChunk chunk = Objects.requireNonNull(getLevel()).getChunkSource().getChunk(screenPos.x >> 4, screenPos.z >> 4, true);
         return chunk != null && !chunk.isEmpty();
     }
 
@@ -94,11 +102,11 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
         if(screenPos == null || screenSide == null)
             return null;
 
-        TileEntity te = world.getTileEntity(screenPos.toBlock());
+        BlockEntity te = level.getBlockEntity(screenPos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen) || ((TileEntityScreen) te).getScreen(screenSide) == null) {
             screenPos = null;
             screenSide = null;
-            markDirty();
+            setChanged();
             return null;
         }
 
@@ -110,7 +118,7 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
         if(screenPos == null || screenSide == null)
             return null;
 
-        TileEntity te = world.getTileEntity(screenPos.toBlock());
+        BlockEntity te = level.getBlockEntity(screenPos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen) || ((TileEntityScreen) te).getScreen(screenSide) == null)
             return null;
 
@@ -127,8 +135,8 @@ public abstract class TileEntityPeripheralBase extends TileEntity implements IPe
         return screenSide;
     }
 
-    public boolean onRightClick(EntityPlayer player, EnumHand hand, BlockSide side) {
-        return false;
+    public InteractionResult onRightClick(Player player, InteractionHand hand) {
+        return InteractionResult.PASS;
     }
 
     public void onNeighborChange(Block neighborType, BlockPos neighborPos) {

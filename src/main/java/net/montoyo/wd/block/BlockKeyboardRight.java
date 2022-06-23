@@ -5,27 +5,29 @@
 package net.montoyo.wd.block;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.phys.AABB;
-import net.montoyo.wd.WebDisplays;
+import net.minecraft.world.phys.BlockHitResult;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.entity.TileEntityKeyboard;
 import net.montoyo.wd.item.ItemLinker;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3i;
-
-import javax.annotation.Nonnull;
-import java.util.Random;
 
 public class BlockKeyboardRight extends Block implements IPeripheral {
 
@@ -35,76 +37,34 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
     public BlockKeyboardRight() {
         super(Properties.of(Material.STONE)
                 .strength(1.5f, 10.f));
+
                 //("keyboard")
         //fullBlock = false;
     }
 
     @Override
-    @Nonnull
-    protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, properties);
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(facing);
     }
 
     @Override
-    public int quantityDropped(Random random) {
-        return 0;
-    }
-
-    @Override
-    public boolean isFullCube(BlockState state) {
+    public boolean isCollisionShapeFullBlock(BlockState state, BlockGetter level, BlockPos pos) {
         return false;
     }
 
-    @Override
-    public boolean isFullBlock(BlockState state) {
-        return false;
-    }
-
-    @Override
-    public boolean isNormalCube(BlockState state, BlockGetter world, BlockPos pos) {
-        return false;
-    }
-
-    @Override
-    public boolean isOpaqueCube(BlockState state) {
-        return false;
-    }
-
-    @Override
-    public boolean doesSideBlockRendering(BlockState state, BlockGetter world, BlockPos pos, EnumFacing face) {
-        return false;
-    }
-
-    @Override
+    /*@Override
     @Nonnull
     public AABB getBoundingBox(BlockState state, IBlockAccess source, BlockPos pos) {
         return KEYBOARD_AABB;
-    }
-
-    @Override
-    @Nonnull
-    public BlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(facing, meta);
-    }
-
-    @Override
-    public int getMetaFromState(BlockState state) {
-        return state.getValue(facing);
-    }
-
-    @Override
-    @Nonnull
-    public ItemStack getPickBlock(@Nonnull BlockState state, RayTraceResult target, @Nonnull Level world, @Nonnull BlockPos pos, EntityPlayer player) {
-        return new ItemStack(WebDisplays.INSTANCE.blockPeripheral, 1, 0);
-    }
+    }*/
 
     private TileEntityKeyboard getTileEntity(Level world, BlockPos pos) {
-        for(EnumFacing nf: EnumFacing.HORIZONTALS) {
-            BlockPos np = pos.add(nf.getDirectionVec());
-            IBlockState ns = world.getBlockState(np);
+        for(Direction nf: Direction.Plane.HORIZONTAL) {
+            BlockPos np = pos.above(nf.getNormal().getX()); //TODO is X correct?
+            BlockState ns = world.getBlockState(np);
 
             if(ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
-                TileEntity te = world.getTileEntity(np);
+                BlockEntity te = world.getBlockEntity(np);
                 if(te != null && te instanceof TileEntityKeyboard)
                     return (TileEntityKeyboard) te;
 
@@ -121,18 +81,12 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
         return keyboard != null && keyboard.connect(world, pos, state, scrPos, scrSide);
     }
 
-    @Override
-    @Nonnull
-    public EnumPushReaction getMobilityFlag(BlockState state) {
-        return EnumPushReaction.IGNORE;
-    }
-
-    public static boolean checkNeighborhood(IBlockAccess world, BlockPos bp, BlockPos ignore) {
-        for(EnumFacing neighbor: EnumFacing.HORIZONTALS) {
-            BlockPos np = bp.add(neighbor.getDirectionVec());
+    public static boolean checkNeighborhood(Level world, BlockPos bp, BlockPos ignore) {
+        for(Direction neighbor: Direction.Plane.HORIZONTAL) {
+            BlockPos np = bp.above(neighbor.getNormal().getX()); //TODO is X correct?
 
             if(ignore == null || !np.equals(ignore)) {
-                IBlockState state = world.getBlockState(np);
+                BlockState state = world.getBlockState(np);
 
                 if(state.getBlock() instanceof BlockPeripheral) {
                     if(state.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD)
@@ -146,47 +100,43 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
     }
 
     public void removeLeftPiece(Level world, BlockPos pos, boolean dropItem) {
-        for(EnumFacing nf: EnumFacing.HORIZONTALS) {
-            BlockPos np = pos.add(nf.getDirectionVec());
+        for(Direction nf: Direction.Plane.HORIZONTAL) {
+            BlockPos np = pos.above(nf.getNormal().getX()); //TODO is X correct?
             BlockState ns = world.getBlockState(np);
 
             if(ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
-                if(dropItem)
-                    ns.getBlock().dropBlockAsItem(world, np, ns, 0);
-
-                world.setBlockToAir(np);
+               /* if(dropItem)
+                    if(world instanceof ServerLevel serverWorld) {
+                       // ns.getBlock().getDrops(ns, serverWorld, np,0);
+                    } */
+                world.setBlock(np, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
                 break;
             }
         }
     }
 
     @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block neighborType, BlockPos neighbor) {
-        if(world.isClientSide)
+    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos neighbor, boolean isMoving) {
+        if (world.isClientSide())
             return;
 
-        if(neighbor.getX() == pos.getX() && neighbor.getY() == pos.getY() - 1 && neighbor.getZ() == pos.getZ() && world.isAirBlock(neighbor)) {
+        if(neighbor.getX() == pos.getX() && neighbor.getY() == pos.getY() - 1 && neighbor.getZ() == pos.getZ()) {
             removeLeftPiece(world, pos, true);
-            world.setBlockToAir(pos);
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
         }
     }
 
     @Override
-    public boolean removedByPlayer(@Nonnull BlockState state, Level world, @Nonnull BlockPos pos, @Nonnull Player ply, boolean willHarvest) {
+    public boolean onDestroyedByPlayer(BlockState state, Level world, BlockPos pos, Player ply, boolean willHarvest, FluidState fluid) {
         if(!world.isClientSide)
             removeLeftPiece(world, pos, !ply.isCreative());
 
-        return super.removedByPlayer(state, world, pos, ply, willHarvest);
+        return super.onDestroyedByPlayer(state, world, pos, ply, willHarvest, fluid);
     }
 
-    @Override
-    public void onBlockDestroyedByExplosion(Level world, BlockPos pos, Explosion explosionIn) {
-        if(!world.isClientSide)
-            removeLeftPiece(world, pos, true);
-    }
 
     @Override
-    public void onEntityCollidedWithBlock(Level world, BlockPos pos, BlockState state, Entity entity) {
+    public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
         double rpos = (entity.getY() - ((double) pos.getY())) * 16.0;
         if(!world.isClientSide && rpos >= 1.0 && rpos <= 2.0 && Math.random() < 0.25) {
             TileEntityKeyboard tek = getTileEntity(world, pos);
@@ -197,18 +147,18 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
     }
 
     @Override
-    public boolean onBlockActivated(Level world, BlockPos pos, BlockState state, Player player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        if(player.isSneaking())
-            return false;
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        if(player.isShiftKeyDown())
+            return InteractionResult.PASS;
 
-        if(player.getHeldItem(hand).getItem() instanceof ItemLinker)
-            return false;
+        if(player.getItemInHand(hand).getItem() instanceof ItemLinker)
+            return InteractionResult.PASS;
 
-        TileEntityKeyboard tek = getTileEntity(world, pos);
+        TileEntityKeyboard tek = getTileEntity(level, pos);
         if(tek != null)
-            return tek.onRightClick(player, hand, BlockSide.values()[facing.ordinal()]);
+            return tek.onRightClick(player, hand);
 
-        return false;
+        return InteractionResult.PASS;
     }
 
 }

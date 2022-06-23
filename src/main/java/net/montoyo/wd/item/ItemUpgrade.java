@@ -10,6 +10,7 @@ import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.utilities.BlockSide;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -48,5 +49,10 @@ public class ItemUpgrade extends ItemMulti implements IUpgrade, WDItem {
             return "webdisplays:wtf";
         else
             return "webdisplays:" + is;
+    }
+
+    @Override
+    public String getWikiName(@NotNull ItemStack is) {
+        return is.getItem().getName(is).getString();
     }
 }

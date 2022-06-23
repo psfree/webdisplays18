@@ -4,10 +4,6 @@
 
 package net.montoyo.wd.core;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.tags.TagKey;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 

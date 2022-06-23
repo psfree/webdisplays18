@@ -4,25 +4,19 @@
 
 package net.montoyo.wd.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.MapColor;
-import net.minecraft.block.material.Material;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
 
 public abstract class WDBlock extends Block {
 
-    protected ItemBlock itemBlock;
+    protected BlockItem itemBlock;
 
-    public WDBlock(Material mat, MapColor color) {
-        super(mat, color);
-    }
-
-    public WDBlock(Material material) {
-        super(material);
+    public WDBlock(Properties properties) {
+        super(properties);
     }
 
     protected void setName(String name) {
-        setUnlocalizedName("webdisplays." + name);
         setRegistryName(name);
     }
 
@@ -30,12 +24,11 @@ public abstract class WDBlock extends Block {
         if(itemBlock != null)
             throw new RuntimeException("WDBlock.makeItemBlock() called twice!");
 
-        itemBlock = new ItemBlock(this);
-        itemBlock.setUnlocalizedName(getUnlocalizedName());
+        itemBlock = new BlockItem(this, new Item.Properties());
         itemBlock.setRegistryName(getRegistryName());
     }
 
-    public ItemBlock getItem() {
+    public BlockItem getItem() {
         return itemBlock;
     }
 

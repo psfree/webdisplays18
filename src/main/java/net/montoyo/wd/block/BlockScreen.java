@@ -40,6 +40,7 @@ import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.data.SetURLData;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.item.ItemPeripheral;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.utilities.*;
 
@@ -376,7 +377,7 @@ public class BlockScreen extends WDBlockContainer {
     }
 
     @Override
-    protected ItemBlock createItemBlock() {
+    protected ItemPeripheral createItemBlock() {
         return new ItemBlockScreen(this);
     }
 

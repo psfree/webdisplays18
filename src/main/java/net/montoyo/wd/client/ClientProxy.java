@@ -6,6 +6,7 @@ package net.montoyo.wd.client;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.Minecraft;
@@ -534,8 +535,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 if(tes.isLoaded()) {
                     if(dist2 > WebDisplays.INSTANCE.unloadDistance2)
                         tes.unload();
-                    else if(WebDisplays.INSTANCE.enableSoundDistance)
-                        tes.updateTrackDistance(dist2, SoundSystemConfig.getMasterGain());
+                    //else if(WebDisplays.INSTANCE.enableSoundDistance)
+                       // tes.updateTrackDistance(dist2, SoundSystemConfig.getMasterGain());
                 } else if(dist2 <= WebDisplays.INSTANCE.loadDistance2)
                     tes.load();
             }
@@ -635,7 +636,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         if(ev.getHand() == InteractionHand.OFF_HAND)
             handSide = handSide.getOpposite();
 
-        renderer.render(ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress());
+        renderer.render(new PoseStack(), ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress());
         ev.setCanceled(true);
     }
 

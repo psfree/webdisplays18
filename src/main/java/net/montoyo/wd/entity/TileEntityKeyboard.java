@@ -4,11 +4,15 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.EntityOcelot;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.util.EnumHand;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.animal.Ocelot;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.KeyboardData;
@@ -19,30 +23,34 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
 
     private static final String RANDOM_CHARS = "AZERTYUIOPQSDFGHJKLMWXCVBNazertyuiopqsdfghjklmwxcvbn0123456789"; //Yes I have an AZERTY keyboard, u care?
 
+    public TileEntityKeyboard(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
+        super(arg, arg2, arg3);
+    }
+
     @Override
-    public boolean onRightClick(EntityPlayer player, EnumHand hand, BlockSide side) {
-        if(world.isRemote)
-            return true;
+    public InteractionResult onRightClick(Player player, InteractionHand hand) {
+        if(level.isClientSide)
+            return InteractionResult.SUCCESS;
 
         if(!isScreenChunkLoaded()) {
             Util.toast(player, "chunkUnloaded");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         TileEntityScreen tes = getConnectedScreen();
         if(tes == null) {
             Util.toast(player, "notLinked");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         TileEntityScreen.Screen scr = tes.getScreen(screenSide);
         if((scr.rightsFor(player) & ScreenRights.CLICK) == 0) {
             Util.toast(player, "restrictions");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
-        (new KeyboardData(tes, screenSide, pos)).sendTo((EntityPlayerMP) player);
-        return true;
+        (new KeyboardData(tes, screenSide, getBlockPos())).sendTo((ServerPlayer) player);
+        return InteractionResult.SUCCESS;
     }
 
     public void simulateCat(Entity ent) {
@@ -53,18 +61,18 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
                 TileEntityScreen.Screen scr = tes.getScreen(screenSide);
                 boolean ok;
 
-                if(ent instanceof EntityPlayer)
-                    ok = (scr.rightsFor((EntityPlayer) ent) & ScreenRights.CLICK) != 0;
+                if(ent instanceof Player)
+                    ok = (scr.rightsFor((Player) ent) & ScreenRights.CLICK) != 0;
                 else
                     ok = (scr.otherRights & ScreenRights.CLICK) != 0;
 
                 if(ok) {
                     char rnd = RANDOM_CHARS.charAt((int) (Math.random() * ((double) RANDOM_CHARS.length())));
-                    tes.type(screenSide, "t" + rnd, pos);
+                    tes.type(screenSide, "t" + rnd, getBlockPos());
 
-                    EntityPlayer owner = world.getPlayerEntityByUUID(scr.owner.uuid);
-                    if(owner != null && owner instanceof EntityPlayerMP && ent instanceof EntityOcelot)
-                        WebDisplays.INSTANCE.criterionKeyboardCat.trigger(((EntityPlayerMP) owner).getAdvancements());
+                    Player owner = level.getPlayerByUUID(scr.owner.uuid);
+                    if(owner != null && owner instanceof ServerPlayer && ent instanceof Ocelot)
+                        WebDisplays.INSTANCE.criterionKeyboardCat.trigger(((ServerPlayer) owner).getAdvancements());
                 }
             }
         }

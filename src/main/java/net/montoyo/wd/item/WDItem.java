@@ -20,6 +20,5 @@ public interface WDItem {
             tt.add("" + ChatFormatting.GRAY + I18n.get("item.webdisplays.wiki"));
     }
 
-    public String getWikiName(@Nonnull ItemStack is);
-
+    String getWikiName(@Nonnull ItemStack is);
 }

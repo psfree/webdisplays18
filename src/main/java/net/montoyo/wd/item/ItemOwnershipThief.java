@@ -4,128 +4,101 @@
 
 package net.montoyo.wd.item;
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumActionResult;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
-import net.minecraft.world.World;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.utilities.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
 public class ItemOwnershipThief extends Item implements WDItem {
 
-    public ItemOwnershipThief() {
-        setUnlocalizedName("webdisplays.ownerthief");
-        setRegistryName("ownerthief");
-        setMaxStackSize(1);
-        setCreativeTab(WebDisplays.CREATIVE_TAB);
+    public ItemOwnershipThief(Properties properties) {
+        super(properties
+        //setRegistryName("ownerthief");
+                .stacksTo(1)
+                .tab(WebDisplays.CREATIVE_TAB));
     }
 
     @Override
-    @Nonnull
-    public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos_, EnumHand hand, EnumFacing side_, float hitX, float hitY, float hitZ) {
-        if(player.isSneaking())
-            return EnumActionResult.PASS;
+    public @NotNull InteractionResult useOn(UseOnContext context) {
+           if(context.getPlayer().isShiftKeyDown())
+            return InteractionResult.PASS;
 
-        if(world.isRemote)
-            return EnumActionResult.SUCCESS;
+        if(context.getLevel().isClientSide)
+            return InteractionResult.SUCCESS;
 
         if(WebDisplays.INSTANCE.disableOwnershipThief) {
-            Util.toast(player, "otDisabled");
-            return EnumActionResult.SUCCESS;
+            Util.toast(context.getPlayer(), "otDisabled");
+            return InteractionResult.SUCCESS;
         }
 
-        ItemStack stack = player.getHeldItem(hand);
-        if(stack.hasTagCompound()) {
-            NBTTagCompound tag = stack.getTagCompound();
+        ItemStack stack = context.getPlayer().getItemInHand(context.getHand());
+        if(stack.hasTag()) {
+            CompoundTag tag = stack.getTag();
 
-            if(tag.hasKey("PosX") && tag.hasKey("PosY") && tag.hasKey("PosZ") && tag.hasKey("Side")) {
-                BlockPos bp = new BlockPos(tag.getInteger("PosX"), tag.getInteger("PosY"), tag.getInteger("PosZ"));
+            if(tag.contains("PosX") && tag.contains("PosY") && tag.contains("PosZ") && tag.contains("Side")) {
+                BlockPos bp = new BlockPos(tag.getInt("PosX"), tag.getInt("PosY"), tag.getInt("PosZ"));
                 BlockSide side = BlockSide.values()[tag.getByte("Side")];
 
-                if(!(world.getBlockState(bp).getBlock() instanceof BlockScreen))
-                    return EnumActionResult.SUCCESS;
+                if(!(context.getLevel().getBlockState(bp).getBlock() instanceof BlockScreen))
+                    return InteractionResult.SUCCESS;
 
-                TileEntity te = world.getTileEntity(bp);
+                BlockEntity te = context.getLevel().getBlockEntity(bp);
                 if(te == null || !(te instanceof TileEntityScreen))
-                    return EnumActionResult.SUCCESS;
+                    return InteractionResult.SUCCESS;
 
                 TileEntityScreen tes = (TileEntityScreen) te;
                 TileEntityScreen.Screen scr = tes.getScreen(side);
                 if(scr == null)
-                    return EnumActionResult.SUCCESS;
+                    return InteractionResult.SUCCESS;
 
-                Log.warning("Owner of screen at %d %d %d, side %s was changed from %s (UUID %s) to %s (UUID %s)", bp.getX(), bp.getY(), bp.getZ(), side.toString(), scr.owner.name, scr.owner.uuid.toString(), player.getName(), player.getGameProfile().getId().toString());
-                player.setHeldItem(hand, ItemStack.EMPTY);
-                tes.setOwner(side, player);
-                Util.toast(player, TextFormatting.AQUA, "newOwner");
-                return EnumActionResult.SUCCESS;
+                Log.warning("Owner of screen at %d %d %d, side %s was changed from %s (UUID %s) to %s (UUID %s)", bp.getX(), bp.getY(), bp.getZ(), side.toString(), scr.owner.name, scr.owner.uuid.toString(), context.getPlayer().getName(), context.getPlayer().getGameProfile().getId().toString());
+                context.getPlayer().setItemInHand(context.getHand(), ItemStack.EMPTY);
+                tes.setOwner(side, context.getPlayer());
+                Util.toast(context.getPlayer(), ChatFormatting.AQUA, "newOwner");
+                return InteractionResult.SUCCESS;
             }
         }
 
-        if(!(world.getBlockState(pos_).getBlock() instanceof BlockScreen))
-            return EnumActionResult.SUCCESS;
+        if(!(context.getLevel().getBlockState(context.getClickedPos()).getBlock() instanceof BlockScreen))
+            return InteractionResult.SUCCESS;
 
-        Vector3i pos = new Vector3i(pos_);
-        BlockSide side = BlockSide.values()[side_.ordinal()];
-        Multiblock.findOrigin(world, pos, side, null);
+        Vector3i pos = new Vector3i(context.getClickedPos());
+        BlockSide side = BlockSide.values()[context.getHorizontalDirection().ordinal()];
+        Multiblock.findOrigin(context.getLevel(), pos, side, null);
 
-        TileEntity te = world.getTileEntity(pos.toBlock());
+        BlockEntity te = context.getLevel().getBlockEntity(pos.toBlock());
         if(te == null || !(te instanceof TileEntityScreen)) {
-            Util.toast(player, "turnOn");
-            return EnumActionResult.SUCCESS;
+            Util.toast(context.getPlayer(), "turnOn");
+            return InteractionResult.SUCCESS;
         }
 
         if(((TileEntityScreen) te).getScreen(side) == null)
-            Util.toast(player, "turnOn");
+            Util.toast(context.getPlayer(), "turnOn");
         else {
-            NBTTagCompound tag = new NBTTagCompound();
-            tag.setInteger("PosX", pos.x);
-            tag.setInteger("PosY", pos.y);
-            tag.setInteger("PosZ", pos.z);
-            tag.setByte("Side", (byte) side.ordinal());
+            CompoundTag tag = new CompoundTag();
+            tag.putInt("PosX", pos.x);
+            tag.putInt("PosY", pos.y);
+            tag.putInt("PosZ", pos.z);
+            tag.putByte("Side", (byte) side.ordinal());
 
-            stack.setTagCompound(tag);
-            Util.toast(player, TextFormatting.AQUA, "screenSet");
-            Log.warning("Player %s (UUID %s) created an Ownership Thief item for screen at %d %d %d, side %s!", player.getName(), player.getGameProfile().getId().toString(), pos.x, pos.y, pos.z, side.toString());
+            stack.setTag(tag);
+            Util.toast(context.getPlayer(), ChatFormatting.AQUA, "screenSet");
+            Log.warning("Player %s (UUID %s) created an Ownership Thief item for screen at %d %d %d, side %s!", context.getPlayer().getName(), context.getPlayer().getGameProfile().getId().toString(), pos.x, pos.y, pos.z, side.toString());
         }
 
-        return EnumActionResult.SUCCESS;
-    }
-
-    @SideOnly(Side.CLIENT)
-    @Override
-    public void addInformation(ItemStack stack, @Nullable World world, List<String> tt, ITooltipFlag ttFlags) {
-        if(stack.hasTagCompound()) {
-            NBTTagCompound tag = stack.getTagCompound();
-
-            if(tag.hasKey("PosX") && tag.hasKey("PosY") && tag.hasKey("PosZ") && tag.hasKey("Side")) {
-                tt.add("Screen pos: " + tag.getInteger("PosX") + ", " + tag.getInteger("PosY") + ", " + tag.getInteger("PosZ"));
-                tt.add("Screen side: " + BlockSide.values()[tag.getByte("Side")].toString());
-                WDItem.addInformation(tt);
-                return;
-            }
-        }
-
-        tt.add("" + TextFormatting.RED + "WARNING: Admin tool");
-        tt.add("Right click on screen");
-        tt.add("and give to new owner.");
-        WDItem.addInformation(tt);
+        return InteractionResult.SUCCESS;
     }
 
     @Nullable

@@ -4,7 +4,6 @@
 
 package net.montoyo.wd.entity;
 
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -330,7 +329,7 @@ public class TileEntityScreen extends BlockEntity{
         if(level.isClientSide)
             updateAABB();
         else
-            markDirty();
+            setChanged();
 
         return ret;
     }
@@ -356,7 +355,7 @@ public class TileEntityScreen extends BlockEntity{
         screens.clear();
 
         if(!level.isClientSide)
-            markDirty();
+            setChanged();
     }
 
     public void requestData(ServerPlayer ep) {
@@ -380,7 +379,7 @@ public class TileEntityScreen extends BlockEntity{
                 scr.browser.loadURL(url);
         } else {
             Messages.INSTANCE.sendTo(CMessageScreenUpdate.setURL(this, side, url), point());
-            markDirty();
+            setChanged();
         }
     }
 
@@ -412,7 +411,7 @@ public class TileEntityScreen extends BlockEntity{
             if(screens.isEmpty()) //No more screens: remove tile entity
                 level.setBlock(getBlockPos(), WebDisplays.INSTANCE.blockScreen.getDefaultInstance().withProperty(BlockScreen.hasTE, false));
             else
-                markDirty();
+                setChanged();
         }
     }
 
@@ -440,7 +439,7 @@ public class TileEntityScreen extends BlockEntity{
             }
         } else {
             Messages.INSTANCE.sendTo(CMessageScreenUpdate.setResolution(this, side, res), point());
-            markDirty();
+            setChanged();
         }
     }
 
@@ -722,7 +721,7 @@ public class TileEntityScreen extends BlockEntity{
             if(!scr.friends.contains(pair)) {
                 scr.friends.add(pair);
                 (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
-                markDirty();
+                setChanged();
             }
         }
     }
@@ -738,7 +737,7 @@ public class TileEntityScreen extends BlockEntity{
             if(scr.friends.remove(pair)) {
                 checkLaserUserRights(scr);
                 (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
-                markDirty();
+                setChanged();
             }
         }
     }
@@ -821,7 +820,7 @@ public class TileEntityScreen extends BlockEntity{
     }
 
     public void updateUpgrades(BlockSide side, ItemStack[] upgrades) {
-        if(!world.isRemote) {
+        if(!level.isClientSide) {
             Log.error("Tried to call TileEntityScreen.updateUpgrades() from server side...");
             return;
         }
@@ -876,7 +875,7 @@ public class TileEntityScreen extends BlockEntity{
         Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
         itemAsUpgrade.onInstall(this, side, player, isCopy);
         playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
-        markDirty();
+        setChanged();
         return true;
     }
 
@@ -927,7 +926,7 @@ public class TileEntityScreen extends BlockEntity{
             scr.upgrades.remove(idxToRemove);
             Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
             playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
-            markDirty();
+            setChanged();
         } else
             Log.warning("Tried to remove non-existing upgrade %s to screen %s at %s", safeName(is), side.toString(), pos.toString());
     }
@@ -1028,7 +1027,7 @@ public class TileEntityScreen extends BlockEntity{
         scr.owner = new NameUUIDPair(newOwner.getGameProfile());
         Messages.INSTANCE.sendTo(CMessageScreenUpdate.owner(this, side, scr.owner), point());
         checkLaserUserRights(scr);
-        markDirty();
+        setChanged();
     }
 
     public void setRotation(BlockSide side, Rotation rot) {
@@ -1051,7 +1050,7 @@ public class TileEntityScreen extends BlockEntity{
         } else {
             scr.rotation = rot;
             Messages.INSTANCE.sendTo(CMessageScreenUpdate.rotation(this, side, rot), point());
-            markDirty();
+            setChanged();
         }
     }
 
@@ -1082,7 +1081,7 @@ public class TileEntityScreen extends BlockEntity{
             WebDisplays.PROXY.screenUpdateAutoVolumeInGui(new Vector3i(getBlockPos()), side, av);
         else {
             Messages.INSTANCE.sendTo(CMessageScreenUpdate.autoVolume(this, side, av), point());
-            markDirty();
+            setChanged();
         }
     }
 
