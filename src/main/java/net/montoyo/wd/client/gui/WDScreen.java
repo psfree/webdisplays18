@@ -21,6 +21,7 @@ import net.montoyo.wd.client.gui.controls.Event;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageACQuery;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Bounds;
@@ -330,7 +331,7 @@ public abstract class WDScreen extends Screen {
     }
 
     protected void requestAutocomplete(String beginning, boolean matchExact) {
-        WebDisplays.NET_HANDLER.sendToServer(new SMessageACQuery(beginning, matchExact));
+        Messages.INSTANCE.sendToServer(new SMessageACQuery(beginning, matchExact));
     }
 
     public void onAutocompleteResult(NameUUIDPair pairs[]) {

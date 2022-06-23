@@ -5,8 +5,8 @@
 package net.montoyo.wd.client.gui.controls;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.item.ItemStack;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class UpgradeGroup extends BasicControl {
     private ArrayList<ItemStack> upgrades;
     private ItemStack overStack;
     private ItemStack clickStack;
-    private final RenderItem renderItem = Minecraft.getMinecraft().getRenderItem();
+    private final ItemRenderer renderItem = Minecraft.getInstance().getItemRenderer();
 
     public UpgradeGroup() {
         parent.requirePostDraw(this);
@@ -33,8 +33,8 @@ public class UpgradeGroup extends BasicControl {
                 if(is == overStack && !disabled)
                     fillRect(x, y, 16, 16, 0x80FF0000);
 
-                renderItem.renderItemAndEffectIntoGUI(mc.player, is, x, y);
-                renderItem.renderItemOverlayIntoGUI(font, is, x, y, null);
+                renderItem.renderAndDecorateItem(mc.player, is, x, y, 0);
+                renderItem.renderAndDecorateItem(is, font.lineHeight, x, y); //TODO is lineHeight right?
                 x += 18;
             }
         }

@@ -6,15 +6,21 @@ package net.montoyo.wd.client.gui;
 
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.resources.I18n;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.BlockPos;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.*;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.item.WDItem;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
 
@@ -115,7 +121,8 @@ public class GuiScreenConfig extends WDScreen {
     private CheckBox[] friendBoxes;
     private CheckBox[] otherBoxes;
 
-    public GuiScreenConfig(TileEntityScreen tes, BlockSide side, NameUUIDPair[] friends, int fr, int or) {
+    public GuiScreenConfig(Component component, TileEntityScreen tes, BlockSide side, NameUUIDPair[] friends, int fr, int or) {
+        super(component);
         this.tes = tes;
         this.side = side;
         this.friends = friends;
@@ -124,8 +131,8 @@ public class GuiScreenConfig extends WDScreen {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         loadFrom(new ResourceLocation("webdisplays", "gui/screencfg.json"));
 
         friendBoxes = new CheckBox[] { boxFResolution, boxFUpgrades, boxFOthers, boxFFriends, boxFClick, boxFSetUrl };
@@ -169,11 +176,11 @@ public class GuiScreenConfig extends WDScreen {
         updateMyRights();
         updateRotationStr();
 
-        mc.getSoundHandler().playSound(PositionedSoundRecord.getRecord(WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
+        minecraft.getSoundManager().play(PositionedSoundRecord.getRecord(WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
     }
 
     private void updateRotationStr() {
-        btnChangeRot.setLabel(I18n.format("webdisplays.gui.screencfg.rot" + rotation.getAngleAsInt()));
+        btnChangeRot.setLabel(I18n.get("webdisplays.gui.screencfg.rot" + rotation.getAngleAsInt()));
     }
 
     private void addFriend(String name) {
@@ -197,7 +204,7 @@ public class GuiScreenConfig extends WDScreen {
                 throw new NumberFormatException(); //I'm lazy
 
             if(x != scr.resolution.x || y != scr.resolution.y)
-                WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_SET_RESOLUTION, new Vector2i(x, y)));
+                Messages.INSTANCE.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_SET_RESOLUTION, new Vector2i(x, y)));
         } catch(NumberFormatException ex) {
             //Roll back
             tfResX.setText("" + scr.resolution.x);
@@ -215,7 +222,7 @@ public class GuiScreenConfig extends WDScreen {
             clickSetRes();
         else if(ev.getSource() == btnChangeRot) {
             Rotation[] rots = Rotation.values();
-            WebDisplays.NET_HANDLER.sendToServer(new SMessageScreenCtrl(tes, side, rots[(rotation.ordinal() + 1) % rots.length]));
+            Messages.INSTANCE.sendToServer(new SMessageScreenCtrl(tes, side, rots[(rotation.ordinal() + 1) % rots.length]));
         }
     }
 
@@ -278,7 +285,7 @@ public class GuiScreenConfig extends WDScreen {
     @GuiSubscribe
     public void onRemovePlayer(List.EntryClick ev) {
         if(ev.getSource() == lstFriends)
-            WebDisplays.NET_HANDLER.sendToServer(new SMessageScreenCtrl(tes, side, (NameUUIDPair) ev.getUserdata(), true));
+            Messages.INSTANCE.sendToServer(new SMessageScreenCtrl(tes, side, (NameUUIDPair) ev.getUserdata(), true));
     }
 
     @GuiSubscribe
@@ -309,12 +316,12 @@ public class GuiScreenConfig extends WDScreen {
                 cbLockRatio.setChecked(false);
             }
         } else if(ev.getSource() == cbAutoVolume)
-            WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.autoVol(tes, side, ev.isChecked()));
+            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.autoVol(tes, side, ev.isChecked()));
     }
 
     @GuiSubscribe
     public void onRemoveUpgrade(UpgradeGroup.ClickEvent ev) {
-        WebDisplays.NET_HANDLER.sendToServer(new SMessageScreenCtrl(tes, side, ev.getMouseOverStack()));
+        Messages.INSTANCE.sendToServer(new SMessageScreenCtrl(tes, side, ev.getMouseOverStack()));
     }
 
     public boolean isFriendCheckbox(CheckBox cb) {
@@ -335,7 +342,7 @@ public class GuiScreenConfig extends WDScreen {
 
         if(adding) {
             if(!hasFriend(pairs[0]))
-                WebDisplays.NET_HANDLER.sendToServer(new SMessageScreenCtrl(tes, side, pairs[0], false));
+                Messages.INSTANCE.sendToServer(new SMessageScreenCtrl(tes, side, pairs[0], false));
 
             tfFriend.setDisabled(false);
             tfFriend.clear();
@@ -424,12 +431,12 @@ public class GuiScreenConfig extends WDScreen {
 
     @Override
     protected void sync() {
-        WebDisplays.NET_HANDLER.sendToServer(new SMessageScreenCtrl(tes, side, friendRights, otherRights));
+        Messages.INSTANCE.sendToServer(new SMessageScreenCtrl(tes, side, friendRights, otherRights));
         Log.info("Sent sync packet");
     }
 
     public void updateMyRights() {
-        NameUUIDPair me = new NameUUIDPair(mc.player.getGameProfile());
+        NameUUIDPair me = new NameUUIDPair(minecraft.player.getGameProfile());
         int myRights;
         boolean clientIsOwner = false;
 
@@ -483,7 +490,7 @@ public class GuiScreenConfig extends WDScreen {
 
     @Override
     public boolean isForBlock(BlockPos bp, BlockSide side) {
-        return bp.equals(tes.getPos()) && side == this.side;
+        return bp.equals(tes.getBlockPos()) && side == this.side;
     }
 
     @Nullable

@@ -4,16 +4,16 @@
 
 package net.montoyo.wd.client.gui;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.montoyo.mcef.api.API;
-import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.TextField;
 import net.montoyo.wd.client.gui.loading.FillControl;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageRedstoneCtrl;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
@@ -37,10 +37,7 @@ public class GuiRedstoneCtrl extends WDScreen {
     @FillControl
     private Button btnOk;
 
-    public GuiRedstoneCtrl() {
-    }
-
-    public GuiRedstoneCtrl(ResourceLocation d, Vector3i p, String r, String f) {
+    public GuiRedstoneCtrl(Component component, ResourceLocation d, Vector3i p, String r, String f) {
         super(component);
         dimension = d;
         pos = p;
@@ -49,8 +46,8 @@ public class GuiRedstoneCtrl extends WDScreen {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
         loadFrom(new ResourceLocation("webdisplays", "gui/redstonectrl.json"));
         tfRisingEdge.setText(risingEdgeURL);
         tfFallingEdge.setText(fallingEdgeURL);
@@ -63,10 +60,10 @@ public class GuiRedstoneCtrl extends WDScreen {
 
             String rising = mcef.punycode(Util.addProtocol(tfRisingEdge.getText()));
             String falling = mcef.punycode(Util.addProtocol(tfFallingEdge.getText()));
-            WebDisplays.NET_HANDLER.sendToServer(new SMessageRedstoneCtrl(dimension, pos, rising, falling));
+            Messages.INSTANCE.sendToServer(new SMessageRedstoneCtrl(dimension, pos, rising, falling));
         }
 
-        mc.displayGuiScreen(null);
+        minecraft.setScreen(null);
     }
 
     @Override
