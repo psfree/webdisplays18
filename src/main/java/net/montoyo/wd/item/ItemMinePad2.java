@@ -19,6 +19,7 @@ import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.SoundCategory;
 import net.minecraft.world.World;
+import net.minecraft.world.item.Item;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.CraftComponent;
 

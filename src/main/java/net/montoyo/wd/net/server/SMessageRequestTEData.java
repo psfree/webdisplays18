@@ -5,56 +5,61 @@
 package net.montoyo.wd.net.server;
 
 import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
-import net.montoyo.wd.utilities.Log;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Message;
+import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Vector3i;
 
-@Message(messageId = 1, side = Side.SERVER)
-public class SMessageRequestTEData implements IMessage, Runnable {
+import java.util.function.Supplier;
 
-    private int dim;
+public class SMessageRequestTEData implements Runnable {
+
+    private ResourceLocation dim;
     private Vector3i pos;
-    private EntityPlayerMP player;
+    private ServerPlayer player;
 
     public SMessageRequestTEData() {
     }
 
-    public SMessageRequestTEData(TileEntity te) {
-        dim = te.getWorld().provider.getDimension();
-        pos = new Vector3i(te.getPos());
+    public SMessageRequestTEData(BlockEntity te) {
+        dim = te.getLevel().dimension().location();
+        pos = new Vector3i(te.getBlockPos());
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        dim = buf.readInt();
-        pos = new Vector3i(buf);
+    public SMessageRequestTEData(ResourceLocation dim, Vector3i pos) {
+        this.dim = dim;
+        this.pos = pos;
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
-        buf.writeInt(dim);
+    public static SMessageRequestTEData decode(FriendlyByteBuf buf) {
+        return new SMessageRequestTEData(buf.readResourceLocation(), new Vector3i(buf));
+    }
+
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeResourceLocation(dim);
         pos.writeTo(buf);
     }
 
     @Override
     public void run() {
-        if(player.world.provider.getDimension() != dim)
+        if(!player.level.dimension().location().equals(dim))
             return;
 
         BlockPos bp = pos.toBlock();
-        if(player.getDistanceSq(bp) > 512.0 * 512.0)
+        if(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ()) > 512.0 * 512.0)
             return;
 
-        TileEntity te = player.world.getTileEntity(bp);
+        BlockEntity te = player.level.getBlockEntity(bp);
         if(te == null) {
             Log.error("MesageRequestTEData: Can't request data of null tile entity at %s", pos.toString());
             return;
@@ -64,15 +69,8 @@ public class SMessageRequestTEData implements IMessage, Runnable {
             ((TileEntityScreen) te).requestData(player);
     }
 
-    public static class Handler implements IMessageHandler<SMessageRequestTEData, IMessage> {
-
-        @Override
-        public IMessage onMessage(SMessageRequestTEData message, MessageContext ctx) {
-            message.player = ctx.getServerHandler().player;
-            ((WorldServer) message.player.world).addScheduledTask(message);
-            return null;
-        }
-
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        player = contextSupplier.get().getSender();
+        contextSupplier.get().enqueueWork(this);
     }
-
 }

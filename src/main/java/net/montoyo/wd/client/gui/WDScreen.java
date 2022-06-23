@@ -208,7 +208,7 @@ public abstract class WDScreen extends Screen {
         else if(Mouse.getEventButton() == -1)
             onMouseMove(x, y);
     }
-    
+
     @Override
     public void handleKeyboardInput() throws IOException {
         super.handleKeyboardInput();

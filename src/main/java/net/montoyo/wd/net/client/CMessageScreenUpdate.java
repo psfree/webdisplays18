@@ -164,34 +164,39 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public void decode(FriendlyByteBuf buf) {
-        pos = new Vector3i(buf);
-        side = BlockSide.values()[buf.readByte()];
-        action = buf.readByte();
+    public static CMessageScreenUpdate decode(FriendlyByteBuf buf) {
+        Vector3i pos = new Vector3i(buf);
+        BlockSide side = BlockSide.values()[buf.readByte()];
+        byte action = buf.readByte();
 
-        if(action == UPDATE_URL || action == UPDATE_TYPE || action == UPDATE_RUN_JS)
-            string = buf.readUtf();
-        else if(action == UPDATE_MOUSE) {
-            mouseEvent = buf.readByte();
+        CMessageScreenUpdate message = new CMessageScreenUpdate();
+        message.pos = pos;
+        message.side = side;
+        message.action = action;
 
-            if(mouseEvent != MOUSE_UP)
-                vec2i = new Vector2i(buf);
-        } else if(action == UPDATE_RESOLUTION)
-            vec2i = new Vector2i(buf);
-        else if(action == UPDATE_UPGRADES) {
-            upgrades = new ItemStack[buf.readByte()];
+        switch (action) {
+            case UPDATE_URL, UPDATE_TYPE, UPDATE_RUN_JS -> message.string = buf.readUtf();
+            case UPDATE_MOUSE -> {
+                message.mouseEvent = buf.readByte();
+                if (message.mouseEvent != MOUSE_UP)
+                    message.vec2i = new Vector2i(buf);
+            }
+            case UPDATE_RESOLUTION -> message.vec2i = new Vector2i(buf);
+            case UPDATE_UPGRADES -> {
+                message.upgrades = new ItemStack[buf.readByte()];
+                for (int i = 0; i < message.upgrades.length; i++)
+                    message.upgrades[i] = buf.readItem();
+            }
+            case UPDATE_JS_REDSTONE -> {
+                message.vec2i = new Vector2i(buf);
+                message.redstoneLevel = buf.readByte();
+            }
+            case UPDATE_OWNER -> message.owner = new NameUUIDPair(buf);
+            case UPDATE_ROTATION -> message.rotation = Rotation.values()[buf.readByte() & 3];
+            case UPDATE_AUTO_VOL -> message.autoVolume = buf.readBoolean();
+        }
 
-            for(int i = 0; i < upgrades.length; i++)
-                upgrades[i] = buf.readItem();
-        } else if(action == UPDATE_JS_REDSTONE) {
-            vec2i = new Vector2i(buf);
-            redstoneLevel = buf.readByte();
-        } else if(action == UPDATE_OWNER)
-            owner = new NameUUIDPair(buf);
-        else if(action == UPDATE_ROTATION)
-            rotation = Rotation.values()[buf.readByte() & 3];
-        else if(action == UPDATE_AUTO_VOL)
-            autoVolume = buf.readBoolean();
+        return message;
     }
 
 

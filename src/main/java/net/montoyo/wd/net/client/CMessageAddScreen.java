@@ -37,12 +37,19 @@ public class CMessageAddScreen {
         screens = toSend;
     }
 
-    public void decode(FriendlyByteBuf buf) {
-        clear = buf.readBoolean();
-        pos = new Vector3i(buf);
+    public CMessageAddScreen(boolean clear, Vector3i pos, TileEntityScreen.Screen[] screens) {
+        this.clear = clear;
+        this.pos = pos;
+        this.screens = screens;
+    }
+
+    public static CMessageAddScreen decode(FriendlyByteBuf buf) {
+        boolean clear = buf.readBoolean();
+        Vector3i pos = new Vector3i(buf);
+
         int cnt = buf.readByte() & 7;
 
-        screens = new TileEntityScreen.Screen[cnt];
+        TileEntityScreen.Screen[] screens = new TileEntityScreen.Screen[cnt];
         for (int i = 0; i < cnt; i++) {
             screens[i] = new TileEntityScreen.Screen();
             screens[i].side = BlockSide.values()[buf.readByte()];
@@ -57,9 +64,11 @@ public class CMessageAddScreen {
             for (int j = 0; j < numUpgrades; j++)
                 screens[i].upgrades.add(buf.readItem());
         }
+
+        return new CMessageAddScreen(clear, pos, screens);
     }
 
-    public CMessageAddScreen encode(FriendlyByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeBoolean(clear);
         pos.writeTo(buf);
         buf.writeByte(screens.length);
@@ -76,7 +85,6 @@ public class CMessageAddScreen {
             for (ItemStack is : scr.upgrades)
                 buf.writeItem(is);
         }
-        return this;
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {

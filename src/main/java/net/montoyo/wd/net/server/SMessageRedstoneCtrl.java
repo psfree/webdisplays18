@@ -5,16 +5,25 @@
 package net.montoyo.wd.net.server;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.entity.TileEntityRedCtrl;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -22,11 +31,12 @@ import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
 
-@Message(messageId = 8, side = Side.SERVER)
-public class SMessageRedstoneCtrl implements IMessage, Runnable {
+import java.util.function.Supplier;
 
-    private EntityPlayer player;
-    private int dimension;
+public class SMessageRedstoneCtrl implements Runnable {
+
+    private Player player;
+    private ResourceLocation dimension;
     private Vector3i pos;
     private String risingEdgeURL;
     private String fallingEdgeURL;
@@ -34,7 +44,7 @@ public class SMessageRedstoneCtrl implements IMessage, Runnable {
     public SMessageRedstoneCtrl() {
     }
 
-    public SMessageRedstoneCtrl(int d, Vector3i p, String r, String f) {
+    public SMessageRedstoneCtrl(ResourceLocation d, Vector3i p, String r, String f) {
         dimension = d;
         pos = p;
         risingEdgeURL = r;
@@ -43,14 +53,14 @@ public class SMessageRedstoneCtrl implements IMessage, Runnable {
 
     @Override
     public void run() {
-        World world = player.world;
+        Level world = player.level;
         BlockPos blockPos = pos.toBlock();
-        final double maxRange = player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue();
+        final double maxRange = player.getAttribute(ForgeMod.REACH_DISTANCE.get()).getValue();
 
-        if(world.provider.getDimension() != dimension || player.getDistanceSq(blockPos) > maxRange * maxRange)
+        if(!world.dimension().location().equals(dimension) || player.distanceToSqr(blockPos.getX(), blockPos.getY(), blockPos.getZ()) > maxRange * maxRange)
             return;
 
-        TileEntity te = player.world.getTileEntity(blockPos);
+        BlockEntity te = world.getBlockEntity(blockPos);
         if(te == null || !(te instanceof TileEntityRedCtrl))
             return;
 
@@ -70,30 +80,19 @@ public class SMessageRedstoneCtrl implements IMessage, Runnable {
         redCtrl.setURLs(risingEdgeURL, fallingEdgeURL);
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        dimension = buf.readInt();
-        pos = new Vector3i(buf);
-        risingEdgeURL = ByteBufUtils.readUTF8String(buf);
-        fallingEdgeURL = ByteBufUtils.readUTF8String(buf);
+    public static SMessageRedstoneCtrl decode(FriendlyByteBuf buf) {
+        return new SMessageRedstoneCtrl(buf.readResourceLocation(), new Vector3i(buf), buf.readUtf(), buf.readUtf());
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
-        buf.writeInt(dimension);
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeResourceLocation(dimension);
         pos.writeTo(buf);
-        ByteBufUtils.writeUTF8String(buf, risingEdgeURL);
-        ByteBufUtils.writeUTF8String(buf, fallingEdgeURL);
+        buf.writeUtf(risingEdgeURL);
+        buf.writeUtf(fallingEdgeURL);
     }
 
-    public static class Handler implements IMessageHandler<SMessageRedstoneCtrl, IMessage> {
-
-        @Override
-        public IMessage onMessage(SMessageRedstoneCtrl msg, MessageContext ctx) {
-            msg.player = ctx.getServerHandler().player;
-            ((WorldServer) msg.player.world).addScheduledTask(msg);
-            return null;
-        }
-
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        player = contextSupplier.get().getSender();
+        contextSupplier.get().enqueueWork(this);
     }
 }

@@ -5,12 +5,15 @@
 package net.montoyo.wd.net.client;
 
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.data.GuiData;
 import net.montoyo.wd.utilities.Util;
 
-public class CMessageOpenGui {
+import java.util.function.Supplier;
+
+public class CMessageOpenGui implements Runnable {
 
     private GuiData data;
 
@@ -30,9 +33,8 @@ public class CMessageOpenGui {
         data = (GuiData) Util.unserialize(buf, cls);
     }
 
-    @Override
-    public CMessageOpenGui encode(FriendlyByteBuf buf) {
-        ByteBufUtils.writeUTF8String(buf, data.getName());
+    public void encode(FriendlyByteBuf buf) {
+        buf.writeUtf(data.getName());
         Util.serialize(buf, data);
     }
 
@@ -41,4 +43,7 @@ public class CMessageOpenGui {
         WebDisplays.PROXY.displayGui(data);
     }
 
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        contextSupplier.get().enqueueWork(this);
+    }
 }

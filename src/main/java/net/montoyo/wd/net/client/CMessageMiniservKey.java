@@ -21,15 +21,15 @@ public class CMessageMiniservKey {
         encryptedKey = key;
     }
 
-    public void decode(FriendlyByteBuf buf) {
-        encryptedKey = new byte[buf.readShort() & 0xFFFF];
+    public static CMessageMiniservKey decode(FriendlyByteBuf buf) {
+        byte[] encryptedKey = new byte[buf.readShort() & 0xFFFF];
         buf.readBytes(encryptedKey);
+        return new CMessageMiniservKey(encryptedKey);
     }
 
     public CMessageMiniservKey encode(FriendlyByteBuf buf) {
         buf.writeShort(encryptedKey.length);
         buf.writeBytes(encryptedKey);
-        return new CMessageMiniservKey(encryptedKey);
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {

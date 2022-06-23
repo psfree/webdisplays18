@@ -9,7 +9,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageOpenGui;
 
 import java.util.HashMap;
@@ -34,7 +36,7 @@ public abstract class GuiData {
     public abstract String getName();
 
     public void sendTo(ServerPlayer player) {
-        WebDisplays.NET_HANDLER.sendTo(new CMessageOpenGui(this), player);
+        Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new CMessageOpenGui(this));
     }
 
 }

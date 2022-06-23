@@ -4,20 +4,29 @@
 
 package net.montoyo.wd.net.server;
 
-import io.netty.buffer.ByteBuf;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.core.DefaultPeripheral;
@@ -27,6 +36,8 @@ import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.net.Message;
 import net.montoyo.wd.utilities.*;
+
+import java.util.function.Supplier;
 
 @Message(messageId = 2, side = Side.SERVER)
 public class SMessageScreenCtrl implements IMessage, Runnable {
@@ -48,12 +59,12 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static final int CTRL_SET_AUTO_VOL = 14;
 
     private int ctrl;
-    private int dim;
+    private ResourceLocation dim;
     private Vector3i pos;
     private BlockSide side;
     private String url;
     private NameUUIDPair friend;
-    private EntityPlayerMP player;
+    private ServerPlayer player;
     private int friendRights;
     private int otherRights;
     private Vector2i vec2i;
@@ -73,8 +84,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static SMessageScreenCtrl setURL(TileEntityScreen tes, BlockSide side, String url, Vector3i remoteLocation) {
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = (remoteLocation == null) ? CTRL_SET_URL : CTRL_SET_URL_REMOTE;
-        ret.dim = tes.getWorld().provider.getDimension();
-        ret.pos = new Vector3i(tes.getPos());
+        ret.dim = tes.getLevel().dimension().location();
+        ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.url = url;
 
@@ -86,16 +97,16 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
 
     public SMessageScreenCtrl(TileEntityScreen tes, BlockSide side, NameUUIDPair friend, boolean del) {
         ctrl = del ? CTRL_REMOVE_FRIEND : CTRL_ADD_FRIEND;
-        dim = tes.getWorld().provider.getDimension();
-        pos = new Vector3i(tes.getPos());
+        dim = tes.getLevel().dimension().location();
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         this.friend = friend;
     }
 
     public SMessageScreenCtrl(TileEntityScreen tes, BlockSide side, int fr, int or) {
         ctrl = CTRL_SET_RIGHTS;
-        dim = tes.getWorld().provider.getDimension();
-        pos = new Vector3i(tes.getPos());
+        dim = tes.getLevel().dimension().location();
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         friendRights = fr;
         otherRights = or;
@@ -103,16 +114,16 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
 
     public SMessageScreenCtrl(TileEntityScreen tes, BlockSide side, ItemStack toRem) {
         ctrl = CTRL_REMOVE_UPGRADE;
-        dim = tes.getWorld().provider.getDimension();
-        pos = new Vector3i(tes.getPos());
+        dim = tes.getLevel().dimension().location();
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         toRemove = toRem;
     }
 
     public SMessageScreenCtrl(TileEntityScreen tes, BlockSide side, Rotation rot) {
         ctrl = CTRL_SET_ROTATION;
-        dim = tes.getWorld().provider.getDimension();
-        pos = new Vector3i(tes.getPos());
+        dim = tes.getLevel().dimension().location();
+        pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         rotation = rot;
     }
@@ -120,8 +131,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static SMessageScreenCtrl type(TileEntityScreen tes, BlockSide side, String text, BlockPos soundPos) {
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = CTRL_TYPE;
-        ret.pos = new Vector3i(tes.getPos());
-        ret.dim = tes.getWorld().provider.getDimension();
+        ret.pos = new Vector3i(tes.getBlockPos());
+        ret.dim = tes.getLevel().dimension().location();
         ret.side = side;
         ret.text = text;
         ret.soundPos = soundPos;
@@ -135,8 +146,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
 
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = ctrl;
-        ret.pos = new Vector3i(tes.getPos());
-        ret.dim = tes.getWorld().provider.getDimension();
+        ret.pos = new Vector3i(tes.getBlockPos());
+        ret.dim = tes.getLevel().dimension().location();
         ret.side = side;
         ret.vec2i = vec;
 
@@ -146,8 +157,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static SMessageScreenCtrl laserUp(TileEntityScreen tes, BlockSide side) {
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = CTRL_LASER_UP;
-        ret.pos = new Vector3i(tes.getPos());
-        ret.dim = tes.getWorld().provider.getDimension();
+        ret.pos = new Vector3i(tes.getBlockPos());
+        ret.dim = tes.getLevel().dimension().location();
         ret.side = side;
 
         return ret;
@@ -156,8 +167,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static SMessageScreenCtrl jsRequest(TileEntityScreen tes, BlockSide side, int reqId, JSServerRequest reqType, Object ... data) {
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = CTRL_JS_REQUEST;
-        ret.pos = new Vector3i(tes.getPos());
-        ret.dim = tes.getWorld().provider.getDimension();
+        ret.pos = new Vector3i(tes.getBlockPos());
+        ret.dim = tes.getLevel().dimension().location();
         ret.side = side;
         ret.jsReqID = reqId;
         ret.jsReqType = reqType;
@@ -169,8 +180,8 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     public static SMessageScreenCtrl autoVol(TileEntityScreen tes, BlockSide side, boolean av) {
         SMessageScreenCtrl ret = new SMessageScreenCtrl();
         ret.ctrl = CTRL_SET_AUTO_VOL;
-        ret.pos = new Vector3i(tes.getPos());
-        ret.dim = tes.getWorld().provider.getDimension();
+        ret.pos = new Vector3i(tes.getBlockPos());
+        ret.dim = tes.getLevel().dimension().location();
         ret.side = side;
         ret.autoVol = av;
 
@@ -181,55 +192,56 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
         return msg == CTRL_SET_RESOLUTION || msg == CTRL_LASER_DOWN || msg == CTRL_LASER_MOVE;
     }
 
-    @Override
-    public void fromBytes(ByteBuf buf) {
-        ctrl = buf.readByte();
-        dim = buf.readInt();
-        pos = new Vector3i(buf);
-        side = BlockSide.fromInt(buf.readByte());
+    public static SMessageScreenCtrl decode(FriendlyByteBuf buf) {
+        SMessageScreenCtrl message = new SMessageScreenCtrl();
+        message.ctrl = buf.readByte();
+        message.dim = buf.readResourceLocation();
+        message.pos = new Vector3i(buf);
+        message.side = BlockSide.fromInt(buf.readByte());
 
-        if(ctrl == CTRL_SET_URL)
-            url = ByteBufUtils.readUTF8String(buf);
-        else if(ctrl == CTRL_ADD_FRIEND || ctrl == CTRL_REMOVE_FRIEND)
-            friend = new NameUUIDPair(buf);
-        else if(ctrl == CTRL_SET_RIGHTS) {
-            friendRights = buf.readByte();
-            otherRights = buf.readByte();
-        } else if(isVec2Ctrl(ctrl))
-            vec2i = new Vector2i(buf);
-        else if(ctrl == CTRL_TYPE) {
-            text = ByteBufUtils.readUTF8String(buf);
+        if(message.ctrl == CTRL_SET_URL)
+            message.url = buf.readUtf();
+        else if(message.ctrl == CTRL_ADD_FRIEND || message.ctrl == CTRL_REMOVE_FRIEND)
+            message.friend = new NameUUIDPair(buf);
+        else if(message.ctrl == CTRL_SET_RIGHTS) {
+            message.friendRights = buf.readByte();
+            message.otherRights = buf.readByte();
+        } else if(isVec2Ctrl(message.ctrl))
+            message.vec2i = new Vector2i(buf);
+        else if(message.ctrl == CTRL_TYPE) {
+            message.text = buf.readUtf();
 
             int sx = buf.readInt();
             int sy = buf.readInt();
             int sz = buf.readInt();
-            soundPos = new BlockPos(sx, sy, sz);
-        } else if(ctrl == CTRL_REMOVE_UPGRADE)
-            toRemove = ByteBufUtils.readItemStack(buf);
-        else if(ctrl == CTRL_JS_REQUEST) {
-            jsReqID = buf.readInt();
-            jsReqType = JSServerRequest.fromID(buf.readByte());
+            message.soundPos = new BlockPos(sx, sy, sz);
+        } else if(message.ctrl == CTRL_REMOVE_UPGRADE)
+            message.toRemove = buf.readItem();
+        else if(message.ctrl == CTRL_JS_REQUEST) {
+            message.jsReqID = buf.readInt();
+            message.jsReqType = JSServerRequest.fromID(buf.readByte());
 
-            if(jsReqType != null)
-                jsReqData = jsReqType.deserialize(buf);
-        } else if(ctrl == CTRL_SET_ROTATION)
-            rotation = Rotation.values()[buf.readByte() & 3];
-        else if(ctrl == CTRL_SET_URL_REMOTE) {
-            url = ByteBufUtils.readUTF8String(buf);
-            remoteLoc = new Vector3i(buf);
-        } else if(ctrl == CTRL_SET_AUTO_VOL)
-            autoVol = buf.readBoolean();
+            if(message.jsReqType != null)
+                message.jsReqData = message.jsReqType.deserialize(buf);
+        } else if(message.ctrl == CTRL_SET_ROTATION)
+            message.rotation = Rotation.values()[buf.readByte() & 3];
+        else if(message.ctrl == CTRL_SET_URL_REMOTE) {
+            message.url = buf.readUtf();
+            message.remoteLoc = new Vector3i(buf);
+        } else if(message.ctrl == CTRL_SET_AUTO_VOL)
+            message.autoVol = buf.readBoolean();
+
+        return message;
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeByte(ctrl);
-        buf.writeInt(dim);
+        buf.writeResourceLocation(dim);
         pos.writeTo(buf);
         buf.writeByte(side.ordinal());
 
         if(ctrl == CTRL_SET_URL)
-            ByteBufUtils.writeUTF8String(buf, url);
+            buf.writeUtf(url);
         else if(ctrl == CTRL_ADD_FRIEND || ctrl == CTRL_REMOVE_FRIEND)
             friend.writeTo(buf);
         else if(ctrl == CTRL_SET_RIGHTS) {
@@ -238,12 +250,12 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
         } else if(isVec2Ctrl(ctrl))
             vec2i.writeTo(buf);
         else if(ctrl == CTRL_TYPE) {
-            ByteBufUtils.writeUTF8String(buf, text);
+            buf.writeUtf(text);
             buf.writeInt(soundPos.getX());
             buf.writeInt(soundPos.getY());
             buf.writeInt(soundPos.getZ());
         } else if(ctrl == CTRL_REMOVE_UPGRADE)
-            ByteBufUtils.writeItemStack(buf, toRemove);
+            buf.writeItem(toRemove);
         else if(ctrl == CTRL_JS_REQUEST) {
             buf.writeInt(jsReqID);
             buf.writeByte(jsReqType.ordinal());
@@ -253,7 +265,7 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
         } else if(ctrl == CTRL_SET_ROTATION)
             buf.writeByte(rotation.ordinal());
         else if(ctrl == CTRL_SET_URL_REMOTE) {
-            ByteBufUtils.writeUTF8String(buf, url);
+            buf.writeUtf(url);
             remoteLoc.writeTo(buf);
         } else if(ctrl == CTRL_SET_AUTO_VOL)
             buf.writeBoolean(autoVol);
@@ -280,26 +292,26 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
     }
 
     private void runUnsafe() throws MissingPermissionException {
-        World world = player.world;
+        Level world = player.level;
         BlockPos bp = pos.toBlock();
 
-        if(world.provider.getDimension() != dim)
+        if(!world.dimension().location().equals(dim))
             return; //Out of range (dimension mismatch)
 
         if(ctrl == CTRL_SET_URL_REMOTE) {
-            double reachDist = player.getEntityAttribute(EntityPlayer.REACH_DISTANCE).getAttributeValue();
+            double reachDist = player.getAttributeValue(ForgeMod.REACH_DISTANCE.get());
             BlockPos blockPos = remoteLoc.toBlock();
 
-            if(player.getDistanceSq(blockPos) > reachDist * reachDist)
+            if(player.distanceToSqr(blockPos.getX(), blockPos.getY(), blockPos.getZ()) > reachDist * reachDist)
                 return; //Out of range (player reach distance)
 
-            IBlockState bs = world.getBlockState(blockPos);
+            BlockState bs = world.getBlockState(blockPos);
             if(bs.getBlock() != WebDisplays.INSTANCE.blockPeripheral || bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
                 return; //I call it hax...
-        } else if(player.getDistanceSq(bp) > 128.0 * 128.0)
+        } else if(player.shouldRenderAtSqrDistance(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ())))
             return; //Out of range (range problem)
 
-        TileEntity te = world.getTileEntity(bp);
+        BlockEntity te = world.getBlockEntity(bp);
         if(te == null || !(te instanceof TileEntityScreen)) {
             Log.error("TileEntity at %s is not a screen; can't control it!", pos.toString());
             return;
@@ -358,15 +370,9 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
             Log.warning("Caught SMessageScreenCtrl with invalid control ID %d from player %s (UUID %s)", ctrl, player.getName(), player.getGameProfile().getId().toString());
     }
 
-    public static class Handler implements IMessageHandler<SMessageScreenCtrl, IMessage> {
-
-        @Override
-        public IMessage onMessage(SMessageScreenCtrl message, MessageContext ctx) {
-            message.player = ctx.getServerHandler().player;
-            ((WorldServer) message.player.world).addScheduledTask(message);
-            return null;
-        }
-
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        player = contextSupplier.get().getSender();
+        contextSupplier.get().enqueueWork(this);
     }
 
 }

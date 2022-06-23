@@ -36,21 +36,29 @@ public class CMessageJSResponse {
         errString = err;
     }
 
-    public void decode(FriendlyByteBuf buf) {
-        id = buf.readInt();
-        type = JSServerRequest.fromID(buf.readByte());
-        success = buf.readBoolean();
+    public static CMessageJSResponse decode(FriendlyByteBuf buf) {
+        int id = buf.readInt();
+        JSServerRequest type = JSServerRequest.fromID(buf.readByte());
+        boolean success = buf.readBoolean();
+
+        byte[] data = null;
+
+        int errCode;
+        String errString;
 
         if(success) {
             data = new byte[buf.readByte()];
             buf.readBytes(data);
+
+            return new CMessageJSResponse(id, type, data);
         } else {
             errCode = buf.readInt();
             errString = buf.readUtf();
+            return new CMessageJSResponse(id, type, errCode, errString);
         }
     }
 
-    public CMessageJSResponse encode(FriendlyByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeInt(id);
         buf.writeByte(type.ordinal());
         buf.writeBoolean(success);
@@ -62,7 +70,6 @@ public class CMessageJSResponse {
             buf.writeInt(errCode);
             buf.writeUtf(errString);
         }
-        return this;
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {

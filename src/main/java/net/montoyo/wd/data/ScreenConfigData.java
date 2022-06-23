@@ -10,9 +10,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.GuiScreenConfig;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageOpenGui;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
@@ -78,8 +80,8 @@ public class ScreenConfigData extends GuiData {
         return this;
     }
 
-    public void sendTo(NetworkRegistry.TargetPoint tp) {
-        WebDisplays.NET_HANDLER.sendToAllAround(new CMessageOpenGui(this), tp);
+    public void sendTo(PacketDistributor.TargetPoint tp) {
+        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> tp), new CMessageOpenGui(this));
     }
 
 }

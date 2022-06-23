@@ -28,21 +28,20 @@ public class CMessageCloseGui {
         blockSide = side;
     }
 
-    public void decode(FriendlyByteBuf buf) {
+    public static CMessageCloseGui decode(FriendlyByteBuf buf) {
         int x, y, z, side;
         x = buf.readInt();
         y = buf.readInt();
         z = buf.readInt();
         side = buf.readByte();
 
-        blockPos = new BlockPos(x, y, z);
-        if(side <= 0)
-            blockSide = null;
-        else
-            blockSide = BlockSide.values()[side - 1];
+        BlockPos blockPos = new BlockPos(x, y, z);
+        BlockSide blockSide = side <= 0 ? null : BlockSide.values()[side - 1];
+
+        return new CMessageCloseGui(blockPos, blockSide);
     }
 
-    public CMessageCloseGui encode(FriendlyByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeInt(blockPos.getX());
         buf.writeInt(blockPos.getY());
         buf.writeInt(blockPos.getZ());
@@ -52,8 +51,6 @@ public class CMessageCloseGui {
         } else {
             buf.writeByte(blockSide.ordinal() + 1);
         }
-
-        return this;
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {

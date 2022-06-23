@@ -20,8 +20,8 @@ public class CMessageServerInfo {
         miniservPort = msPort;
     }
 
-    public void decode(FriendlyByteBuf buf) {
-        miniservPort = buf.readShort() & 0xFFFF;
+    public static CMessageServerInfo decode(FriendlyByteBuf buf) {
+        return new CMessageServerInfo(buf.readShort() & 0xFFFF);
     }
 
     public CMessageServerInfo encode(FriendlyByteBuf buf) {
