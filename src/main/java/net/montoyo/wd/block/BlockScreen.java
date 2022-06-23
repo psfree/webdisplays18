@@ -26,6 +26,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.common.property.ExtendedBlockState;
@@ -375,26 +377,20 @@ public class BlockScreen extends WDBlockContainer {
     }
 
     @Override
-    protected ItemPeripheral createItemBlock() {
+    protected BlockItem createItemBlock() {
         return new ItemBlockScreen(this);
     }
 
-    private static class ItemBlockScreen extends ItemBlock implements WDItem {
+    private static class ItemBlockScreen extends BlockItem implements WDItem {
 
         public ItemBlockScreen(BlockScreen screen) {
-            super(screen);
+            super(screen, new Properties());
         }
 
         @Nullable
         @Override
         public String getWikiName(@Nonnull ItemStack is) {
-            return "Screen";
-        }
-
-        @Override
-        public void addInformation(@Nullable ItemStack is, @Nullable World world, @Nullable List<String> tt, @Nullable ITooltipFlag ttFlags) {
-            super.addInformation(is, world, tt, ttFlags);
-            WDItem.addInformation(tt);
+            return is.getItem().getName(is).getString();
         }
 
     }

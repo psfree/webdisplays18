@@ -34,10 +34,12 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.block.BlockScreen;
@@ -45,8 +47,12 @@ import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.init.ItemInit;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.item.*;
 import net.montoyo.wd.miniserv.server.Server;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageServerInfo;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
@@ -72,21 +78,6 @@ public class WebDisplays {
     public static final String BLACKLIST_URL = "mod://webdisplays/blacklisted.html";
     public static final Gson GSON = new Gson();
     public static final ResourceLocation CAPABILITY = new ResourceLocation("webdisplays", "customdatacap");
-
-    //Blocks
-    public BlockScreen blockScreen;
-    public BlockPeripheral blockPeripheral;
-    public BlockKeyboardRight blockKbRight;
-
-    //Items
-    public ItemScreenConfigurator itemScreenCfg;
-    public ItemOwnershipThief itemOwnerThief;
-    public ItemLinker itemLinker;
-    public ItemMinePad2 itemMinePad;
-    public ItemUpgrade itemUpgrade;
-    public ItemLaserPointer itemLaserPointer;
-    public ItemCraftComponent itemCraftComp;
-    public ItemMulti itemAdvIcon;
 
     //Sounds
     public SoundEvent soundTyping;
@@ -162,39 +153,16 @@ public class WebDisplays {
         padResY = config.main.padHeight;
         padResX = padResY * PAD_RATIO;
 
-        //Init blocks
-        blockScreen = new BlockScreen();
-        blockScreen.makeItemBlock();
-
-        blockPeripheral = new BlockPeripheral();
-        blockPeripheral.makeItemBlock();
-
-        blockKbRight = new BlockKeyboardRight();
-
-        //Init items
-        itemScreenCfg = new ItemScreenConfigurator();
-        itemOwnerThief = new ItemOwnershipThief();
-        itemLinker = new ItemLinker();
-        itemMinePad = new ItemMinePad2();
-        itemUpgrade = new ItemUpgrade();
-        itemLaserPointer = new ItemLaserPointer();
-        itemCraftComp = new ItemCraftComponent();
-
-        itemAdvIcon = new ItemMulti(AdvancementIcon.class, new Item.Properties());
-        itemAdvIcon.setRegistryName("advicon");
-
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        ItemInit.init(bus);
+        BlockInit.init(bus);
         PROXY.preInit();
         MinecraftForge.EVENT_BUS.register(this);
 
-        //Register tile entities
-        Registry.register(Registry.BLOCK_ENTITY_TYPE, TileEntityScreen.class, new ResourceLocation("webdisplays", "screen"));
-        for(DefaultPeripheral dp: DefaultPeripheral.values()) {
-            if(dp.getTEClass() != null)
-                GameRegistry.registerTileEntity(dp.getTEClass(), new ResourceLocation("webdisplays", dp.getName()));
-        }
-
         //Other things
         PROXY.init();
+
+        TileInit.registerPeripherals();
 
         PROXY.postInit();
         hasOC = ModList.get().isLoaded("opencomputers");
@@ -216,17 +184,6 @@ public class WebDisplays {
         if (event.getObject() instanceof Player && !event.getObject().getCapability(WDDCapability.Provider.cap).isPresent()) {
             event.addCapability(new ResourceLocation("webdisplays", "wddcapability"), new WDDCapability.Provider());
         }
-    }
-
-    @SubscribeEvent
-    public void onRegisterBlocks(RegistryEvent.Register<Block> ev) {
-        ev.getRegistry().registerAll(blockScreen, blockPeripheral, blockKbRight);
-    }
-
-    @SubscribeEvent
-    public void onRegisterItems(RegistryEvent.Register<Item> ev) {
-        ev.getRegistry().registerAll(blockScreen.getItem(), blockPeripheral.getItem());
-        ev.getRegistry().registerAll(itemScreenCfg, itemOwnerThief, itemLinker, itemMinePad, itemUpgrade, itemLaserPointer, itemCraftComp, itemAdvIcon);
     }
 
     @SubscribeEvent
@@ -298,7 +255,7 @@ public class WebDisplays {
         if(!ev.getEntityItem().getLevel().isClientSide) {
             ItemStack is = ev.getEntityItem().getItem();
 
-            if(is.getItem() == itemMinePad) {
+            if(is.getItem() == ItemInit.itemMinePad.get()) {
                 CompoundTag tag = is.getTag();
 
                 if(tag == null) {
@@ -316,7 +273,7 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onPlayerCraft(PlayerEvent.ItemCraftedEvent ev) {
-        if(doHardRecipe && ev.getCrafting().getItem() == itemCraftComp && (CraftComponent.EXTENSION_CARD.makeItemStack().is(ev.getCrafting().getItem()))) {
+        if(doHardRecipe && ev.getCrafting().getItem() == ItemInit.itemCraftComp.get() && (CraftComponent.EXTENSION_CARD.makeItemStack().is(ev.getCrafting().getItem()))) {
             if((ev.getPlayer() instanceof ServerPlayer && !hasPlayerAdvancement((ServerPlayer) ev.getPlayer(), ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
                 ev.getCrafting().setDamageValue(CraftComponent.BAD_EXTENSION_CARD.ordinal());
 
@@ -334,7 +291,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
         if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
-            WebDisplays.NET_HANDLER.sendTo(new CMessageServerInfo(miniservPort), (ServerPlayer) ev.getPlayer());
+            Messages.INSTANCE.sendTo(new CMessageServerInfo(miniservPort), (ServerPlayer) ev.getPlayer());
             IWDDCapability cap = (IWDDCapability) ev.getPlayer().getCapability(WDDCapability.Provider.cap, null);
 
             if(cap == null)

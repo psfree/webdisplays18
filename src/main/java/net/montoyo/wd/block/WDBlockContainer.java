@@ -23,7 +23,7 @@ public abstract class WDBlockContainer extends BaseContainerBlockEntity {
        // setRegistryName(name);
     }
 
-    protected abstract ItemPeripheral createItemBlock();
+    protected abstract BlockItem createItemBlock();
 
     public void makeItemBlock() {
         if(itemBlock != null)
