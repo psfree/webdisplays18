@@ -45,6 +45,8 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static net.montoyo.wd.block.BlockPeripheral.point;
+
 public class TileEntityScreen extends BlockEntity{
 
     public TileEntityScreen(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {

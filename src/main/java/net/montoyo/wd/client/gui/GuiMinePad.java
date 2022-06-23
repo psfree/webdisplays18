@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui;
 
+import com.mojang.blaze3d.vertex.BufferBuilder;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
@@ -45,10 +46,10 @@ public class GuiMinePad extends WDScreen {
     }
 
     private static void addRect(BufferBuilder bb, double x, double y, double w, double h) {
-        bb.pos(x, y, 0.0).endVertex();
-        bb.pos(x + w, y, 0.0).endVertex();
-        bb.pos(x + w, y + h, 0.0).endVertex();
-        bb.pos(x, y + h, 0.0).endVertex();
+        bb.vertex(x, y, 0.0).endVertex();
+        bb.vertex(x + w, y, 0.0).endVertex();
+        bb.vertex(x + w, y + h, 0.0).endVertex();
+        bb.vertex(x, y + h, 0.0).endVertex();
     }
 
     @Override

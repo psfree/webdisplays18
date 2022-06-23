@@ -4,29 +4,29 @@
 
 package net.montoyo.wd.client.gui;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.Control;
 import net.montoyo.wd.client.gui.controls.Label;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.system.CallbackI;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Map;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(Dist.CLIENT)
 public class GuiKeyboard extends WDScreen {
 
     private static final String WARNING_FNAME = "wd_keyboard_warning.txt";
@@ -58,10 +58,10 @@ public class GuiKeyboard extends WDScreen {
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
-        if(mc.isIntegratedServerRunning() && mc.getIntegratedServer() != null && !mc.getIntegratedServer().getPublic())
+        if(minecraft.getSingleplayerServer() != null && !minecraft.getSingleplayerServer().isPublished())
             showWarning = false; //NO NEED
         else
             showWarning = !hasUserReadWarning();
@@ -94,8 +94,8 @@ public class GuiKeyboard extends WDScreen {
                 }
             }
         } else {
-            mc.inGameHasFocus = true;
-            mc.mouseHelper.grabMouseCursor();
+            minecraft.setWindowActive(true);
+            minecraft.mouseHandler.grabMouse();
         }
 
         defaultBackground = showWarning;
@@ -103,10 +103,10 @@ public class GuiKeyboard extends WDScreen {
     }
 
     @Override
-    public void handleInput() {
+    public void handleKeyboardInput() throws IOException {
         if(showWarning) {
             try {
-                super.handleInput();
+                super.handleKeyboardInput();
             } catch(IOException ex) {
                 Log.warningEx("Caught exception while handling screen input", ex);
             }
@@ -141,7 +141,7 @@ public class GuiKeyboard extends WDScreen {
     @Override
     protected void sync() {
         if(!evStack.isEmpty()) {
-            WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.type(tes, side, WebDisplays.GSON.toJson(evStack), kbPos));
+            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.type(tes, side, WebDisplays.GSON.toJson(evStack), kbPos));
             evStack.clear();
         }
     }

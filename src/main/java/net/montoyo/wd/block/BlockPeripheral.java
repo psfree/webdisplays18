@@ -12,6 +12,7 @@ import net.minecraft.block.properties.PropertyEnum;
 import net.minecraft.block.properties.PropertyInteger;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.core.BlockPos;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
@@ -31,7 +32,10 @@ import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.network.NetworkDirection;
+import net.minecraftforge.network.NetworkRegistry;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.entity.*;
@@ -275,8 +279,8 @@ public class BlockPeripheral extends WDBlockContainer {
         }
     }
 
-    private static NetworkRegistry.TargetPoint point(World world, BlockPos bp) {
-        return new NetworkRegistry.TargetPoint(world.provider.getDimension(), (double) bp.getX(), (double) bp.getY(), (double) bp.getZ(), 64.0);
+    private static NetworkDirection point(Level world, BlockPos bp) {
+        return new NetworkDirection (world.dimension().location(), (double) bp.getX(), (double) bp.getY(), (double) bp.getZ(), 64.0);
     }
 
 }

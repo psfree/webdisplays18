@@ -16,6 +16,7 @@ import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
@@ -32,7 +33,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.ClientRegistry;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -48,7 +48,6 @@ import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.renderers.IItemRenderer;
 import net.montoyo.wd.client.renderers.LaserPointerRenderer;
 import net.montoyo.wd.client.renderers.MinePadRenderer;
-import net.montoyo.wd.client.renderers.ScreenRenderer;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
@@ -133,7 +132,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void init() {
-        ClientRegistry.bindTileEntitySpecialRenderer(TileEntityScreen.class, new ScreenRenderer());
+        //ClientRegistry.bindTileEntitySpecialRenderer(TileEntityScreen.class, new ScreenRenderer());
         jsDispatcher = new JSQueryDispatcher(this);
         minePadRenderer = new MinePadRenderer();
         laserPointerRenderer = new LaserPointerRenderer();
@@ -152,15 +151,17 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @Override
-    public Level getWorld(ResourceLocation dim) {
+    public Level getWorld(ResourceKey<Level> dim) {
         Level ret = mc.level;
 //        if(dim == CURRENT_DIMENSION)
 //            return ret;
-
-        if(!ret.dimension().location().equals(dim))
-            throw new RuntimeException("Can't get non-current dimension " + dim + " from client.");
-
-        return ret;
+        if(ret != null) {
+            if (!ret.dimension().equals(dim))
+                throw new RuntimeException("Can't get non-current dimension " + dim + " from client.");
+            return ret;
+        } else {
+            throw new RuntimeException("Level on client is null");
+        }
     }
 
     @Override
