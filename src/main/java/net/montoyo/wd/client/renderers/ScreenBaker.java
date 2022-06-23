@@ -8,6 +8,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrideList;
+import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -140,8 +141,8 @@ public class ScreenBaker implements IModelBaker {
 
     @Override
     @Nonnull
-    public ItemOverrideList getOverrides() {
-        return ItemOverrideList.NONE;
+    public ItemOverrides getOverrides() {
+        return ItemOverrides.EMPTY;
     }
 
 }

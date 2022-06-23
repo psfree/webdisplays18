@@ -16,6 +16,7 @@ import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
 import org.jetbrains.annotations.NotNull;
 
+import static com.mojang.math.Vector3f.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
@@ -30,9 +31,9 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             return;
 
         //Disable lighting
-        glEnable(GL_TEXTURE_2D);
-        glDisable(GL_CULL_FACE);
-        glDisable(GL_BLEND);
+        RenderSystem.enableTexture();
+        RenderSystem.disableCull();
+        RenderSystem.disableBlend();
 
         for(int i = 0; i < te.screenCount(); i++) {
             TileEntityScreen.Screen scr = te.getScreen(i);
@@ -52,39 +53,38 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             tmpi.mul(scr.size.x);
             tmpi.addMul(scr.side.up, scr.size.y);
             tmpf.set(tmpi);
-
-            mid.set(tmpf.x + 0.5, tmpi.y + 0.5, tmpi.z + 0.5);
+            mid.set(0.5, 0.5, 0.5);
             mid.addMul(tmpf, 0.5f);
             tmpf.set(scr.side.left);
             mid.addMul(tmpf, 0.5f);
             tmpf.set(scr.side.down);
             mid.addMul(tmpf, 0.5f);
 
-            glPushMatrix();
-            glTranslatef(mid.x, mid.y, mid.z);
+            poseStack.pushPose();
+            poseStack.translate(mid.x, mid.y, mid.z);
 
             switch(scr.side) {
                 case BOTTOM:
-                    glRotatef(90.f, 1.f, 0.f, 0.f);
+                    poseStack.mulPose(XP.rotation(90.f));
                     break;
 
                 case TOP:
-                    glRotatef(-90.f, 1.f, 0.f, 0.f);
+                    poseStack.mulPose(XN.rotation(90.f));
                     break;
 
                 case NORTH:
-                    glRotatef(180.f, 0.f, 1.f, 0.f);
+                    poseStack.mulPose(YN.rotationDegrees(180.f));
                     break;
 
                 case SOUTH:
                     break;
 
                 case WEST:
-                    glRotatef(-90.f, 0.f, 1.f, 0.f);
+                    poseStack.mulPose(YN.rotationDegrees(90.f));
                     break;
 
                 case EAST:
-                    glRotatef(90.f, 0.f, 1.f, 0.f);
+                    poseStack.mulPose(YP.rotationDegrees(90.f));
                     break;
             }
 
@@ -112,16 +112,19 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
                 sh = tmp;
             }
 
+            Tesselator tesselator = Tesselator.getInstance();
+            BufferBuilder builder = tesselator.getBuilder();
             //TODO: Use tesselator
-            glBindTexture(GL_TEXTURE_2D, scr.browser.getTextureID());
-            glBegin(GL_QUADS);
-            glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(0.f, 1.f); glVertex3f(-sw, -sh, 0.505f);
-            glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(1.f, 1.f); glVertex3f( sw, -sh, 0.505f);
-            glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(1.f, 0.f); glVertex3f( sw,  sh, 0.505f);
-            glColor4f(1.f, 1.f, 1.f, 1.f); glTexCoord2f(0.f, 0.f); glVertex3f(-sw,  sh, 0.505f);
-            glEnd();
+            RenderSystem.setShaderTexture(0, scr.browser.getTextureID());
+            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
+
+            builder.vertex(-sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 1.f).endVertex();
+            builder.vertex( sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 1.f).endVertex();
+            builder.vertex( sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 0.f).endVertex();
+            builder.vertex(-sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 0.f).endVertex();
+            builder.end();
             RenderSystem.bindTexture(0); //Minecraft does shit with mah texture otherwise...
-            glPopMatrix();
+            poseStack.popPose();
         }
 
         /*
@@ -133,7 +136,7 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
         */
 
         //Re-enable lighting
-        glEnable(GL_CULL_FACE);
+        RenderSystem.enableCull();
     }
 
     public void renderAABB(AABB bb) {
@@ -191,11 +194,4 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
         glEnable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
     }
-
-  //  @Override
-  //  public boolean isGlobalRenderer(TileEntityScreen te) {
-        //I don't like making it a global renderer for performance reasons,
-        //but Minecraft's AABB-in-view-frustum checking is crappy as hell.
-  //      return te.isLoaded();
-  //  }
 }
