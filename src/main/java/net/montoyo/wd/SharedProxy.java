@@ -9,6 +9,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -23,7 +24,7 @@ import javax.annotation.Nonnull;
 
 import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 
-public abstract class SharedProxy {
+public class SharedProxy {
     public void preInit() {
     }
 
@@ -51,7 +52,9 @@ public abstract class SharedProxy {
     public void onAutocompleteResult(NameUUIDPair pairs[]) {
     }
 
-    public abstract GameProfile[] getOnlineGameProfiles();
+    public GameProfile[] getOnlineGameProfiles() {
+        return ServerLifecycleHooks.getCurrentServer().getPlayerList().getPlayers().stream().map(Player::getGameProfile).toArray(GameProfile[]::new);
+    }
 
     public void screenUpdateResolutionInGui(Vector3i pos, BlockSide side, Vector2i res) {
     }

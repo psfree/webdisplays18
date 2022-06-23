@@ -8,6 +8,8 @@ import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 
 import javax.annotation.Nonnull;
@@ -33,5 +35,4 @@ public class ItemLaserPointer extends Item implements WDItem {
     public String getWikiName(@Nonnull ItemStack is) {
         return "Laser_Pointer";
     }
-
 }

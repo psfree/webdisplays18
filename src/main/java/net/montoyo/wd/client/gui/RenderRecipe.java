@@ -4,46 +4,40 @@
 
 package net.montoyo.wd.client.gui;
 
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.RenderHelper;
-import net.minecraft.client.renderer.RenderItem;
-import net.minecraft.client.renderer.texture.TextureUtil;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.CraftingManager;
-import net.minecraft.item.crafting.IRecipe;
-import net.minecraft.item.crafting.Ingredient;
-import net.minecraft.item.crafting.ShapedRecipes;
+import com.mojang.blaze3d.platform.Lighting;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.renderer.entity.ItemRenderer;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.NonNullList;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.ShapedRecipe;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.utilities.Log;
-import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.EXTBgra;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.IntBuffer;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 
-import static org.lwjgl.opengl.GL11.*;
+import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 
-@SideOnly(Side.CLIENT)
-public class RenderRecipe extends GuiScreen {
+@OnlyIn(CLIENT)
+public class RenderRecipe extends Screen {
+    public RenderRecipe() {
+        super(Component.nullToEmpty(null));
+    }
 
     private static class NameRecipePair {
 
         private final String name;
-        private final ShapedRecipes recipe;
+        private final ShapedRecipe recipe;
 
-        private NameRecipePair(String n, ShapedRecipes r) {
+        private NameRecipePair(String n, ShapedRecipe r) {
             this.name = n;
             this.recipe = r;
         }
@@ -55,26 +49,26 @@ public class RenderRecipe extends GuiScreen {
     private static final int SIZE_Y = 166;
     private int x;
     private int y;
-    private RenderItem renderItem;
+    private ItemRenderer renderItem;
     private final ItemStack[] recipe = new ItemStack[3 * 3];
     private ItemStack recipeResult;
     private String recipeName;
     private final ArrayList<NameRecipePair> recipes = new ArrayList<>();
-    private IntBuffer buffer;
+    private ByteBuffer buffer;
     private int[] array;
 
     @Override
-    public void initGui() {
+    public void init() {
         x = (width - SIZE_X) / 2;
         y = (height - SIZE_Y) / 2;
-        renderItem = mc.getRenderItem();
+        renderItem = minecraft.getItemRenderer();
 
-        for(IRecipe recipe: CraftingManager.REGISTRY) {
-            ResourceLocation regName = recipe.getRegistryName();
+        for(Recipe recipe : minecraft.level.getRecipeManager().getRecipes()) {
+            ResourceLocation regName = recipe.getId();
 
-            if(regName != null && regName.getResourceDomain().equals("webdisplays")) {
-                if(recipe instanceof ShapedRecipes)
-                    recipes.add(new NameRecipePair(regName.getResourcePath(), (ShapedRecipes) recipe));
+            if(regName != null && regName.getNamespace().equals("webdisplays")) {
+                if(recipe instanceof ShapedRecipe)
+                    recipes.add(new NameRecipePair(regName.getPath(), (ShapedRecipe) recipe));
                 else
                     Log.warning("Found non-shaped recipe %s", regName.toString());
             }
@@ -85,15 +79,16 @@ public class RenderRecipe extends GuiScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        drawDefaultBackground();
-        GlStateManager.color(1.0f, 1.0f, 1.0f);
-        mc.getTextureManager().bindTexture(CRAFTING_TABLE_GUI_TEXTURES);
-        drawTexturedModalRect(x, y, 0, 0, SIZE_X, SIZE_Y);
-        fontRenderer.drawString(I18n.format("container.crafting"), x + 28, y + 6, 0x404040);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
+        renderBackground(poseStack);
 
-        RenderHelper.enableGUIStandardItemLighting();
-        GlStateManager.disableLighting();
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        RenderSystem.setShaderTexture(0, CRAFTING_TABLE_GUI_TEXTURES);
+        blit(poseStack, x, y, 0, 0, SIZE_X, SIZE_Y);
+        font.draw(poseStack, I18n.get("container.crafting"), x + 28, y + 6, 0x404040);
+
+        Lighting.setupForFlatItems();
+//        RenderSystem.disableLighting(); //TODO: Need this?
 
         for(int sy = 0; sy < 3; sy++) {
             for(int sx = 0; sx < 3; sx++) {
@@ -103,41 +98,41 @@ public class RenderRecipe extends GuiScreen {
                     int x = this.x + 30 + sx * 18;
                     int y = this.y + 17 + sy * 18;
 
-                    renderItem.renderItemAndEffectIntoGUI(mc.player, is, x, y);
-                    renderItem.renderItemOverlayIntoGUI(fontRenderer, is, x, y, null);
+                    renderItem.renderAndDecorateItem(minecraft.player, is, x, y, 0);
+                    renderItem.renderGuiItemDecorations(font, is, x, y, null);
                 }
             }
         }
 
         if(recipeResult != null) {
-            renderItem.renderItemAndEffectIntoGUI(mc.player, recipeResult, x + 124, y + 35);
-            renderItem.renderItemOverlayIntoGUI(fontRenderer, recipeResult, x + 124, y + 35, null);
+            renderItem.renderAndDecorateItem(minecraft.player, recipeResult, x + 124, y + 35, 0);
+            renderItem.renderGuiItemDecorations(font, recipeResult, x + 124, y + 35, null);
         }
 
-        GlStateManager.enableLighting();
-        RenderHelper.disableStandardItemLighting();
+//        GlStateManager.enableLighting();
+        Lighting.setupFor3DItems();
     }
 
-    private void setRecipe(ShapedRecipes recipe) {
+    private void setRecipe(ShapedRecipe recipe) {
         IntStream.range(0, this.recipe.length).forEach(i -> this.recipe[i] = null);
         NonNullList<Ingredient> ingredients = recipe.getIngredients();
         int pos = 0;
 
         for(int y = 0; y < recipe.getRecipeHeight(); y++) {
             for(int x = 0; x < recipe.getRecipeWidth(); x++) {
-                ItemStack[] stacks = ingredients.get(pos++).getMatchingStacks();
+                ItemStack[] stacks = ingredients.get(pos++).getItems();
 
                 if(stacks.length > 0)
                     this.recipe[y * 3 + x] = stacks[0];
             }
         }
 
-        recipeResult = recipe.getRecipeOutput();
+        recipeResult = recipe.getResultItem();
     }
 
     private void nextRecipe() {
         if(recipes.isEmpty())
-            mc.displayGuiScreen(null);
+            minecraft.setScreen(null);
         else {
             NameRecipePair pair = recipes.remove(0);
             setRecipe(pair.recipe);
@@ -146,39 +141,40 @@ public class RenderRecipe extends GuiScreen {
     }
 
     private int screen2DisplayX(int x) {
-        double ret = ((double) x) / ((double) width) * ((double) mc.displayWidth);
+        double ret = ((double) x) / ((double) width) * ((double) minecraft.getWindow().getWidth());
         return (int) ret;
     }
 
     private int screen2DisplayY(int y) {
-        double ret = ((double) y) / ((double) height) * ((double) mc.displayHeight);
+        double ret = ((double) y) / ((double) height) * ((double) minecraft.getWindow().getHeight());
         return (int) ret;
     }
 
-    private void takeScreenshot() throws Throwable {
+    private void takeScreenshot() throws Throwable { //TODO: Figure out how to do this.
+        /*
         int x = screen2DisplayX(this.x + 27);
-        int y = mc.displayHeight - screen2DisplayY(this.y + 4);
+        int y = minecraft.getWindow().getHeight() - screen2DisplayY(this.y + 4);
         int w = screen2DisplayX(120);
         int h = screen2DisplayY(68);
         y -= h;
 
         if(buffer == null)
-            buffer = BufferUtils.createIntBuffer(w * h);
+            buffer = BufferUtils.createByteBuffer(w * h);
 
         int oldPack = glGetInteger(GL_PACK_ALIGNMENT);
-        glPixelStorei(GL_PACK_ALIGNMENT, 1);
+        RenderSystem.pixelStore(GL_PACK_ALIGNMENT, 1);
         buffer.clear();
-        glReadPixels(x, y, w, h, EXTBgra.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
-        glPixelStorei(GL_PACK_ALIGNMENT, oldPack);
+        RenderSystem.readPixels(x, y, w, h, EXTBGRA.GL_BGRA_EXT, GL_UNSIGNED_BYTE, buffer);
+        RenderSystem.pixelStore(GL_PACK_ALIGNMENT, oldPack);
 
         if(array == null)
             array = new int[w * h];
 
         buffer.clear();
-        buffer.get(array);
+        buffer.asIntBuffer().get(array);
         TextureUtil.processPixelValues(array, w, h);
 
-        File f = new File(mc.mcDataDir, "wd_recipes");
+        File f = new File(minecraft.gameDirectory, "wd_recipes");
         if(!f.exists())
             f.mkdir();
 
@@ -187,17 +183,18 @@ public class RenderRecipe extends GuiScreen {
         BufferedImage bi = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
         bi.setRGB(0, 0, w, h, array, 0, w);
         ImageIO.write(bi, "PNG", f);
+        */
     }
 
     @Override
-    public void updateScreen() {
+    public void tick() {
         if(recipeName != null) {
             try {
                 takeScreenshot();
                 nextRecipe();
             } catch(Throwable t) {
                 t.printStackTrace();
-                mc.displayGuiScreen(null);
+                minecraft.setScreen(null);
             }
         }
     }

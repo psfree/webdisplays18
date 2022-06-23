@@ -8,8 +8,9 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 
-public abstract class WDBlockContainer extends BlockContainer {
+public abstract class WDBlockContainer extends BaseContainerBlockEntity {
 
     protected ItemBlock itemBlock;
 

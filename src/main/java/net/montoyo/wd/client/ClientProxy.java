@@ -5,45 +5,37 @@
 package net.montoyo.wd.client;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.multiplayer.ClientAdvancementManager;
+import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.client.renderer.texture.TextureAtlas;
-import net.minecraft.client.renderer.texture.TextureMap;
-import net.minecraft.client.resources.IResourceManager;
-import net.minecraft.client.resources.SimpleReloadableResourceManager;
 import net.minecraft.core.BlockPos;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.inventory.Slot;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.EnumHandSide;
-import net.minecraft.util.NonNullList;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.HumanoidArm;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.ClientRegistry;
-import net.minecraftforge.client.event.ModelBakeEvent;
 import net.minecraftforge.client.event.ModelRegistryEvent;
-import net.minecraftforge.client.event.TextureStitchEvent;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.client.resource.IResourceType;
+import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.data.ExistingFileHelper;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.montoyo.mcef.api.*;
@@ -52,28 +44,30 @@ import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.gui.*;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
-import net.montoyo.wd.client.renderers.*;
+import net.montoyo.wd.client.renderers.IItemRenderer;
+import net.montoyo.wd.client.renderers.LaserPointerRenderer;
+import net.montoyo.wd.client.renderers.MinePadRenderer;
+import net.montoyo.wd.client.renderers.ScreenRenderer;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.data.GuiData;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.item.ItemMulti;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.miniserv.client.Client;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessagePadCtrl;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
-import java.util.function.Predicate;
 
-public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQueryHandler {
+public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQueryHandler, ResourceManagerReloadListener {
 
     public class PadData {
 
@@ -129,7 +123,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     public void preInit() {
         mc = Minecraft.getInstance();
         MinecraftForge.EVENT_BUS.register(this);
-        registerCustomBlockBaker(new ScreenBaker(), WebDisplays.INSTANCE.blockScreen);
+//        registerCustomBlockBaker(new ScreenBaker(), WebDisplays.INSTANCE.blockScreen);
 
         mcef = MCEFApi.getAPI();
         if(mcef != null)
@@ -146,7 +140,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void postInit() {
-        ((SimpleReloadableResourceManager) mc.getResourceManager()).registerReloadListener(this);
+        ((ReloadableResourceManager) mc.getResourceManager()).registerReloadListener(this);
 
         if(mcef == null)
             throw new RuntimeException("MCEF is missing");
@@ -157,12 +151,12 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @Override
-    public World getWorld(int dim) {
-        World ret = mc.world;
-        if(dim == CURRENT_DIMENSION)
-            return ret;
+    public Level getWorld(ResourceLocation dim) {
+        Level ret = mc.level;
+//        if(dim == CURRENT_DIMENSION)
+//            return ret;
 
-        if(ret.provider.getDimension() != dim)
+        if(!ret.dimension().location().equals(dim))
             throw new RuntimeException("Can't get non-current dimension " + dim + " from client.");
 
         return ret;
@@ -170,14 +164,14 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void enqueue(Runnable r) {
-        mc.addScheduledTask(r);
+        mc.submit(r);
     }
 
     @Override
     public void displayGui(GuiData data) {
-        GuiScreen gui = data.createGui(mc.currentScreen, mc.world);
+        Screen gui = data.createGui(mc.screen, mc.level);
         if(gui != null)
-            mc.displayGuiScreen(gui);
+            mc.setScreen(gui);
     }
 
     @Override
@@ -199,11 +193,11 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void onAutocompleteResult(NameUUIDPair[] pairs) {
-        if(mc.currentScreen != null && mc.currentScreen instanceof WDScreen) {
+        if(mc.screen != null && mc.screen instanceof WDScreen screen) {
             if(pairs.length == 0)
-                ((WDScreen) mc.currentScreen).onAutocompleteFailure();
+                (screen).onAutocompleteFailure();
             else
-                ((WDScreen) mc.currentScreen).onAutocompleteResult(pairs);
+                (screen).onAutocompleteResult(pairs);
         }
     }
 
@@ -214,9 +208,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void screenUpdateResolutionInGui(Vector3i pos, BlockSide side, Vector2i res) {
-        if(mc.currentScreen != null && mc.currentScreen instanceof GuiScreenConfig) {
-            GuiScreenConfig gsc = (GuiScreenConfig) mc.currentScreen;
-
+        if(mc.screen != null && mc.screen instanceof GuiScreenConfig gsc) {
             if(gsc.isForBlock(pos.toBlock(), side))
                 gsc.updateResolution(res);
         }
@@ -224,9 +216,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void screenUpdateRotationInGui(Vector3i pos, BlockSide side, Rotation rot) {
-        if(mc.currentScreen != null && mc.currentScreen instanceof GuiScreenConfig) {
-            GuiScreenConfig gsc = (GuiScreenConfig) mc.currentScreen;
-
+        if(mc.screen != null && mc.screen instanceof GuiScreenConfig gsc) {
             if(gsc.isForBlock(pos.toBlock(), side))
                 gsc.updateRotation(rot);
         }
@@ -234,9 +224,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void screenUpdateAutoVolumeInGui(Vector3i pos, BlockSide side, boolean av) {
-        if(mc.currentScreen != null && mc.currentScreen instanceof GuiScreenConfig) {
-            GuiScreenConfig gsc = (GuiScreenConfig) mc.currentScreen;
-
+        if(mc.screen != null && mc.screen instanceof GuiScreenConfig gsc) {
             if(gsc.isForBlock(pos.toBlock(), side))
                 gsc.updateAutoVolume(av);
         }
@@ -244,7 +232,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void displaySetPadURLGui(String padURL) {
-        mc.displayGuiScreen(new GuiSetURL2(padURL));
+        mc.setScreen(new GuiSetURL2(padURL));
     }
 
     @Override
@@ -252,15 +240,15 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         PadData pd = padMap.get(padId);
 
         if(pd != null && pd.view != null)
-            mc.displayGuiScreen(new GuiMinePad(pd));
+            mc.setScreen(new GuiMinePad(pd));
     }
 
     @Override
     @Nonnull
     public HasAdvancement hasClientPlayerAdvancement(@Nonnull ResourceLocation rl) {
         if(advancementToProgressField != null && mc.player != null && mc.player.connection != null) {
-            ClientAdvancementManager cam = mc.player.connection.getAdvancementManager();
-            Advancement adv = cam.getAdvancementList().getAdvancement(rl);
+            ClientAdvancements cam = mc.player.connection.getAdvancements();
+            Advancement adv = cam.getAdvancements().get(rl);
 
             if(adv == null)
                 return HasAdvancement.DONT_KNOW;
@@ -375,13 +363,14 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public boolean isShiftDown() {
-        return Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) || Keyboard.isKeyDown(Keyboard.KEY_RSHIFT);
+        return Screen.hasShiftDown();
     }
+
 
     /**************************************** RESOURCE MANAGER METHODS ****************************************/
 
     @Override
-    public void onResourceManagerReload(ResourceManager resourceManager, Predicate<ExistingFileHelper.ResourceType> resourcePredicate) {
+    public void onResourceManagerReload(ResourceManager resourceManager) {
         Log.info("Resource manager reload: clearing GUI cache...");
         GuiLoader.clearCache();
     }
@@ -465,61 +454,61 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     /**************************************** EVENT METHODS ****************************************/
 
-    @SubscribeEvent
-    public void onStitchTextures(TextureStitchEvent.Pre ev) {
-        TextureAtlas texMap = ev.getAtlas();
-
-        if(texMap == mc.getTextureAtlas()) {
-            for(ResourceModelPair pair : modelBakers)
-                pair.getModel().loadTextures(texMap);
-        }
-    }
-
-    @SubscribeEvent
-    public void onBakeModel(ModelBakeEvent ev) {
-        for(ResourceModelPair pair : modelBakers)
-            ev.getModelRegistry().putObject(pair.getResourceLocation(), pair.getModel());
-    }
+//    @SubscribeEvent TODO: CHeck if we need this at all
+//    public void onStitchTextures(TextureStitchEvent.Pre ev) {
+//        TextureAtlas texMap = ev.getAtlas();
+//
+//        if(texMap == mc.getTextureManager()..getTextureAtlas()) {
+//            for(ResourceModelPair pair : modelBakers)
+//                pair.getModel().loadTextures(texMap);
+//        }
+//    }
+//
+//    @SubscribeEvent
+//    public void onBakeModel(ModelBakeEvent ev) {
+//        for(ResourceModelPair pair : modelBakers)
+//            ev.getModelRegistry().put(pair.getResourceLocation(), pair.getModel());
+//    }
 
     @SubscribeEvent
     public void onRegisterModels(ModelRegistryEvent ev) {
         final WebDisplays wd = WebDisplays.INSTANCE;
 
         //I hope I'm doing this right because it doesn't seem like it...
-        registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
-        ModelLoader.setCustomModelResourceLocation(wd.blockPeripheral.getItem(), 0, new ModelResourceLocation("webdisplays:kb_inv", "normal"));
-        registerItemModel(wd.blockPeripheral.getItem(), 1, "facing=2,type=ccinterface");
-        registerItemModel(wd.blockPeripheral.getItem(), 2, "facing=2,type=cointerface");
-        registerItemModel(wd.blockPeripheral.getItem(), 3, "facing=0,type=remotectrl");
-        registerItemModel(wd.blockPeripheral.getItem(), 7, "facing=0,type=redstonectrl");
-        registerItemModel(wd.blockPeripheral.getItem(), 11, "facing=0,type=server");
-        registerItemModel(wd.itemScreenCfg, 0, "normal");
-        registerItemModel(wd.itemOwnerThief, 0, "normal");
-        registerItemModel(wd.itemLinker, 0, "normal");
-        registerItemModel(wd.itemMinePad, 0, "normal");
-        registerItemModel(wd.itemMinePad, 1, "normal");
-        registerItemModel(wd.itemLaserPointer, 0, "normal");
-        registerItemMultiModels(wd.itemUpgrade);
-        registerItemMultiModels(wd.itemCraftComp);
-        registerItemMultiModels(wd.itemAdvIcon);
+//        registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
+//        ModelLoaderRegistry.setCustomModelResourceLocation(wd.blockPeripheral.getItem(), 0, new ModelResourceLocation("webdisplays:kb_inv", "normal"));
+//        registerItemModel(wd.blockPeripheral.getItem(), 1, "facing=2,type=ccinterface");
+//        registerItemModel(wd.blockPeripheral.getItem(), 2, "facing=2,type=cointerface");
+//        registerItemModel(wd.blockPeripheral.getItem(), 3, "facing=0,type=remotectrl");
+//        registerItemModel(wd.blockPeripheral.getItem(), 7, "facing=0,type=redstonectrl");
+//        registerItemModel(wd.blockPeripheral.getItem(), 11, "facing=0,type=server");
+//        registerItemModel(wd.itemScreenCfg, 0, "normal");
+//        registerItemModel(wd.itemOwnerThief, 0, "normal");
+//        registerItemModel(wd.itemLinker, 0, "normal");
+//        registerItemModel(wd.itemMinePad, 0, "normal");
+//        registerItemModel(wd.itemMinePad, 1, "normal");
+//        registerItemModel(wd.itemLaserPointer, 0, "normal");
+//        registerItemMultiModels(wd.itemUpgrade);
+//        registerItemMultiModels(wd.itemCraftComp);
+//        registerItemMultiModels(wd.itemAdvIcon);
     }
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent ev) {
         if(ev.phase == TickEvent.Phase.END) {
             //Help
-            if(Keyboard.isKeyDown(Keyboard.KEY_F1)) {
+            if(InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_F1)) {
                 if(!isF1Down) {
                     isF1Down = true;
 
                     String wikiName = null;
-                    if(mc.currentScreen instanceof WDScreen)
-                        wikiName = ((WDScreen) mc.currentScreen).getWikiPageName();
-                    else if(mc.currentScreen instanceof GuiContainer) {
-                        Slot slot = ((GuiContainer) mc.currentScreen).getSlotUnderMouse();
+                    if(mc.screen instanceof WDScreen)
+                        wikiName = ((WDScreen) mc.screen).getWikiPageName();
+                    else if(mc.screen instanceof ContainerScreen) {
+                        Slot slot = ((ContainerScreen) mc.screen).getSlotUnderMouse();
 
-                        if(slot != null && slot.getHasStack() && slot.getStack().getItem() instanceof WDItem)
-                            wikiName = ((WDItem) slot.getStack().getItem()).getWikiName(slot.getStack());
+                        if(slot != null && slot.hasItem() && slot.getItem().getItem() instanceof WDItem)
+                            wikiName = ((WDItem) slot.getItem().getItem()).getWikiName(slot.getItem());
                     }
 
                     if(wikiName != null)
@@ -529,8 +518,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 isF1Down = false;
 
             //Workaround cuz chat sux
-            if(nextScreen != null && mc.currentScreen == null) {
-                mc.displayGuiScreen(nextScreen);
+            if(nextScreen != null && mc.screen == null) {
+                mc.setScreen(nextScreen);
                 nextScreen = null;
             }
 
@@ -540,7 +529,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 lastTracked++;
 
                 TileEntityScreen tes = screenTracking.get(id);
-                double dist2 = mc.player.getDistanceSq(tes.getPos());
+                double dist2 = mc.player.distanceToSqr(tes.getBlockPos().getX(), tes.getBlockPos().getY(), tes.getBlockPos().getZ());
 
                 if(tes.isLoaded()) {
                     if(dist2 > WebDisplays.INSTANCE.unloadDistance2)
@@ -554,14 +543,14 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             //Load/unload minePads depending on which item is in the player's hand
             if(++minePadTickCounter >= 10) {
                 minePadTickCounter = 0;
-                EntityPlayer ep = mc.player;
+                Player ep = mc.player;
 
                 for(PadData pd: padList)
                     pd.isInHotbar = false;
 
                 if(ep != null) {
-                    updateInventory(ep.inventory.mainInventory, ep.getHeldItem(EnumHand.MAIN_HAND), 9);
-                    updateInventory(ep.inventory.offHandInventory, ep.getHeldItem(EnumHand.OFF_HAND), 1); //Is this okay?
+                    updateInventory(ep.getInventory().items, ep.getItemInHand(InteractionHand.MAIN_HAND), 9);
+                    updateInventory(ep.getInventory().offhand, ep.getItemInHand(InteractionHand.OFF_HAND), 1); //Is this okay?
                 }
 
                 //TODO: Check for GuiContainer.draggedStack
@@ -581,36 +570,34 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             //Laser pointer raycast
             boolean raycastHit = false;
 
-            if(mc.player != null && mc.world != null && mc.player.getHeldItem(EnumHand.MAIN_HAND).getItem() == WebDisplays.INSTANCE.itemLaserPointer
-                                                     && mc.gameSettings.keyBindUseItem.isKeyDown()
-                                                     && (mc.objectMouseOver == null || mc.objectMouseOver.typeOfHit != RayTraceResult.Type.BLOCK)) {
+            if(mc.player != null && mc.level != null && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() == WebDisplays.INSTANCE.itemLaserPointer
+                                                     && mc.options.keyUse.isDown()
+                                                     && (mc.hitResult == null || mc.hitResult.getType() != HitResult.Type.BLOCK)) {
                 laserPointerRenderer.isOn = true;
-                RayTraceResult result = raycast(64.0); //TODO: Make that distance configurable
+                BlockHitResult result = raycast(64.0); //TODO: Make that distance configurable
 
-                if(result != null) {
-                    BlockPos bpos = result.getBlockPos();
+                BlockPos bpos = result.getBlockPos();
 
-                    if(result.typeOfHit == RayTraceResult.Type.BLOCK && mc.world.getBlockState(bpos).getBlock() == WebDisplays.INSTANCE.blockScreen) {
-                        Vector3i pos = new Vector3i(result.getBlockPos());
-                        BlockSide side = BlockSide.values()[result.sideHit.ordinal()];
+                if(result.getType() == HitResult.Type.BLOCK && mc.level.getBlockState(bpos).getBlock() == WebDisplays.INSTANCE.blockScreen) {
+                    Vector3i pos = new Vector3i(result.getBlockPos());
+                    BlockSide side = BlockSide.values()[result.getDirection().ordinal()];
 
-                        Multiblock.findOrigin(mc.world, pos, side, null);
-                        TileEntityScreen te = (TileEntityScreen) mc.world.getTileEntity(pos.toBlock());
+                    Multiblock.findOrigin(mc.level, pos, side, null);
+                    TileEntityScreen te = (TileEntityScreen) mc.level.getBlockEntity(pos.toBlock());
 
-                        if(te != null && te.hasUpgrade(side, DefaultUpgrade.LASER_MOUSE)) { //hasUpgrade returns false is there's no screen on side 'side'
-                            //Since rights aren't synchronized, let the server check them for us...
-                            TileEntityScreen.Screen scr = te.getScreen(side);
+                    if(te != null && te.hasUpgrade(side, DefaultUpgrade.LASER_MOUSE)) { //hasUpgrade returns false is there's no screen on side 'side'
+                        //Since rights aren't synchronized, let the server check them for us...
+                        TileEntityScreen.Screen scr = te.getScreen(side);
 
-                            if(scr.browser != null) {
-                                float hitX = ((float) result.hitVec.x) - (float) bpos.getX();
-                                float hitY = ((float) result.hitVec.y) - (float) bpos.getY();
-                                float hitZ = ((float) result.hitVec.z) - (float) bpos.getZ();
-                                Vector2i tmp = new Vector2i();
+                        if(scr.browser != null) {
+                            float hitX = ((float) result.getLocation().x) - (float) bpos.getX();
+                            float hitY = ((float) result.getLocation().y) - (float) bpos.getY();
+                            float hitZ = ((float) result.getLocation().z) - (float) bpos.getZ();
+                            Vector2i tmp = new Vector2i();
 
-                                if(BlockScreen.hit2pixels(side, bpos, pos, scr, hitX, hitY, hitZ, tmp)) {
-                                    laserClick(te, side, scr, tmp);
-                                    raycastHit = true;
-                                }
+                            if(BlockScreen.hit2pixels(side, bpos, pos, scr, hitX, hitY, hitZ, tmp)) {
+                                laserClick(te, side, scr, tmp);
+                                raycastHit = true;
                             }
                         }
                     }
@@ -633,7 +620,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @SubscribeEvent
-    public void onRenderPlayerHand(RenderSpecificHandEvent ev) {
+    public void onRenderPlayerHand(RenderHandEvent ev) {
         Item item = ev.getItemStack().getItem();
         IItemRenderer renderer;
 
@@ -644,22 +631,23 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         else
             return;
 
-        EnumHandSide handSide = mc.player.getPrimaryHand();
-        if(ev.getHand() == EnumHand.OFF_HAND)
-            handSide = handSide.opposite();
+        HumanoidArm handSide = mc.player.getMainArm();
+        if(ev.getHand() == InteractionHand.OFF_HAND)
+            handSide = handSide.getOpposite();
 
-        renderer.render(ev.getItemStack(), (handSide == EnumHandSide.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress());
+        renderer.render(ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress());
         ev.setCanceled(true);
     }
 
     @SubscribeEvent
     public void onWorldUnload(WorldEvent.Unload ev) {
         Log.info("World unloaded; killing screens...");
-        int dim = ev.getWorld().provider.getDimension();
-
-        for(int i = screenTracking.size() - 1; i >= 0; i--) {
-            if(screenTracking.get(i).getWorld().provider.getDimension() == dim) //Could be world == ev.getWorld()
-                screenTracking.remove(i).unload();
+        if(ev.getWorld() instanceof Level level) {
+            ResourceLocation dim = level.dimension().location();
+            for(int i = screenTracking.size() - 1; i >= 0; i--) {
+                if(screenTracking.get(i).getLevel().dimension().location().equals(dim)) //Could be world == ev.getWorld()
+                    screenTracking.remove(i).unload();
+            }
         }
     }
 
@@ -671,30 +659,30 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
             if(t - lastPointPacket >= 100) {
                 lastPointPacket = t;
-                WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_MOVE, hit));
+                Messages.INSTANCE.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_MOVE, hit));
             }
         } else {
             deselectScreen();
             pointedScreen = tes;
             pointedScreenSide = side;
-            WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_DOWN, hit));
+            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_DOWN, hit));
         }
     }
 
     private void deselectScreen() {
         if(pointedScreen != null && pointedScreenSide != null) {
-            WebDisplays.NET_HANDLER.sendToServer(SMessageScreenCtrl.laserUp(pointedScreen, pointedScreenSide));
+            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.laserUp(pointedScreen, pointedScreenSide));
             pointedScreen = null;
             pointedScreenSide = null;
         }
     }
 
-    private RayTraceResult raycast(double dist) {
-        Vec3d start = mc.player.getPositionEyes(1.0f);
-        Vec3d lookVec = mc.player.getLook(1.0f);
-        Vec3d end = start.addVector(lookVec.x * dist, lookVec.y * dist, lookVec.z * dist);
+    private BlockHitResult raycast(double dist) {
+        Vec3 start = mc.player.getEyePosition(1.0f);
+        Vec3 lookVec = mc.player.getLookAngle();
+        Vec3 end = start.add(lookVec.x * dist, lookVec.y * dist, lookVec.z * dist);
 
-        return mc.world.rayTraceBlocks(start, end, true, true, false);
+        return mc.level.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.ANY, null));
     }
 
     private void updateInventory(NonNullList<ItemStack> inv, ItemStack heldStack, int cnt) {
@@ -702,38 +690,38 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             ItemStack item = inv.get(i);
 
             if(item.getItem() == WebDisplays.INSTANCE.itemMinePad) {
-                NBTTagCompound tag = item.getTagCompound();
+                CompoundTag tag = item.getTag();
 
-                if(tag != null && tag.hasKey("PadID"))
-                    updatePad(tag.getInteger("PadID"), tag, item == heldStack);
+                if(tag != null && tag.contains("PadID"))
+                    updatePad(tag.getInt("PadID"), tag, item == heldStack);
             }
         }
     }
 
-    private void registerCustomBlockBaker(IModelBaker baker, Block block0) {
-        ModelResourceLocation normalLoc = new ModelResourceLocation(block0.getRegistryName(), "normal");
-        ResourceModelPair pair = new ResourceModelPair(normalLoc, baker);
-        modelBakers.add(pair);
-        ModelLoader.setCustomStateMapper(block0, new StaticStateMapper(normalLoc));
-    }
+//    private void registerCustomBlockBaker(IModelBaker baker, Block block0) {
+//        ModelResourceLocation normalLoc = new ModelResourceLocation(block0.getRegistryName(), "normal");
+//        ResourceModelPair pair = new ResourceModelPair(normalLoc, baker);
+//        modelBakers.add(pair);
+//        ModelLoader.setCustomStateMapper(block0, new StaticStateMapper(normalLoc));
+//    }
+//
+//    private void registerItemModel(Item item, int meta, String variant) {
+//        ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), variant));
+//    }
+//
+//    private void registerItemMultiModels(ItemMulti item) {
+//        Enum[] values = item.getEnumValues();
+//
+//        for(int i = 0; i < values.length; i++)
+//            ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(item.getRegistryName().toString() + '_' + values[i], "normal"));
+//    }
 
-    private void registerItemModel(Item item, int meta, String variant) {
-        ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), variant));
-    }
-
-    private void registerItemMultiModels(ItemMulti item) {
-        Enum[] values = item.getEnumValues();
-
-        for(int i = 0; i < values.length; i++)
-            ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(item.getRegistryName().toString() + '_' + values[i], "normal"));
-    }
-
-    private void updatePad(int id, NBTTagCompound tag, boolean isSelected) {
+    private void updatePad(int id, CompoundTag tag, boolean isSelected) {
         PadData pd = padMap.get(id);
 
         if(pd != null)
             pd.isInHotbar = true;
-        else if(isSelected && tag.hasKey("PadURL")) {
+        else if(isSelected && tag.contains("PadURL")) {
             pd = new PadData(tag.getString("PadURL"), id);
             padMap.put(id, pd);
             padList.add(pd);
@@ -776,7 +764,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     private static Field findAdvancementToProgressField() {
-        Field[] fields = ClientAdvancementManager.class.getDeclaredFields();
+        Field[] fields = ClientAdvancements.class.getDeclaredFields();
         Optional<Field> result = Arrays.stream(fields).filter(f -> f.getType() == Map.class).findAny();
 
         if(result.isPresent()) {
