@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.renderers;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -43,7 +44,7 @@ public final class MinePadRenderer implements IItemRenderer {
     }
 
     @Override
-    public final void render(ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
+    public final void render(PoseStack stack, ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
         //Pre-compute values
         float sqrtSwingProg = (float) Math.sqrt(swingProgress);
         sinSqrtSwingProg1 = (float) Math.sin(sqrtSwingProg * PI);

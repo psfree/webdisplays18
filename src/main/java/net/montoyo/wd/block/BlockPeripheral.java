@@ -30,6 +30,7 @@ import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.item.BlockItem;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.DefaultPeripheral;
@@ -57,7 +58,7 @@ public class BlockPeripheral extends WDBlockContainer {
     }
 
     @Override
-    protected ItemBlock createItemBlock() {
+    protected BlockItem createItemBlock() {
         return new ItemPeripheral(this);
     }
 

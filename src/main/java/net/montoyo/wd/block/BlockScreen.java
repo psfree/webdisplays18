@@ -28,6 +28,8 @@ import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.Explosion;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.common.property.IUnlistedProperty;
@@ -47,9 +49,9 @@ import java.util.List;
 
 public class BlockScreen extends WDBlockContainer {
 
-    public static final PropertyBool hasTE = PropertyBool.create("haste");
-    public static final PropertyBool emitting = PropertyBool.create("emitting");
-    private static final IProperty[] properties = new IProperty[] { hasTE, emitting };
+    public static final BooleanProperty hasTE = BooleanProperty.create("haste");
+    public static final BooleanProperty emitting = BooleanProperty.create("emitting");
+    private static final Property[] properties = new IProperty[] { hasTE, emitting };
     public static final IUnlistedProperty<Integer>[] sideFlags = new IUnlistedProperty[6];
     static {
         for(int i = 0; i < sideFlags.length; i++)

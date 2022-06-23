@@ -8,14 +8,18 @@ import net.minecraft.block.BlockContainer;
 import net.minecraft.block.material.MapColor;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
 
 public abstract class WDBlockContainer extends BaseContainerBlockEntity {
 
-    protected ItemBlock itemBlock;
+    protected BlockItem itemBlock;
 
-    public WDBlockContainer(Material material) {
-        super(material);
+    public WDBlockContainer(BlockEntityType<?> type, BlockBehaviour.Properties material, BlockState state) {
+        super(type, material, state);
     }
 
     protected void setName(String name) {
@@ -23,7 +27,7 @@ public abstract class WDBlockContainer extends BaseContainerBlockEntity {
         setRegistryName(name);
     }
 
-    protected abstract ItemBlock createItemBlock();
+    protected abstract BlockItem createItemBlock();
 
     public void makeItemBlock() {
         if(itemBlock != null)
@@ -34,7 +38,7 @@ public abstract class WDBlockContainer extends BaseContainerBlockEntity {
         itemBlock.setRegistryName(getRegistryName());
     }
 
-    public ItemBlock getItem() {
+    public BlockItem getItem() {
         return itemBlock;
     }
 
