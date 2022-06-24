@@ -45,5 +45,6 @@ public class CMessageOpenGui implements Runnable {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(this);
+        contextSupplier.get().setPacketHandled(true);
     }
 }

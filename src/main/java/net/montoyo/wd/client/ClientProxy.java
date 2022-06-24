@@ -639,7 +639,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         if(ev.getHand() == InteractionHand.OFF_HAND)
             handSide = handSide.getOpposite();
 
-        renderer.render(new PoseStack(), ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress());
+        renderer.render(ev.getPoseStack(), ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress(), ev.getMultiBufferSource(), ev.getPackedLight());
         ev.setCanceled(true);
     }
 

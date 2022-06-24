@@ -113,5 +113,6 @@ public class CMessageAddScreen {
             }
 
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

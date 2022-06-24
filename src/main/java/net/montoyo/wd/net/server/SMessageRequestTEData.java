@@ -66,5 +66,6 @@ public class SMessageRequestTEData implements Runnable {
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         player = contextSupplier.get().getSender();
         contextSupplier.get().enqueueWork(this);
+        contextSupplier.get().setPacketHandled(true);
     }
 }

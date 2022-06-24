@@ -40,6 +40,7 @@ public class CMessageACResult {
         contextSupplier.get().enqueueWork(() -> {
             WebDisplays.PROXY.onAutocompleteResult(result);
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 
 }

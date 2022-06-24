@@ -52,5 +52,7 @@ public class SMessageMiniservConnect {
         if (encKey != null) {
             Messages.INSTANCE.sendToServer(new CMessageMiniservKey(encKey));
         }
+
+        contextSupplier.get().setPacketHandled(true);
     }
 }

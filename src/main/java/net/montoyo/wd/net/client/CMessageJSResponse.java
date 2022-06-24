@@ -83,5 +83,6 @@ public class CMessageJSResponse {
                 Log.warningEx("Could not handle JS response", t);
             }
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

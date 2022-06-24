@@ -27,7 +27,7 @@ public class CMessageMiniservKey {
         return new CMessageMiniservKey(encryptedKey);
     }
 
-    public CMessageMiniservKey encode(FriendlyByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeShort(encryptedKey.length);
         buf.writeBytes(encryptedKey);
     }
@@ -39,5 +39,6 @@ public class CMessageMiniservKey {
                 WebDisplays.PROXY.startMiniservClient();
             }
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

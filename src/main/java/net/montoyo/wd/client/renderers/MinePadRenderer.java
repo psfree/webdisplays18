@@ -4,8 +4,12 @@
 
 package net.montoyo.wd.client.renderers;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
@@ -44,7 +48,7 @@ public final class MinePadRenderer implements IItemRenderer {
     }
 
     @Override
-    public final void render(PoseStack stack, ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
+    public final void render(PoseStack stack, ItemStack is, float handSideSign, float swingProgress, float equipProgress, MultiBufferSource multiBufferSource, int packedLight) {
         //Pre-compute values
         float sqrtSwingProg = (float) Math.sqrt(swingProgress);
         sinSqrtSwingProg1 = (float) Math.sin(sqrtSwingProg * PI);
@@ -52,18 +56,18 @@ public final class MinePadRenderer implements IItemRenderer {
         sinSwingProg1 = (float) Math.sin(swingProgress * PI);
         sinSwingProg2 = (float) Math.sin(swingProgress * swingProgress * PI);
 
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_RESCALE_NORMAL);
+        RenderSystem.disableCull();
+//        glEnable(GL_RESCALE_NORMAL);
 
         //Render arm
-        glPushMatrix();
-        renderArmFirstPerson(equipProgress, handSideSign);
-        glPopMatrix();
+        stack.pushPose();
+        renderArmFirstPerson(stack, multiBufferSource, packedLight, equipProgress, handSideSign);
+        stack.popPose();
 
         //Prepare minePad transform
         glPushMatrix();
-        glTranslatef(handSideSign * -0.4f * sinSqrtSwingProg1, 0.2f * sinSqrtSwingProg2, -0.2f * sinSwingProg1);
-        glTranslatef(handSideSign * 0.56f, -0.52f - equipProgress * 0.6f, -0.72f);
+        stack.translate(handSideSign * -0.4f * sinSqrtSwingProg1, 0.2f * sinSqrtSwingProg2, -0.2f * sinSwingProg1);
+        stack.translate(handSideSign * 0.56f, -0.52f - equipProgress * 0.6f, -0.72f);
         glRotatef(handSideSign * (45.0f - sinSwingProg2 * 20.0f), 0.0f, 1.0f, 0.0f);
         glRotatef(handSideSign * sinSqrtSwingProg1 * -20.0f, 0.0f, 0.0f, 1.0f);
         glRotatef(sinSqrtSwingProg1 * -80.0f, 1.0f, 0.0f, 0.0f);
@@ -82,7 +86,7 @@ public final class MinePadRenderer implements IItemRenderer {
         glPushMatrix();
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-//TODO        mc.renderEngine.bindTexture(tex);
+        RenderSystem.setShaderTexture(0, tex);
         model.render(1.f / 16.f);
         glPopMatrix();
 
@@ -98,32 +102,32 @@ public final class MinePadRenderer implements IItemRenderer {
         }
 
         glPopMatrix();
-        glDisable(GL_RESCALE_NORMAL);
+//        glDisable(GL_RESCALE_NORMAL);
         glEnable(GL_CULL_FACE);
     }
 
-    private void renderArmFirstPerson(float equipProgress, float handSideSign) {
+    private void renderArmFirstPerson(PoseStack matrixStack, MultiBufferSource buffer, int combinedLight, float equipProgress, float handSideSign) {
         float tx = -0.3f * sinSqrtSwingProg1;
         float ty = 0.4f * sinSqrtSwingProg2;
         float tz = -0.4f * sinSwingProg1;
 
-        glTranslatef(handSideSign * (tx + 0.64000005f), ty - 0.6f - equipProgress * 0.6f, tz - 0.71999997f);
+        matrixStack.translate(handSideSign * (tx + 0.64000005f), ty - 0.6f - equipProgress * 0.6f, tz - 0.71999997f);
         glRotatef(handSideSign * 45.0f, 0.0f, 1.0f, 0.0f);
         glRotatef(handSideSign * sinSqrtSwingProg1 * 70.0f, 0.0f, 1.0f, 0.0f);
         glRotatef(handSideSign * sinSwingProg2 * -20.0f, 0.0f, 0.0f, 1.0f);
-        glTranslatef(-handSideSign, 3.6f, 3.5f);
+        matrixStack.translate(-handSideSign, 3.6f, 3.5f);
         glRotatef(handSideSign * 120.0f, 0.0f, 0.0f, 1.0f);
         glRotatef(200.0f, 1.0f, 0.0f, 0.0f);
         glRotatef(handSideSign * -135.0f, 0.0f, 1.0f, 0.0f);
-        glTranslatef(handSideSign * 5.6f, 0.0f, 0.0f);
+        matrixStack.translate(handSideSign * 5.6f, 0.0f, 0.0f);
 
-        /*RenderPlayer playerRenderer = (RenderPlayer) mc.getRenderManager().<AbstractClientPlayer>getEntityRenderObject(mc.player);
-        mc.getTextureManager().bindTexture(mc.player.getLocationSkin());
+        PlayerRenderer playerRenderer = (PlayerRenderer) mc.getEntityRenderDispatcher().getRenderer(mc.player);
+        RenderSystem.setShaderTexture(0, mc.player.getSkinTextureLocation());
 
         if(handSideSign >= 0.0f)
-            playerRenderer.renderRightArm(mc.player);
+            playerRenderer.renderRightHand(matrixStack, buffer, combinedLight, mc.player);
         else
-            playerRenderer.renderLeftArm(mc.player);*/
+            playerRenderer.renderLeftHand(matrixStack, buffer, combinedLight, mc.player);
     }
 
 }

@@ -241,33 +241,26 @@ public class CMessageScreenUpdate {
 
         TileEntityScreen tes = (TileEntityScreen) te;
 
-        if(action == UPDATE_URL)
-            tes.setScreenURL(side, string);
-        else if(action == UPDATE_MOUSE)
-            tes.handleMouseEvent(side, mouseEvent, vec2i);
-        else if(action == UPDATE_DELETE)
-            tes.removeScreen(side);
-        else if(action == UPDATE_RESOLUTION)
-            tes.setResolution(side, vec2i);
-        else if(action == UPDATE_TYPE)
-            tes.type(side, string, null);
-        else if(action == UPDATE_RUN_JS)
-            tes.evalJS(side, string);
-        else if(action == UPDATE_UPGRADES)
-            tes.updateUpgrades(side, upgrades);
-        else if(action == UPDATE_JS_REDSTONE)
-            tes.updateJSRedstone(side, vec2i, redstoneLevel);
-        else if(action == UPDATE_OWNER) {
-            TileEntityScreen.Screen scr = tes.getScreen(side);
-
-            if(scr != null)
-                scr.owner = owner;
-        } else if(action == UPDATE_ROTATION)
-            tes.setRotation(side, rotation);
-        else if(action == UPDATE_AUTO_VOL)
-            tes.setAutoVolume(side, autoVolume);
-        else
-            Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
+            switch (action) {
+                case UPDATE_URL -> tes.setScreenURL(side, string);
+                case UPDATE_MOUSE -> tes.handleMouseEvent(side, mouseEvent, vec2i);
+                case UPDATE_DELETE -> tes.removeScreen(side);
+                case UPDATE_RESOLUTION -> tes.setResolution(side, vec2i);
+                case UPDATE_TYPE -> tes.type(side, string, null);
+                case UPDATE_RUN_JS -> tes.evalJS(side, string);
+                case UPDATE_UPGRADES -> tes.updateUpgrades(side, upgrades);
+                case UPDATE_JS_REDSTONE -> tes.updateJSRedstone(side, vec2i, redstoneLevel);
+                case UPDATE_OWNER -> {
+                    TileEntityScreen.Screen scr = tes.getScreen(side);
+                    if (scr != null)
+                        scr.owner = owner;
+                }
+                case UPDATE_ROTATION -> tes.setRotation(side, rotation);
+                case UPDATE_AUTO_VOL -> tes.setAutoVolume(side, autoVolume);
+                default -> Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
+            }
         });
+
+        contextSupplier.get().setPacketHandled(true);
     }
 }

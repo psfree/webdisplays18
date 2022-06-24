@@ -7,6 +7,7 @@ package net.montoyo.wd.client.renderers;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -36,7 +37,7 @@ public final class LaserPointerRenderer implements IItemRenderer {
     }
 
     @Override
-    public void render(PoseStack poseStack, ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
+    public void render(PoseStack poseStack, ItemStack is, float handSideSign, float swingProgress, float equipProgress, MultiBufferSource multiBufferSource, int packedLight) {
         //This whole method is a fucking hack
         float sqrtSwingProg = (float) Math.sqrt(swingProgress);
         float sinSqrtSwingProg1 = (float) Math.sin(sqrtSwingProg * PI);

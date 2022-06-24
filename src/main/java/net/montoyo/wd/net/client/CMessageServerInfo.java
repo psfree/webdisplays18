@@ -36,5 +36,6 @@ public class CMessageServerInfo {
             if (miniservPort > 0)
                 Messages.INSTANCE.sendToServer(Client.getInstance().beginConnection());
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }

@@ -4,27 +4,23 @@
 
 package net.montoyo.wd.net.server;
 
-import io.netty.buffer.ByteBuf;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.NonNullList;
-import net.minecraft.world.WorldServer;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
+import net.minecraft.core.NonNullList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
-import net.montoyo.wd.net.Message;
+import net.montoyo.wd.init.ItemInit;
 
-@Message(messageId = 7, side = Side.SERVER)
+import java.util.function.Supplier;
+
 public class SMessagePadCtrl implements Runnable {
 
     private int id;
     private String url;
-    private EntityPlayer player;
+    private ServerPlayer player;
 
     public SMessagePadCtrl() {
     }
@@ -40,29 +36,29 @@ public class SMessagePadCtrl implements Runnable {
     }
 
     private boolean matchesMinePadID(ItemStack is) {
-        return is.getItem() == WebDisplays.INSTANCE.itemMinePad && is.getTagCompound() != null && is.getTagCompound().hasKey("PadID") && is.getTagCompound().getInteger("PadID") == id;
+        return is.getItem() == ItemInit.itemMinePad.get() && is.getTag() != null && is.getTag().contains("PadID") && is.getTag().getInt("PadID") == id;
     }
 
     @Override
     public void run() {
         if(id < 0) {
-            ItemStack is = player.getHeldItem(EnumHand.MAIN_HAND);
+            ItemStack is = player.getItemInHand(InteractionHand.MAIN_HAND);
 
-            if(is.getItem() == WebDisplays.INSTANCE.itemMinePad) {
+            if(is.getItem() == ItemInit.itemMinePad.get()) {
                 if(url.isEmpty())
-                    is.setTagCompound(null); //Shutdown
+                    is.setTag(null); //Shutdown
                 else {
-                    if(is.getTagCompound() == null)
-                        is.setTagCompound(new NBTTagCompound());
+                    if(is.getTag() == null)
+                        is.setTag(new CompoundTag());
 
-                    if(!is.getTagCompound().hasKey("PadID"))
-                        is.getTagCompound().setInteger("PadID", WebDisplays.getNextAvailablePadID());
+                    if(!is.getTag().contains("PadID"))
+                        is.getTag().putInt("PadID", WebDisplays.getNextAvailablePadID());
 
-                    is.getTagCompound().setString("PadURL", WebDisplays.applyBlacklist(url));
+                    is.getTag().putString("PadURL", WebDisplays.applyBlacklist(url));
                 }
             }
         } else {
-            NonNullList<ItemStack> inv = player.inventory.mainInventory;
+            NonNullList<ItemStack> inv = player.getInventory().items;
             ItemStack target = null;
 
             for(int i = 0; i < 9; i++) {
@@ -72,35 +68,30 @@ public class SMessagePadCtrl implements Runnable {
                 }
             }
 
-            if(target == null && matchesMinePadID(player.inventory.offHandInventory.get(0)))
-                target = player.inventory.offHandInventory.get(0);
+            if(target == null && matchesMinePadID(player.getInventory().offhand.get(0)))
+                target = player.getInventory().offhand.get(0);
 
             if(target != null)
-                target.getTagCompound().setString("PadURL", WebDisplays.applyBlacklist(url));
+                target.getTag().putString("PadURL", WebDisplays.applyBlacklist(url));
         }
     }
 
-    @Override
-    public void encode(ByteBuf buf) {
-        id = buf.readInt();
-        url = ByteBufUtils.readUTF8String(buf);
+    public static SMessagePadCtrl decode(FriendlyByteBuf buf) {
+        SMessagePadCtrl message = new SMessagePadCtrl();
+        message.id = buf.readInt();
+        message.url = buf.readUtf();
+        return message;
     }
 
-    @Override
-    public void toBytes(ByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeInt(id);
-        ByteBufUtils.writeUTF8String(buf, url);
+        buf.writeUtf(url);
     }
 
-    public static class Handler implements IMessageHandler<SMessagePadCtrl, IMessage> {
-
-        @Override
-        public IMessage onMessage(SMessagePadCtrl msg, MessageContext ctx) {
-            msg.player = ctx.getServerHandler().player;
-            ((WorldServer) msg.player.world).addScheduledTask(msg);
-            return null;
-        }
-
+    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
+        player = contextSupplier.get().getSender();
+        contextSupplier.get().enqueueWork(this);
+        contextSupplier.get().setPacketHandled(true);
     }
 
 }

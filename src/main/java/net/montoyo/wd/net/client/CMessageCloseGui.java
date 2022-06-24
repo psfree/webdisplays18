@@ -60,5 +60,6 @@ public class CMessageCloseGui {
             else
                 WebDisplays.PROXY.closeGui(blockPos, blockSide);
         });
+        contextSupplier.get().setPacketHandled(true);
     }
 }
