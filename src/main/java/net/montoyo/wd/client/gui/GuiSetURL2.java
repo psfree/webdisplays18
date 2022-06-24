@@ -4,11 +4,9 @@
 
 package net.montoyo.wd.client.gui;
 
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
@@ -17,6 +15,7 @@ import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.TextField;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessagePadCtrl;
 import net.montoyo.wd.net.server.SMessageScreenCtrl;
@@ -52,7 +51,7 @@ public class GuiSetURL2 extends WDScreen {
     private Button btnOk;
 
     public GuiSetURL2(TileEntityScreen tes, BlockSide side, String url, Vector3i rl) {
-        super();
+        super(Component.nullToEmpty(null));
         tileEntity = tes;
         screenSide = side;
         remoteLocation = rl;
@@ -61,6 +60,7 @@ public class GuiSetURL2 extends WDScreen {
     }
 
     public GuiSetURL2(String url) {
+        super(Component.nullToEmpty(null));
         isPad = true;
         screenURL = url;
     }
@@ -105,7 +105,7 @@ public class GuiSetURL2 extends WDScreen {
                 Messages.INSTANCE.sendToServer(new SMessagePadCtrl(url));
                 ItemStack held = minecraft.player.getItemInHand(InteractionHand.MAIN_HAND);
 
-                if(held.getItem() == WebDisplays.INSTANCE.itemMinePad && held.getTag() != null && held.getTag().contains("PadID")) {
+                if(held.getItem().equals(ItemInit.itemMinePad.get()) && held.getTag() != null && held.getTag().contains("PadID")) {
                     ClientProxy.PadData pd = ((ClientProxy) WebDisplays.PROXY).getPadByID(held.getTag().getInt("PadID"));
 
                     if(pd != null && pd.view != null)
@@ -115,12 +115,12 @@ public class GuiSetURL2 extends WDScreen {
                 Messages.INSTANCE.sendToServer(SMessageScreenCtrl.setURL(tileEntity, screenSide, url, remoteLocation));
         }
 
-        mc.displayGuiScreen(null);
+        minecraft.setScreen(null);
     }
 
     @Override
     public boolean isForBlock(BlockPos bp, BlockSide side) {
-        return (remoteLocation != null && remoteLocation.equalsBlockPos(bp)) || (bp.equals(tileEntity.getPos()) && side == screenSide);
+        return (remoteLocation != null && remoteLocation.equalsBlockPos(bp)) || (bp.equals(tileEntity.getBlockPos()) && side == screenSide);
     }
 
 }

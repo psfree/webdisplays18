@@ -4,22 +4,20 @@
 
 package net.montoyo.wd.client.gui;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.util.math.BlockPos;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.utilities.BlockSide;
-import org.lwjgl.input.Keyboard;
-import org.lwjgl.input.Mouse;
+import org.lwjgl.glfw.GLFW;
 
-import static org.lwjgl.opengl.GL11.*;
+import static net.minecraftforge.api.distmarker.Dist.CLIENT;
+import static org.lwjgl.opengl.GL11.glColor4f;
 
-@SideOnly(Side.CLIENT)
+@OnlyIn(CLIENT)
 public class GuiMinePad extends WDScreen {
 
     private ClientProxy.PadData pad;
@@ -29,15 +27,17 @@ public class GuiMinePad extends WDScreen {
     private double vh;
 
     public GuiMinePad() {
+        super(Component.nullToEmpty(null));
     }
 
     public GuiMinePad(ClientProxy.PadData pad) {
+        this();
         this.pad = pad;
     }
 
     @Override
-    public void initGui() {
-        super.initGui();
+    public void init() {
+        super.init();
 
         vw = ((double) width) - 32.0f;
         vh = vw / WebDisplays.PAD_RATIO;
@@ -53,87 +53,122 @@ public class GuiMinePad extends WDScreen {
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float ptt) {
-        drawDefaultBackground();
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
+        renderBackground(poseStack);
 
-        glDisable(GL_TEXTURE_2D);
-        glDisable(GL_CULL_FACE);
-        glColor4f(0.73f, 0.73f, 0.73f, 1.0f);
+        RenderSystem.disableTexture();
+        RenderSystem.disableCull();
+        RenderSystem.setShaderColor(0.73f, 0.73f, 0.73f, 1.0f);
 
-        Tessellator t = Tessellator.getInstance();
-        BufferBuilder bb = t.getBuffer();
-        bb.begin(GL_QUADS, DefaultVertexFormats.POSITION);
+        Tesselator t = Tesselator.getInstance();
+        BufferBuilder bb = t.getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         addRect(bb, vx, vy - 16, vw, 16);
         addRect(bb, vx, vy + vh, vw, 16);
         addRect(bb, vx - 16, vy, 16, vh);
         addRect(bb, vx + vw, vy, 16, vh);
-        t.draw();
+        t.end();
 
-        glEnable(GL_TEXTURE_2D);
+        RenderSystem.enableTexture();
 
-        if(pad.view != null) {
+        if (pad.view != null) {
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
             pad.view.draw(vx, vy + vh, vx + vw, vy);
         }
 
-        glEnable(GL_CULL_FACE);
+        RenderSystem.enableCull();
     }
 
     @Override
-    public void handleInput() {
-        while(Keyboard.next()) {
-            char key = Keyboard.getEventCharacter();
-            int keycode = Keyboard.getEventKey();
-            boolean pressed = Keyboard.getEventKeyState();
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        key(keyCode, scanCode, true);
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
 
-            if(Keyboard.getEventKey() == Keyboard.KEY_ESCAPE) {
-                mc.displayGuiScreen(null);
-                return;
-            }
 
-            if(pad.view != null) {
-                if(pressed)
-                    pad.view.injectKeyPressedByKeyCode(keycode, key, 0);
-                else
-                    pad.view.injectKeyReleasedByKeyCode(keycode, key, 0);
 
-                if(key != 0)
-                    pad.view.injectKeyTyped(key, 0);
-            }
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        key(keyCode, scanCode, false);
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    public void key(int keyCode, int scanCode, boolean pressed) {
+        char key = getChar(keyCode, scanCode);
+
+        if (pad.view != null) {
+            if (pressed)
+                pad.view.injectKeyPressedByKeyCode(keyCode, key, 0);
+            else
+                pad.view.injectKeyReleasedByKeyCode(keyCode, key, 0);
+
+            if (key != 0)
+                pad.view.injectKeyTyped(key, 0);
         }
+
+    }
+
+    @Override
+    public void mouseMoved(double mouseX, double mouseY) {
+        super.mouseMoved(mouseX, mouseY);
+        mouse(-1, false, (int) mouseX, (int) mouseY);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        mouse(button, true, (int) mouseX, (int) mouseY);
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        mouse(button, false, (int) mouseX, (int) mouseY);
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    public void mouse(int btn, boolean pressed, int sx, int sy) {
 
         int vx = screen2DisplayX((int) this.vx);
         int vy = screen2DisplayY((int) this.vy);
         int vh = screen2DisplayX((int) this.vh);
         int vw = screen2DisplayY((int) this.vw);
 
-        while(Mouse.next()) {
-            int btn = Mouse.getEventButton();
-            boolean pressed = Mouse.getEventButtonState();
-            int sx = Mouse.getEventX();
-            int sy = Mouse.getEventY();
+        if (pad.view != null && sx >= vx && sx <= vx + vw && sy >= vy && sy <= vy + vh) {
+            sx -= vx;
+            sy -= vy;
+            sy = vh - sy;
 
-            if(pad.view != null && sx >= vx && sx <= vx + vw && sy >= vy && sy <= vy + vh) {
-                sx -= vx;
-                sy -= vy;
-                sy  = vh - sy;
+            //Scale again according to the webview
+            sx = (int) (((double) sx) / ((double) vw) * WebDisplays.INSTANCE.padResX);
+            sy = (int) (((double) sy) / ((double) vh) * WebDisplays.INSTANCE.padResY);
 
-                //Scale again according to the webview
-                sx = (int) (((double) sx) / ((double) vw) * WebDisplays.INSTANCE.padResX);
-                sy = (int) (((double) sy) / ((double) vh) * WebDisplays.INSTANCE.padResY);
+            if (btn == -1)
+                pad.view.injectMouseMove(sx, sy, 0, false);
+            else
+                pad.view.injectMouseButton(sx, sy, 0, btn + 1, pressed, 1);
 
-                if(btn == -1)
-                    pad.view.injectMouseMove(sx, sy, 0, false);
-                else
-                    pad.view.injectMouseButton(sx, sy, 0, btn + 1, pressed, 1);
-            }
         }
     }
 
+    public char getChar(int keyCode, int scanCode) {
+        String keystr = GLFW.glfwGetKeyName(keyCode, scanCode);
+        if(keystr == null){
+            keystr = "\0";
+        }
+        if(keyCode == GLFW.GLFW_KEY_ENTER){
+            keystr = "\n";
+        }
+        if(keystr.length() == 0){
+            return (char) -1;
+        }
+
+        return keystr.charAt(keystr.length() - 1);
+    }
+
     @Override
-    public void updateScreen() {
+    public void tick() {
         if(pad.view == null)
-            mc.displayGuiScreen(null); //In case the user dies with the pad in the hand
+            minecraft.setScreen(null); //In case the user dies with the pad in the hand
     }
 
     @Override

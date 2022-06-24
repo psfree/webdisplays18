@@ -53,6 +53,8 @@ import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.data.GuiData;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.miniserv.client.Client;
 import net.montoyo.wd.net.Messages;
@@ -572,7 +574,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             //Laser pointer raycast
             boolean raycastHit = false;
 
-            if(mc.player != null && mc.level != null && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem() == WebDisplays.INSTANCE.itemLaserPointer
+            if(mc.player != null && mc.level != null && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get())
                                                      && mc.options.keyUse.isDown()
                                                      && (mc.hitResult == null || mc.hitResult.getType() != HitResult.Type.BLOCK)) {
                 laserPointerRenderer.isOn = true;
@@ -580,7 +582,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
                 BlockPos bpos = result.getBlockPos();
 
-                if(result.getType() == HitResult.Type.BLOCK && mc.level.getBlockState(bpos).getBlock() == WebDisplays.INSTANCE.blockScreen) {
+                if(result.getType() == HitResult.Type.BLOCK && mc.level.getBlockState(bpos).getBlock() == BlockInit.blockScreen.get()) {
                     Vector3i pos = new Vector3i(result.getBlockPos());
                     BlockSide side = BlockSide.values()[result.getDirection().ordinal()];
 
@@ -626,9 +628,9 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         Item item = ev.getItemStack().getItem();
         IItemRenderer renderer;
 
-        if(item == WebDisplays.INSTANCE.itemMinePad)
+        if(item == ItemInit.itemMinePad.get())
             renderer = minePadRenderer;
-        else if(item == WebDisplays.INSTANCE.itemLaserPointer)
+        else if(item == ItemInit.itemLaserPointer.get())
             renderer = laserPointerRenderer;
         else
             return;
@@ -691,7 +693,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         for(int i = 0; i < cnt; i++) {
             ItemStack item = inv.get(i);
 
-            if(item.getItem() == WebDisplays.INSTANCE.itemMinePad) {
+            if(item.getItem() == ItemInit.itemMinePad.get()) {
                 CompoundTag tag = item.getTag();
 
                 if(tag != null && tag.contains("PadID"))

@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -22,6 +23,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
@@ -30,6 +32,8 @@ import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.ScreenConfigData;
+import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageAddScreen;
 import net.montoyo.wd.net.client.CMessageCloseGui;
@@ -49,8 +53,8 @@ import static net.montoyo.wd.block.BlockPeripheral.point;
 
 public class TileEntityScreen extends BlockEntity{
 
-    public TileEntityScreen(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
-        super(arg, arg2, arg3);
+    public TileEntityScreen(BlockPos arg2, BlockState arg3) {
+        super(null /*TODO: add blockEnityTYpe */ , arg2, arg3);
     }
 
     public static class Screen {
@@ -323,7 +327,7 @@ public class TileEntityScreen extends BlockEntity{
             ret.setupRedstoneStatus(level, getBlockPos());
 
             if(sendUpdate)
-                Messages.INSTANCE.sendTo(new CMessageAddScreen(this, ret), point());
+                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageAddScreen(this, ret));
         }
 
         screens.add(ret);
@@ -362,7 +366,7 @@ public class TileEntityScreen extends BlockEntity{
 
     public void requestData(ServerPlayer ep) {
         if(!level.isClientSide)
-            Messages.INSTANCE.sendTo(new CMessageAddScreen(this), ep);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> ep), new CMessageAddScreen(this));
     }
 
     public void setScreenURL(BlockSide side, String url) {
@@ -380,7 +384,7 @@ public class TileEntityScreen extends BlockEntity{
             if(scr.browser != null)
                 scr.browser.loadURL(url);
         } else {
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.setURL(this, side, url), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.setURL(this, side, url));
             setChanged();
         }
     }
@@ -405,13 +409,13 @@ public class TileEntityScreen extends BlockEntity{
                 screens.get(idx).browser = null;
             }
         } else
-            Messages.INSTANCE(new CMessageScreenUpdate(this, side), point()); //Delete the screen
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageScreenUpdate(this, side)); //Delete the screen
 
         screens.remove(idx);
 
         if(!level.isClientSide) {
             if(screens.isEmpty()) //No more screens: remove tile entity
-                level.setBlock(getBlockPos(), WebDisplays.INSTANCE.blockScreen.getDefaultInstance().withProperty(BlockScreen.hasTE, false));
+                level.setBlockAndUpdate(getBlockPos(), BlockInit.blockScreen.get().defaultBlockState().setValue(BlockScreen.hasTE, false));
             else
                 setChanged();
         }
@@ -440,14 +444,14 @@ public class TileEntityScreen extends BlockEntity{
                 scr.browser = null; //Will be re-created by renderer
             }
         } else {
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.setResolution(this, side, res), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.setResolution(this, side, res));
             setChanged();
         }
     }
 
     private static Player getLaserUser(Screen scr) {
         if(scr.laserUser != null) {
-            if(scr.laserUser.isRemoved() || scr.laserUser.getItemInHand(InteractionHand.MAIN_HAND).getItem() != WebDisplays.INSTANCE.itemLaserPointer)
+            if(scr.laserUser.isRemoved() || !scr.laserUser.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get()))
                 scr.laserUser = null;
         }
 
@@ -476,13 +480,13 @@ public class TileEntityScreen extends BlockEntity{
         if(level.isClientSide)
             Log.warning("TileEntityScreen.click() from client side is useless...");
         else if(getLaserUser(scr) == null)
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_CLICK, vec), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_CLICK, vec));
     }
 
     void clickUnsafe(BlockSide side, int action, int x, int y) {
         if(level.isClientSide) {
             Vector2i vec = (action == CMessageScreenUpdate.MOUSE_UP) ? null : new Vector2i(x, y);
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, action, vec), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, action, vec));
         }
     }
 
@@ -539,7 +543,7 @@ public class TileEntityScreen extends BlockEntity{
             }
 
             if(sendMsg)
-               Messages.INSTANCE.sendTo(CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel), point());
+               Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel));
         }
     }
 
@@ -552,18 +556,18 @@ public class TileEntityScreen extends BlockEntity{
         Screen scr = getScreen(side);
         if(scr == null) {
             Log.error("Called handleJSRequest on non-existing side %s", side.toString());
-            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Invalid side"), src);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Invalid side"));
             return;
         }
 
         if(!scr.owner.uuid.equals(src.getGameProfile().getId())) {
             Log.warning("Player %s (UUID %s) tries to use the redstone output API on a screen he doesn't own!", src.getName(), src.getGameProfile().getId().toString());
-            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Only the owner can do that"), src);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Only the owner can do that"));
             return;
         }
 
         if(scr.upgrades.stream().noneMatch(DefaultUpgrade.REDSTONE_OUTPUT::matches)) {
-            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Missing upgrade"), src);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Missing upgrade"));
             return;
         }
 
@@ -588,25 +592,25 @@ public class TileEntityScreen extends BlockEntity{
                 vec1.add(side.up.x, side.up.y, side.up.z);
             }
 
-            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, new byte[0]));
         } else if(req == JSServerRequest.SET_REDSTONE_AT) {
             int x = (Integer) data[0];
             int y = (Integer) data[1];
             boolean state = (Boolean) data[2];
 
             if(x < 0 || x >= scr.size.x || y < 0 || y >= scr.size.y)
-                Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 403, "Out of range"), src);
+                Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Out of range"));
             else {
                 BlockPos bp = (new Vector3i(getBlockPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
                 BlockState bs = level.getBlockState(bp);
 
                 if(!bs.getValue(BlockScreen.emitting).equals(state))
-                    level.setBlock(bp, bs.setValue(BlockScreen.emitting, state));
+                    level.setBlockAndUpdate(bp, bs.setValue(BlockScreen.emitting, state));
 
-                Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, new byte[0]), src);
+                Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, new byte[0]));
             }
         } else
-            Messages.INSTANCE.sendTo(new CMessageJSResponse(reqId, req, 400, "Invalid request"), src);
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 400, "Invalid request"));
     }
 
     @Override
@@ -722,7 +726,7 @@ public class TileEntityScreen extends BlockEntity{
 
             if(!scr.friends.contains(pair)) {
                 scr.friends.add(pair);
-                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
+                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point(level, getBlockPos()));
                 setChanged();
             }
         }
@@ -738,7 +742,7 @@ public class TileEntityScreen extends BlockEntity{
 
             if(scr.friends.remove(pair)) {
                 checkLaserUserRights(scr);
-                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
+                (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point(level, getBlockPos()));
                 setChanged();
             }
         }
@@ -756,8 +760,8 @@ public class TileEntityScreen extends BlockEntity{
             scr.otherRights = or;
 
             checkLaserUserRights(scr);
-            (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point());
-            markDirty();
+            (new ScreenConfigData(new Vector3i(getBlockPos()), side, scr)).updateOnly().sendTo(point(level, getBlockPos()));
+            setChanged();
         }
     }
 
@@ -783,21 +787,11 @@ public class TileEntityScreen extends BlockEntity{
                         TypeData[] data = WebDisplays.GSON.fromJson(text, TypeData[].class);
 
                         for(TypeData ev : data) {
-                            switch(ev.getAction()) {
-                                case PRESS:
-                                    scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
-                                    break;
-
-                                case RELEASE:
-                                    scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
-                                    break;
-
-                                case TYPE:
-                                    scr.browser.injectKeyTyped(ev.getKeyChar(), 0);
-                                    break;
-
-                                default:
-                                    throw new RuntimeException("Invalid type action '" + ev.getAction() + '\'');
+                            switch (ev.getAction()) {
+                                case PRESS -> scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
+                                case RELEASE -> scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
+                                case TYPE -> scr.browser.injectKeyTyped(ev.getKeyChar(), 0);
+                                default -> throw new RuntimeException("Invalid type action '" + ev.getAction() + '\'');
                             }
                         }
                     }
@@ -806,7 +800,7 @@ public class TileEntityScreen extends BlockEntity{
                 }
             }
         } else {
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.type(this, side, text), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.type(this, side, text));
 
             if(soundPos != null)
                 playSoundAt(WebDisplays.INSTANCE.soundTyping, soundPos, 0.25f, 1.f);
@@ -862,7 +856,7 @@ public class TileEntityScreen extends BlockEntity{
         }
 
         if(scr.upgrades.size() >= 16) {
-            Log.error("Can't insert upgrade %s in screen %s at %s: too many upgrades already!", safeName(is), side.toString(), pos.toString());
+            Log.error("Can't insert upgrade %s in screen %s at %s: too many upgrades already!", safeName(is), side.toString(), getBlockPos().toString());
             return false;
         }
 
@@ -874,7 +868,7 @@ public class TileEntityScreen extends BlockEntity{
         isCopy.setCount(1);
 
         scr.upgrades.add(isCopy);
-        Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
+        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
         itemAsUpgrade.onInstall(this, side, player, isCopy);
         playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
         setChanged();
@@ -926,11 +920,11 @@ public class TileEntityScreen extends BlockEntity{
         if(idxToRemove >= 0) {
             dropUpgrade(scr.upgrades.get(idxToRemove), side, player);
             scr.upgrades.remove(idxToRemove);
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.upgrade(this, side), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
             playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
             setChanged();
         } else
-            Log.warning("Tried to remove non-existing upgrade %s to screen %s at %s", safeName(is), side.toString(), pos.toString());
+            Log.warning("Tried to remove non-existing upgrade %s to screen %s at %s", safeName(is), side.toString(), getBlockPos().toString());
     }
 
     private void dropUpgrade(ItemStack is, BlockSide side, @Nullable Player ply) {
@@ -982,10 +976,10 @@ public class TileEntityScreen extends BlockEntity{
                 //Try to acquire laser lock
                 if(getLaserUser(scr) == null) {
                     scr.laserUser = ply;
-                    Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_DOWN, pos), point());
+                    Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_DOWN, pos));
                 }
             } else if(getLaserUser(scr) == ply)
-                Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_MOVE, pos), point());
+                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_MOVE, pos));
         }
     }
 
@@ -995,7 +989,7 @@ public class TileEntityScreen extends BlockEntity{
         if(scr != null) {
             if(getLaserUser(scr) == ply) {
                 scr.laserUser = null;
-                Messages.INSTANCE.sendTo(CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_UP, null), point());
+                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_UP, null));
             }
         }
     }
@@ -1006,7 +1000,7 @@ public class TileEntityScreen extends BlockEntity{
             scr.upgrades.clear();
         }
 
-        Messages.INSTANCE.sendTo(new CMessageCloseGui(getBlockPos()), point());
+        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageCloseGui(getBlockPos()));
     }
 
     public void setOwner(BlockSide side, Player newOwner) {
@@ -1027,7 +1021,7 @@ public class TileEntityScreen extends BlockEntity{
         }
 
         scr.owner = new NameUUIDPair(newOwner.getGameProfile());
-        Messages.INSTANCE.sendTo(CMessageScreenUpdate.owner(this, side, scr.owner), point());
+        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.owner(this, side, scr.owner));
         checkLaserUserRights(scr);
         setChanged();
     }
@@ -1051,7 +1045,7 @@ public class TileEntityScreen extends BlockEntity{
             }
         } else {
             scr.rotation = rot;
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.rotation(this, side, rot), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.rotation(this, side, rot));
             setChanged();
         }
     }
@@ -1067,7 +1061,7 @@ public class TileEntityScreen extends BlockEntity{
             if(scr.browser != null)
                 scr.browser.runJS(code, "");
         } else
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.js(this, side, code), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.js(this, side, code));
     }
 
     public void setAutoVolume(BlockSide side, boolean av) {
@@ -1082,18 +1076,18 @@ public class TileEntityScreen extends BlockEntity{
         if(level.isClientSide)
             WebDisplays.PROXY.screenUpdateAutoVolumeInGui(new Vector3i(getBlockPos()), side, av);
         else {
-            Messages.INSTANCE.sendTo(CMessageScreenUpdate.autoVolume(this, side, av), point());
+            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.autoVolume(this, side, av));
             setChanged();
         }
     }
 
 
-    @Override
-    public boolean shouldRefresh(Level world, BlockPos pos, @Nonnull BlockState oldState, @Nonnull BlockState newState) {
-        if(oldState.getBlock() != WebDisplays.INSTANCE.blockScreen || newState.getBlock() != WebDisplays.INSTANCE.blockScreen)
-            return true;
-
-        return oldState.getValue(BlockScreen.hasTE) != newState.getValue(BlockScreen.hasTE);
-    }
+//    @Override
+//    public boolean shouldRefresh(Level world, BlockPos pos, @Nonnull BlockState oldState, @Nonnull BlockState newState) {
+//        if(oldState.getBlock() != WebDisplays.INSTANCE.blockScreen || newState.getBlock() != WebDisplays.INSTANCE.blockScreen)
+//            return true;
+//
+//        return oldState.getValue(BlockScreen.hasTE) != newState.getValue(BlockScreen.hasTE);
+//    }
 
 }

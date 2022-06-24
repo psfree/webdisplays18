@@ -4,9 +4,11 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import net.minecraft.client.gui.GuiTextField;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.network.chat.Component;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
 
@@ -18,7 +20,7 @@ public class TextField extends Control {
 
         private EnterPressedEvent(TextField field) {
             source = field;
-            text = field.field.getText();
+            text = field.field.getValue();
         }
 
         public String getText() {
@@ -34,7 +36,7 @@ public class TextField extends Control {
         private TabPressedEvent(TextField field) {
             source = field;
 
-            String text = field.field.getText();
+            String text = field.field.getValue();
             int max = field.field.getCursorPosition();
             int spacePos = 0;
 
@@ -62,7 +64,7 @@ public class TextField extends Control {
         private TextChangedEvent(TextField tf, String old) {
             source = tf;
             oldContent = old;
-            newContent = tf.field.getText();
+            newContent = tf.field.getValue();
         }
 
         public String getOldContent() {
@@ -84,62 +86,64 @@ public class TextField extends Control {
     public static final int DEFAULT_TEXT_COLOR = 14737632;
     public static final int DEFAULT_DISABLED_COLOR = 7368816;
 
-    private final GuiTextField field;
+    private final EditBox field;
     private boolean enabled = true;
     private int textColor = DEFAULT_TEXT_COLOR;
     private int disabledColor = DEFAULT_DISABLED_COLOR;
     private final ArrayList<TextChangeListener> listeners = new ArrayList<>();
 
     public TextField() {
-        field = new GuiTextField(0, font, 1, 1, 198, 20);
+        field = new EditBox(font, 1, 1, 198, 20, Component.nullToEmpty(""));
     }
 
     public TextField(int x, int y, int width, int height) {
-        field = new GuiTextField(0, font, x + 1, y + 1, width - 2, height - 2);
+        field = new EditBox(font, x + 1, y + 1, width - 2, height - 2, Component.nullToEmpty(""));
     }
 
     public TextField(int x, int y, int width, int height, String text) {
-        field = new GuiTextField(0, font, x + 1, y + 1, width - 2, height - 2);
-        field.setText(text);
+        field = new EditBox(font, x + 1, y + 1, width - 2, height - 2, Component.nullToEmpty(""));
+        field.setValue(text);
     }
 
     @Override
-    public void keyTyped(char typedChar, int keyCode) {
-        if(keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER)
+    public boolean keyTyped(char typedChar, int keyCode) {
+        if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER)
             parent.actionPerformed(new EnterPressedEvent(this));
-        else if(keyCode == Keyboard.KEY_TAB)
+        else if(keyCode == GLFW.GLFW_KEY_TAB)
             parent.actionPerformed(new TabPressedEvent(this));
         else {
             String old;
             if(enabled && field.isFocused())
-                old = field.getText();
+                old = field.getValue();
             else
                 old = null;
 
-            field.textboxKeyTyped(typedChar, keyCode);
+            field.charTyped(typedChar, keyCode);
 
-            if(enabled && field.isFocused() && !field.getText().equals(old)) {
+            if(enabled && field.isFocused() && !field.getValue().equals(old)) {
                 for(TextChangeListener tcl : listeners)
-                    tcl.onTextChange(this, old, field.getText());
+                    tcl.onTextChange(this, old, field.getValue());
 
                 parent.actionPerformed(new TextChangedEvent(this, old));
             }
         }
+
+        return false;
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        field.mouseClicked(mouseX, mouseY, mouseButton);
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        return field.mouseClicked(mouseX, mouseY, mouseButton);
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
-        field.drawTextBox();
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
+        field.render(poseStack, mouseX, mouseY, ptt);
     }
 
     public void setText(String text) {
-        String old = field.getText();
-        field.setText(text);
+        String old = field.getValue();
+        field.setValue(text);
 
         if(!old.equals(text)) {
             for(TextChangeListener tcl : listeners)
@@ -148,38 +152,38 @@ public class TextField extends Control {
     }
 
     public void clear() {
-        field.setText("");
+        field.setValue("");
     }
 
     public String getText() {
-        return field.getText();
+        return field.getValue();
     }
 
     public String getSelectedText() {
-        return field.getSelectedText();
+        return field.getHighlighted();
     }
 
     public void setWidth(int width) {
-        field.width = width - 2;
+        field.setWidth(width - 2);
     }
 
     @Override
     public int getWidth() {
-        return field.width + 2;
+        return field.getWidth() + 2;
     }
 
     public void setHeight(int height) {
-        field.height = height - 2;
+        field.setHeight(height - 2);
     }
 
     @Override
     public int getHeight() {
-        return field.height + 2;
+        return field.getHeight() + 2;
     }
 
     public void setSize(int w, int h) {
-        field.width = w - 2;
-        field.height = h - 2;
+        field.setWidth(w - 2);
+        field.setHeight(h - 2);
     }
 
     @Override
@@ -200,7 +204,7 @@ public class TextField extends Control {
 
     public void setDisabled(boolean en) {
         enabled = !en;
-        field.setEnabled(enabled);
+        field.setFocus(enabled);
     }
 
     public boolean isDisabled() {
@@ -208,12 +212,12 @@ public class TextField extends Control {
     }
 
     public void enable() {
-        field.setEnabled(true);
+        field.setFocus(true);
         enabled = true;
     }
 
     public void disable() {
-        field.setEnabled(false);
+        field.setFocus(false);
         enabled = false;
     }
 
@@ -222,7 +226,7 @@ public class TextField extends Control {
     }
 
     public boolean isVisible() {
-        return field.getVisible();
+        return field.isVisible();
     }
 
     public void show() {
@@ -234,7 +238,7 @@ public class TextField extends Control {
     }
 
     public void setFocused(boolean val) {
-        field.setFocused(val);
+        field.setFocus(val);
     }
 
     public boolean hasFocus() {
@@ -242,15 +246,15 @@ public class TextField extends Control {
     }
 
     public void focus() {
-        field.setFocused(true);
+        field.setFocus(true);
     }
 
     public void setMaxLength(int len) {
-        field.setMaxStringLength(len);
+        field.setMaxLength(len);
     }
 
     public int getMaxLength() {
-        return field.getMaxStringLength();
+        return field.getMaxLength(); //TODO: access transformer
     }
 
     public void setTextColor(int color) {
@@ -263,7 +267,7 @@ public class TextField extends Control {
     }
 
     public void setDisabledTextColor(int color) {
-        field.setDisabledTextColour(color);
+        field.setTextColorUneditable(color);
         disabledColor = color;
     }
 
@@ -271,7 +275,7 @@ public class TextField extends Control {
         return disabledColor;
     }
 
-    public GuiTextField getMcField() {
+    public EditBox getMcField() {
         return field;
     }
 
@@ -289,19 +293,19 @@ public class TextField extends Control {
         super.load(json);
         field.x = json.getInt("x", 0) + 1;
         field.y = json.getInt("y", 0) + 1;
-        field.width = json.getInt("width", 200) - 2;
-        field.height = json.getInt("height", 22) - 2;
-        field.setText(tr(json.getString("text", "")));
+        field.setWidth(json.getInt("width", 200) - 2);
+        field.setHeight(json.getInt("height", 22) - 2);
+        field.setValue(tr(json.getString("text", "")));
         field.setVisible(json.getBool("visible", true));
-        field.setMaxStringLength(json.getInt("maxLength", 32));
+        field.setMaxLength(json.getInt("maxLength", 32));
 
         enabled = !json.getBool("disabled", false);
         textColor = json.getColor("textColor", DEFAULT_TEXT_COLOR);
         disabledColor = json.getColor("disabledColor", DEFAULT_DISABLED_COLOR);
 
         field.setTextColor(textColor);
-        field.setDisabledTextColour(disabledColor);
-        field.setEnabled(enabled);
+        field.setTextColorUneditable(disabledColor);
+        field.setFocus(enabled);
     }
 
 }

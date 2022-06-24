@@ -5,6 +5,7 @@
 package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -67,7 +68,7 @@ public class ScreenConfigData extends GuiData {
             return null;
         }
 
-        return new GuiScreenConfig((TileEntityScreen) te, side, friends, friendRights, otherRights);
+        return new GuiScreenConfig(Component.nullToEmpty(""), (TileEntityScreen) te, side, friends, friendRights, otherRights);
     }
 
     @Override

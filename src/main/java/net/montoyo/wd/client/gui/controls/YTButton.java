@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import net.minecraft.network.chat.Component;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.VideoType;
@@ -16,8 +17,8 @@ public class YTButton extends Button implements TextField.TextChangeListener {
     private TextField urlField;
 
     public YTButton() {
-        btn.displayString = "YT";
-        btn.enabled = false;
+        btn.setMessage(Component.nullToEmpty("YT"));
+        btn.active = false;
         shiftColor = 0xFFFF6464;
     }
 
@@ -72,7 +73,7 @@ public class YTButton extends Button implements TextField.TextChangeListener {
 
     @Override
     public void onTextChange(TextField tf, String oldContent, String newContent) {
-        btn.enabled = (VideoType.getTypeFromURL(Util.addProtocol(newContent)) == VideoType.YOUTUBE);
+        btn.active = (VideoType.getTypeFromURL(Util.addProtocol(newContent)) == VideoType.YOUTUBE);
     }
 
 }

@@ -4,7 +4,11 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import net.minecraft.client.shader.Framebuffer;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.pipeline.TextureTarget;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 import java.util.ArrayList;
@@ -52,7 +56,7 @@ public class List extends BasicControl {
     private int width;
     private int height;
     private final ArrayList<Entry> content = new ArrayList<>();
-    private Framebuffer fbo;
+    private RenderTarget fbo;
     private int selected = -1;
     private boolean update;
     private int selColor = 0xFF0080FF;
@@ -60,9 +64,9 @@ public class List extends BasicControl {
     //Scroll handling
     private int contentH = 0;
     private int scrollSize;
-    private int scrollPos = 0;
+    private double scrollPos = 0;
     private boolean scrolling = false;
-    private int scrollGrab;
+    private double scrollGrab;
 
     public List() {
     }
@@ -81,25 +85,25 @@ public class List extends BasicControl {
         return (int) amount;
     }
 
-    private boolean isInScrollbar(int mouseX, int mouseY) {
+    private boolean isInScrollbar(double mouseX, double mouseY) {
         return mouseX >= x + width - 5 && mouseX <= x + width - 1 && mouseY >= y + 1 + scrollPos && mouseY <= y + 1 + scrollPos + scrollSize;
     }
 
     private void createFBO() {
         if(fbo != null)
-            fbo.deleteFramebuffer();
+            fbo.destroyBuffers();
 
-        fbo = new Framebuffer(parent.screen2DisplayX(width), parent.screen2DisplayY(height), false);
-        fbo.setFramebufferFilter(GL_NEAREST);
-        fbo.bindFramebuffer(false);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.f); //Set alpha to 1
-        glClear(GL_COLOR_BUFFER_BIT);
-        fbo.unbindFramebuffer();
+        fbo = new TextureTarget(parent.screen2DisplayX(width), parent.screen2DisplayY(height), false, Minecraft.ON_OSX);
+        fbo.setFilterMode(GL_NEAREST);
+        fbo.bindWrite(false);
+        RenderSystem.clearColor(0.0f, 0.0f, 0.0f, 1.f); //Set alpha to 1
+        RenderSystem.clearDepth(GL_COLOR_BUFFER_BIT);
+        fbo.unbindWrite();
         update = true;
     }
 
     private void renderToFBO() {
-        beginFramebuffer(fbo, width, height);
+        PoseStack poseStack = beginFramebuffer(fbo, width, height);
         fillRect(0, 0, width, height, COLOR_BLACK);
         glColor4f(1.f, 1.f, 1.f, 1.f);
 
@@ -112,18 +116,18 @@ public class List extends BasicControl {
                     break;
 
                 int color = (i == selected) ? selColor : COLOR_WHITE;
-                font.drawString(content.get(i).text, 4, i * 12 + offset, color);
+                font.draw(poseStack, content.get(i).text, 4, i * 12 + offset, color);
             }
         }
 
-        drawBorder(0, 0, width, height, 0xFF808080);
-        endFramebuffer(fbo);
+        drawBorder(poseStack, 0, 0, width, height, 0xFF808080);
+        endFramebuffer(poseStack, fbo);
     }
 
     @Override
     public void destroy() {
         if(fbo != null)
-            fbo.deleteFramebuffer();
+            fbo.destroyBuffers();
     }
 
     public void setSize(int w, int h) {
@@ -206,11 +210,11 @@ public class List extends BasicControl {
     }
 
     @Override
-    public void mouseMove(int mouseX, int mouseY) {
+    public boolean mouseMove(double mouseX, double mouseY) {
         int sel = -1;
         if(!disabled && mouseX >= x + 1 && mouseX <= x + width - 6 && mouseY >= y + 2 && mouseY <= y + height - 2) {
             int offset = y + 4 - getYOffset();
-            sel = (mouseY - offset) / 12;
+            sel = (int) ((mouseY - offset) / 12);
 
             if(sel < 0 || sel >= content.size())
                 sel = -1;
@@ -219,31 +223,43 @@ public class List extends BasicControl {
         if(selected != sel) {
             selected = sel;
             update = true;
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if(!disabled && mouseButton == 0) {
             if(isInScrollbar(mouseX, mouseY)) {
                 scrolling = true;
                 scrollGrab = mouseY - (y + 1 + scrollPos);
             } else if(selected >= 0)
                 parent.actionPerformed(new EntryClick(this));
+
+            return true;
         }
+
+        return true;
     }
 
     @Override
-    public void mouseReleased(int mouseX, int mouseY, int state) {
-        if(!disabled && scrolling)
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
+        if(!disabled && scrolling) {
             scrolling = false;
+            return true;
+        }
+
+        return false;
     }
 
     @Override
-    public void mouseScroll(int mouseX, int mouseY, int amount) {
+    public boolean mouseScroll(double mouseX, double mouseY, double amount) {
         if(!disabled && !scrolling && mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height) {
             double disp = 12.d * ((double) (height - 2 - scrollSize)) / ((double) (contentH - height));
-            int sp = scrollPos;
+            double sp = scrollPos;
 
             if(amount < 0)
                 sp += (int) disp;
@@ -259,13 +275,17 @@ public class List extends BasicControl {
                 scrollPos = sp;
                 update = true;
             }
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+    public boolean mouseClickMove(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if(!disabled && scrolling) {
-            int sp = mouseY - scrollGrab - y - 1;
+            double sp = mouseY - scrollGrab - y - 1;
             if(sp < 0)
                 sp = 0;
             else if(sp > height - 2 - scrollSize)
@@ -275,21 +295,25 @@ public class List extends BasicControl {
                 scrollPos = sp;
                 update = true;
             }
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(visible) {
             if(update) {
                 renderToFBO();
                 update = false;
             }
 
-            fbo.bindFramebufferTexture();
-            glColor4f(1.f, 1.f, 1.f, 1.f);
-            fillTexturedRect(x, y, width, height, 0.0, 1.0, 1.0, 0.0);
-            fbo.unbindFramebufferTexture();
+            fbo.bindRead(); //TODO: Make sure is right
+            RenderSystem.setShaderColor(1.f, 1.f, 1.f, 1.f);
+            fillTexturedRect(poseStack, x, y, width, height, 0.0, 1.0, 1.0, 0.0);
+            fbo.unbindRead();
 
             fillRect(x + width - 5, y + 1 + scrollPos, 4, scrollSize, (scrolling || isInScrollbar(mouseX, mouseY)) ? 0xFF202020 : 0xFF404040);
         }

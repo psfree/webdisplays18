@@ -4,12 +4,12 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.gui.loading.JsonAWrapper;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import org.lwjgl.opengl.GL11;
 
-import java.io.IOException;
 import java.util.ArrayList;
 
 public abstract class Container extends BasicControl {
@@ -24,86 +24,119 @@ public abstract class Container extends BasicControl {
     }
 
     @Override
-    public void keyTyped(int keyCode, int scanCode, int modifiers) throws IOException {
+    public boolean keyTyped(char typedChar, int keyCode) {
+        boolean typed = false;
+
         if(!disabled) {
             for(Control ctrl : childs)
-                ctrl.keyTyped(keyCode, scanCode, modifiers);
+                typed = typed || ctrl.keyTyped(typedChar, keyCode);
         }
+
+        return typed;
     }
 
     @Override
-    public void keyUp(int key) {
+    public boolean keyUp(int key) {
+        boolean up = false;
+
         if(!disabled) {
             for(Control ctrl : childs)
-                ctrl.keyUp(key);
+                up = up || ctrl.keyUp(key);
         }
+
+        return up;
     }
 
     @Override
-    public void keyDown(int key) {
+    public boolean keyDown(int key) {
+        boolean down = false;
+
         if(!disabled) {
             for(Control ctrl : childs)
-                ctrl.keyDown(key);
+                down = down || ctrl.keyDown(key);
         }
+
+        return down;
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if(!disabled) {
-            mouseX -= x + paddingX;
-            mouseY -= y + paddingY;
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        boolean clicked = false;
 
-            for(Control ctrl : childs)
-                ctrl.mouseClicked(mouseX, mouseY, mouseButton);
-        }
-    }
-
-    @Override
-    public void mouseReleased(int mouseX, int mouseY, int state) {
-        if(!disabled) {
-            mouseX -= x + paddingX;
-            mouseY -= y + paddingY;
-
-            for(Control ctrl : childs)
-                ctrl.mouseReleased(mouseX, mouseY, state);
-        }
-    }
-
-    @Override
-    public void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
         if(!disabled) {
             mouseX -= x + paddingX;
             mouseY -= y + paddingY;
 
             for(Control ctrl : childs)
-                ctrl.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+                clicked = clicked || ctrl.mouseClicked(mouseX, mouseY, mouseButton);
         }
+
+        return clicked;
     }
 
     @Override
-    public void mouseMove(int mouseX, int mouseY) {
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
+        boolean released = false;
+
         if(!disabled) {
             mouseX -= x + paddingX;
             mouseY -= y + paddingY;
 
             for(Control ctrl : childs)
-                ctrl.mouseMove(mouseX, mouseY);
+                released = released || ctrl.mouseReleased(mouseX, mouseY, state);
         }
+
+        return released;
     }
 
     @Override
-    public void mouseScroll(int mouseX, int mouseY, int amount) {
+    public boolean mouseClickMove(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        boolean clicked = false;
+
         if(!disabled) {
             mouseX -= x + paddingX;
             mouseY -= y + paddingY;
 
             for(Control ctrl : childs)
-                ctrl.mouseScroll(mouseX, mouseY, amount);
+                clicked = clicked || ctrl.mouseClickMove(mouseX, mouseY, button, dragX, dragY);
         }
+
+        return clicked;
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public boolean mouseMove(double mouseX, double mouseY) {
+        boolean clicked = false;
+
+        if(!disabled) {
+            mouseX -= x + paddingX;
+            mouseY -= y + paddingY;
+
+
+            for(Control ctrl : childs)
+                clicked = clicked || ctrl.mouseMove(mouseX, mouseY);
+        }
+
+        return clicked;
+    }
+
+    @Override
+    public boolean mouseScroll(double mouseX, double mouseY, double amount) {
+        boolean scrolled = false;
+
+        if(!disabled) {
+            mouseX -= x + paddingX;
+            mouseY -= y + paddingY;
+
+            for(Control ctrl : childs)
+                scrolled = scrolled || ctrl.mouseScroll(mouseX, mouseY, amount);
+        }
+
+        return scrolled;
+    }
+
+    @Override
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(visible) {
             mouseX -= x + paddingX;
             mouseY -= y + paddingY;
@@ -113,10 +146,10 @@ public abstract class Container extends BasicControl {
 
             if(disabled) {
                 for(Control ctrl : childs)
-                    ctrl.draw(-1, -1, ptt);
+                    ctrl.draw(poseStack, -1, -1, ptt);
             } else {
                 for(Control ctrl : childs)
-                    ctrl.draw(mouseX, mouseY, ptt);
+                    ctrl.draw(poseStack, mouseX, mouseY, ptt);
             }
 
             GL11.glPopMatrix();

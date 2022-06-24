@@ -40,6 +40,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.block.BlockScreen;
@@ -291,7 +292,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
         if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
-            Messages.INSTANCE.sendTo(new CMessageServerInfo(miniservPort), (ServerPlayer) ev.getPlayer());
+            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) ev.getPlayer()), new CMessageServerInfo(miniservPort));
             IWDDCapability cap = (IWDDCapability) ev.getPlayer().getCapability(WDDCapability.Provider.cap, null);
 
             if(cap == null)

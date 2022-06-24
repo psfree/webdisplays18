@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 public class Label extends BasicControl {
@@ -22,7 +23,7 @@ public class Label extends BasicControl {
         this.x = x;
         this.y = y;
         label = str;
-        labelW = font.getStringWidth(str);
+        labelW = font.width(str);
         color = COLOR_WHITE;
         shadowed = false;
     }
@@ -31,7 +32,7 @@ public class Label extends BasicControl {
         this.x = x;
         this.y = y;
         label = str;
-        labelW = font.getStringWidth(str);
+        labelW = font.width(str);
         this.color = color;
         shadowed = false;
     }
@@ -40,14 +41,14 @@ public class Label extends BasicControl {
         this.x = x;
         this.y = y;
         label = str;
-        labelW = font.getStringWidth(str);
+        labelW = font.width(str);
         this.color = color;
         this.shadowed = shadowed;
     }
 
     public void setLabel(String label) {
         this.label = label;
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
     }
 
     public String getLabel() {
@@ -71,9 +72,9 @@ public class Label extends BasicControl {
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(visible)
-            font.drawString(label, x, y, color, shadowed);
+            font.drawShadow(poseStack, label, x, y, color, shadowed);
     }
 
     @Override
@@ -90,7 +91,7 @@ public class Label extends BasicControl {
     public void load(JsonOWrapper json) {
         super.load(json);
         label = tr(json.getString("label", ""));
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
         color = json.getColor("color", COLOR_WHITE);
         shadowed = json.getBool("shadowed", false);
     }

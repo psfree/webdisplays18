@@ -12,9 +12,11 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.item.ItemStack;
-import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Container;
 import net.montoyo.wd.client.gui.controls.Control;
 import net.montoyo.wd.client.gui.controls.Event;
@@ -37,7 +39,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class WDScreen extends Screen {
 
@@ -117,10 +121,10 @@ public abstract class WDScreen extends Screen {
             renderBackground(poseStack);
 
         for(Control ctrl: controls)
-            ctrl.draw(mouseX, mouseY, ptt);
+            ctrl.draw(poseStack, mouseX, mouseY, ptt);
 
         for(Control ctrl: postDrawList)
-            ctrl.postDraw(mouseX, mouseY, ptt);
+            ctrl.postDraw(poseStack, mouseX, mouseY, ptt);
     }
 
     @Override
@@ -135,7 +139,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             typed = typed || ctrl.keyTyped(codePoint, modifiers);
 
-        return typed;
+        return typed || charTyped(codePoint, modifiers);
     }
 
     @Override
@@ -145,7 +149,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             clicked = clicked || ctrl.mouseClicked(mouseX, mouseY, button);
 
-        return clicked;
+        return clicked || mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
@@ -155,13 +159,17 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             mouseReleased = mouseReleased || ctrl.mouseReleased(mouseX, mouseY, button);
 
-        return mouseReleased;
+        return mouseReleased || mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    protected void mouseClickMove(int mouseX, int mouseY, int clickedMouseButton, long timeSinceLastClick) {
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        boolean dragged = false;
+
         for(Control ctrl: controls)
-            ctrl.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick);
+            dragged = dragged || ctrl.mouseClickMove(mouseX, mouseY, button, dragX, dragX);
+
+        return dragged || mouseDragged(mouseX, mouseY, button, dragX, dragY);
     }
 
     @Override
@@ -185,54 +193,43 @@ public abstract class WDScreen extends Screen {
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        boolean scrolled = false;
 
+        for(Control ctrl : controls)
+            scrolled = scrolled || ctrl.mouseScroll(mouseX, mouseY, delta);
 
+        return scrolled;
     }
 
     @Override
     public void mouseMoved(double mouseX, double mouseY) {
-        onMouseMove(mouseX, mouseY);
-    }
+        boolean moved = false;
 
-    @Override
-    public void handleMouseInput() throws IOException {
-        super.handleMouseInput();
-
-        int x = Mouse.getEventX() * width / mc.displayWidth;
-        int y = height - Mouse.getEventY() * height / mc.displayHeight - 1;
-        int dw = Mouse.getEventDWheel();
-
-        if(dw != 0)
-            onMouseScroll(x, y, dw);
-        else if(Mouse.getEventButton() == -1)
-            onMouseMove(x, y);
-    }
-
-    @Override
-    public void handleKeyboardInput() throws IOException {
-        super.handleKeyboardInput();
-
-        int key = Keyboard.getEventKey();
-        if(key != Keyboard.KEY_NONE) {
-            if(Keyboard.getEventKeyState()) {
-                for(Control ctrl : controls)
-                    ctrl.keyDown(key);
-            } else {
-                for(Control ctrl : controls)
-                    ctrl.keyUp(key);
-            }
-        }
-    }
-
-    public void onMouseScroll(int mouseX, int mouseY, int amount) {
         for(Control ctrl : controls)
-            ctrl.mouseScroll(mouseX, mouseY, amount);
+            moved = moved || ctrl.mouseMove(mouseX, mouseY);
+
+        super.mouseMoved(mouseX, mouseY);
     }
 
-    public void onMouseMove(int mouseX, int mouseY) {
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        boolean down = false;
 
+        for(Control ctrl : controls)
+            down = down || ctrl.keyDown(keyCode);
+
+        return down || super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        boolean up = false;
+
+        for(Control ctrl : controls)
+            up = up || ctrl.keyUp(keyCode);
+
+        return up || super.keyReleased(keyCode, scanCode, modifiers);
     }
 
     public Object actionPerformed(Event ev) {
@@ -363,13 +360,12 @@ public abstract class WDScreen extends Screen {
         }
     }
 
-    public void drawItemStackTooltip(ItemStack is, int x, int y) {
-
-        renderToolTip(is, x, y); //Since it's protected...
+    public void drawItemStackTooltip(PoseStack poseStack, ItemStack is, int x, int y) {
+        renderTooltip(poseStack, is, x, y); //Since it's protected...
     }
 
-    public void drawTooltip(java.util.List<String> lines, int x, int y) {
-        drawHoveringText(lines, x, y, font); //This is also protected...
+    public void drawTooltip(PoseStack poseStack, List<String> lines, int x, int y) {
+        renderTooltip(poseStack, lines.stream().map(a -> FormattedCharSequence.forward(a, Style.EMPTY)).collect(Collectors.toList()), x, y, font); //This is also protected...
     }
 
     public void requirePostDraw(Control ctrl) {
@@ -388,5 +384,7 @@ public abstract class WDScreen extends Screen {
     public String getWikiPageName() {
         return null;
     }
+
+    //Bypass for needing to use Components
 
 }

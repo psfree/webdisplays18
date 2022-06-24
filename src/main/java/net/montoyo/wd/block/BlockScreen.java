@@ -4,59 +4,60 @@
 
 package net.montoyo.wd.block;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.EnumPushReaction;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.IProperty;
-import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockStateContainer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemBlock;
-import net.minecraft.item.ItemStack;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.EnumBlockRenderType;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.Explosion;
-import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.World;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
-import net.minecraftforge.common.property.ExtendedBlockState;
-import net.minecraftforge.common.property.IExtendedBlockState;
-import net.minecraftforge.common.property.IUnlistedProperty;
-import net.minecraftforge.common.property.Properties;
+import net.minecraft.world.level.material.Material;
+import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.world.phys.BlockHitResult;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.SetURLData;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.item.ItemPeripheral;
+import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
-public class BlockScreen extends WDBlockContainer {
+public class BlockScreen extends BaseEntityBlock {
 
     public static final BooleanProperty hasTE = BooleanProperty.create("haste");
     public static final BooleanProperty emitting = BooleanProperty.create("emitting");
-    private static final Property[] properties = new IProperty[] { hasTE, emitting };
-    public static final IUnlistedProperty<Integer>[] sideFlags = new IUnlistedProperty[6];
+    private static final Property<?>[] properties = new Property<?>[] { hasTE, emitting };
+    public static final IntegerProperty[] sideFlags = new IntegerProperty[6];
     static {
         for(int i = 0; i < sideFlags.length; i++)
-            sideFlags[i] = Properties.toUnlisted(PropertyInteger.create("neighbor" + i, 0, 15));
+            sideFlags[i] = IntegerProperty.create("neighbor" + i, 0, 15);
     }
 
     private static final int BAR_BOT = 1;
@@ -65,34 +66,41 @@ public class BlockScreen extends WDBlockContainer {
     private static final int BAR_LEFT = 8;
 
     public BlockScreen() {
-        super(Material.ROCK);
-        setHardness(1.5f);
-        setResistance(10.f);
-        setCreativeTab(WebDisplays.CREATIVE_TAB);
-        setName("screen");
-        setDefaultState(blockState.getBaseState().withProperty(hasTE, false).withProperty(emitting, false));
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
+//        setCreativeTab(WebDisplays.CREATIVE_TAB);
+//        setName("screen");
+        registerDefaultState(getStateDefinition().any().setValue(hasTE, false).setValue(emitting, false));
+    }
+
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(properties).add(sideFlags);
+    }
+
+    @Override
+    public RenderShape getRenderShape(BlockState state) {
+        return RenderShape.MODEL;
+    }
+
+    public static boolean isntScreenBlock(Level world, Vector3i pos) {
+        return world.getBlockState(pos.toBlock()).getBlock() != BlockInit.blockScreen.get();
+    }
+
+
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return super.getStateForPlacement(context);
+    }
+
+    @Override
+    public BlockState updateShape(BlockState state, Direction direction, BlockState neighborState, LevelAccessor level, BlockPos currentPos, BlockPos neighborPos) {
+        return super.updateShape(state, direction, neighborState, level, currentPos, neighborPos);
     }
 
     @Override
     @Nonnull
-    public EnumBlockRenderType getRenderType(IBlockState state) {
-        return EnumBlockRenderType.MODEL;
-    }
-
-    @Override
-    @Nonnull
-    protected BlockStateContainer createBlockState() {
-        return new ExtendedBlockState(this, properties, sideFlags);
-    }
-
-    public static boolean isntScreenBlock(IBlockAccess world, Vector3i pos) {
-        return world.getBlockState(pos.toBlock()).getBlock() != WebDisplays.INSTANCE.blockScreen;
-    }
-
-    @Override
-    @Nonnull
-    public IBlockState getExtendedState(@Nonnull IBlockState state, IBlockAccess world, BlockPos bpos) {
-        IExtendedBlockState ret = (IExtendedBlockState) blockState.getBaseState();
+    public BlockState getExtendedState(@Nonnull BlockState ret, Level world, BlockPos bpos) {
         Vector3i pos = new Vector3i(bpos);
 
         for(BlockSide side : BlockSide.values()) {
@@ -102,20 +110,20 @@ public class BlockScreen extends WDBlockContainer {
             if(isntScreenBlock(world, side.left.clone().add(pos)))  icon |= BAR_LEFT;
             if(isntScreenBlock(world, side.right.clone().add(pos))) icon |= BAR_RIGHT;
 
-            ret = ret.withProperty(sideFlags[side.ordinal()], icon);
+            ret = ret.setValue(sideFlags[side.ordinal()], icon);
         }
 
         return ret;
     }
 
-    @Override
-    @Nonnull
-    public IBlockState getStateFromMeta(int meta) {
-        return getDefaultState().withProperty(hasTE, (meta & 1) != 0).withProperty(emitting, (meta & 2) != 0);
-    }
+//    @Override
+//    @Nonnull
+//    public IBlockState getStateFromMeta(int meta) {
+//        return getDefaultState().withProperty(hasTE, (meta & 1) != 0).withProperty(emitting, (meta & 2) != 0);
+//    }
+//
 
-    @Override
-    public int getMetaFromState(IBlockState state) {
+    public int getMetaFromState(BlockState state) {
         int ret = 0;
         if(state.getValue(hasTE))
             ret |= 1;
@@ -127,22 +135,22 @@ public class BlockScreen extends WDBlockContainer {
     }
 
     @Override
-    public boolean onBlockActivated(World world, BlockPos bpos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-        ItemStack heldItem = player.getHeldItem(hand);
+    public InteractionResult use(BlockState state, Level world, BlockPos position, Player player, InteractionHand hand, BlockHitResult hit) {
+        ItemStack heldItem = player.getItemInHand(hand);
         if(heldItem.isEmpty())
             heldItem = null; //Easier to work with
         else if(!(heldItem.getItem() instanceof IUpgrade))
-            return false;
+            return InteractionResult.FAIL;
 
-        if(world.isRemote)
-            return true;
+        if(world.isClientSide)
+            return InteractionResult.FAIL;
 
-        boolean sneaking = player.isSneaking();
-        Vector3i pos = new Vector3i(bpos);
-        BlockSide side = BlockSide.values()[facing.ordinal()];
+        boolean sneaking = player.isShiftKeyDown();
+        Vector3i pos = new Vector3i(position);
+        BlockSide side = BlockSide.values()[hit.getDirection().ordinal()];
 
         Multiblock.findOrigin(world, pos, side, null);
-        TileEntityScreen te = (TileEntityScreen) world.getTileEntity(pos.toBlock());
+        TileEntityScreen te = (TileEntityScreen) world.getBlockEntity(pos.toBlock());
 
         if(te != null && te.getScreen(side) != null) {
             TileEntityScreen.Screen scr = te.getScreen(side);
@@ -151,58 +159,58 @@ public class BlockScreen extends WDBlockContainer {
                 if((scr.rightsFor(player) & ScreenRights.CHANGE_URL) == 0)
                     Util.toast(player, "restrictions");
                 else
-                    (new SetURLData(pos, scr.side, scr.url)).sendTo((EntityPlayerMP) player);
+                    (new SetURLData(pos, scr.side, scr.url)).sendTo((ServerPlayer) player);
 
-                return true;
+                return InteractionResult.SUCCESS;
             } else if(heldItem != null && !te.hasUpgrade(side, heldItem)) { //Add upgrade
                 if((scr.rightsFor(player) & ScreenRights.MANAGE_UPGRADES) == 0) {
                     Util.toast(player, "restrictions");
-                    return true;
+                    return InteractionResult.SUCCESS;
                 }
 
                 if(te.addUpgrade(side, heldItem, player, false)) {
                     if(!player.isCreative())
                         heldItem.shrink(1);
 
-                    Util.toast(player, TextFormatting.AQUA, "upgradeOk");
-                    if(player instanceof EntityPlayerMP)
-                        WebDisplays.INSTANCE.criterionUpgradeScreen.trigger(((EntityPlayerMP) player).getAdvancements());
+                    Util.toast(player, ChatFormatting.AQUA, "upgradeOk");
+                    if(player instanceof ServerPlayer)
+                        WebDisplays.INSTANCE.criterionUpgradeScreen.trigger(((ServerPlayer) player).getAdvancements());
                 } else
                     Util.toast(player, "upgradeError");
 
-                return true;
+                return InteractionResult.SUCCESS;
             } else { //Click
                 if((scr.rightsFor(player) & ScreenRights.CLICK) == 0) {
                     Util.toast(player, "restrictions");
-                    return true;
+                    return InteractionResult.SUCCESS;
                 }
 
                 Vector2i tmp = new Vector2i();
-                if(hit2pixels(side, bpos, pos, scr, hitX, hitY, hitZ, tmp))
+                if(hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getLocation().x, (float) hit.getLocation().y, (float) hit.getLocation().z, tmp))
                     te.click(side, tmp);
 
-                return true;
+                return InteractionResult.SUCCESS;
             }
         } else if(sneaking) {
             Util.toast(player, "turnOn");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         Vector2i size = Multiblock.measure(world, pos, side);
         if(size.x < 2 || size.y < 2) {
             Util.toast(player, "tooSmall");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         if(size.x > WebDisplays.INSTANCE.maxScreenX || size.y > WebDisplays.INSTANCE.maxScreenY) {
             Util.toast(player, "tooBig", WebDisplays.INSTANCE.maxScreenX, WebDisplays.INSTANCE.maxScreenY);
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         Vector3i err = Multiblock.check(world, pos, size, side);
         if(err != null) {
             Util.toast(player, "invalid", err.toString());
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         boolean created = false;
@@ -210,27 +218,27 @@ public class BlockScreen extends WDBlockContainer {
 
         if(te == null) {
             BlockPos bp = pos.toBlock();
-            world.setBlockState(bp, world.getBlockState(bp).withProperty(hasTE, true));
-            te = (TileEntityScreen) world.getTileEntity(bp);
+            world.setBlockAndUpdate(bp, world.getBlockState(bp).setValue(hasTE, true));
+            te = (TileEntityScreen) world.getBlockEntity(bp);
             created = true;
         }
 
         te.addScreen(side, size, null, player, !created);
-        return true;
+        return InteractionResult.SUCCESS;
     }
 
     @Override
-    public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos source) {
-        if(block != this && !world.isRemote && !state.getValue(emitting)) {
+    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos source, boolean isMoving) {
+        if(block != this && !world.isClientSide && !state.getValue(emitting)) {
             for(BlockSide side: BlockSide.values()) {
                 Vector3i vec = new Vector3i(pos);
                 Multiblock.findOrigin(world, vec, side, null);
 
-                TileEntityScreen tes = (TileEntityScreen) world.getTileEntity(vec.toBlock());
+                TileEntityScreen tes = (TileEntityScreen) world.getBlockEntity(vec.toBlock());
                 if(tes != null && tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_INPUT)) {
-                    EnumFacing facing = EnumFacing.VALUES[side.reverse().ordinal()]; //Opposite face
+                    Direction facing = Direction.from2DDataValue(side.reverse().ordinal()); //Opposite face
                     vec.sub(pos.getX(), pos.getY(), pos.getZ()).neg();
-                    tes.updateJSRedstone(side, new Vector2i(vec.dot(side.right), vec.dot(side.up)), world.getRedstonePower(pos, facing));
+                    tes.updateJSRedstone(side, new Vector2i(vec.dot(side.right), vec.dot(side.up)), world.getSignal(pos, facing));
                 }
             }
         }
@@ -294,19 +302,21 @@ public class BlockScreen extends WDBlockContainer {
         return false;
     }
 
-    @Nullable
+    @org.jetbrains.annotations.Nullable
     @Override
-    public TileEntity createNewTileEntity(@Nonnull World world, int meta) {
+    public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        int meta = getMetaFromState(state);
+
         if((meta & 1) == 0)
             return null;
 
-        return ((meta & 1) == 0) ? null : new TileEntityScreen();
+        return ((meta & 1) == 0) ? null : new TileEntityScreen(pos, state);
     }
 
     /************************************************* DESTRUCTION HANDLING *************************************************/
 
-    private void onDestroy(World world, BlockPos pos, EntityPlayer ply) {
-        if(!world.isRemote) {
+    private void onDestroy(Level world, BlockPos pos, Player ply) {
+        if(!world.isClientSide) {
             Vector3i bp = new Vector3i(pos);
             Multiblock.BlockOverride override = new Multiblock.BlockOverride(bp, Multiblock.OverrideAction.SIMULATE);
 
@@ -315,7 +325,7 @@ public class BlockScreen extends WDBlockContainer {
         }
     }
 
-    private void destroySide(World world, Vector3i pos, BlockSide side, Multiblock.BlockOverride override, EntityPlayer source) {
+    private void destroySide(Level world, Vector3i pos, BlockSide side, Multiblock.BlockOverride override, Player source) {
         Multiblock.findOrigin(world, pos, side, override);
         BlockPos bp = pos.toBlock();
         TileEntity te = world.getTileEntity(bp);
@@ -361,25 +371,24 @@ public class BlockScreen extends WDBlockContainer {
     }
 
     @Override
-    @Nonnull
-    public EnumPushReaction getMobilityFlag(IBlockState state) {
-        return EnumPushReaction.IGNORE;
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return PushReaction.IGNORE;
     }
 
     @Override
-    public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+    public int getSignal(BlockState state, BlockGetter level, BlockPos pos, Direction direction) {
         return state.getValue(emitting) ? 15 : 0;
     }
 
     @Override
-    public boolean canProvidePower(IBlockState state) {
+    public boolean isSignalSource(BlockState state) {
         return state.getValue(emitting);
     }
 
-    @Override
-    protected BlockItem createItemBlock() {
-        return new ItemBlockScreen(this);
-    }
+//    @Override //TODO: Add this
+//    protected BlockItem createItemBlock() {
+//        return new ItemBlockScreen(this);
+//    }
 
     private static class ItemBlockScreen extends BlockItem implements WDItem {
 

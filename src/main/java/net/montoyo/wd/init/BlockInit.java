@@ -32,7 +32,7 @@ public class BlockInit {
         return reg;
     }
 
-    public static final RegistryObject<Block> blockScreen = registerBlock("screen_block", () -> new BlockScreen());
+    public static final RegistryObject<Block> blockScreen = registerBlock("screen_block", BlockScreen::new);
 
     public static final RegistryObject<Block> blockPeripheral = registerBlock("peripheral_block", () -> new BlockPeripheral());
 

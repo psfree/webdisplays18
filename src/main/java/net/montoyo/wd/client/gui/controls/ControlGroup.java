@@ -4,7 +4,11 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.DefaultVertexFormat;
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexFormat;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import net.montoyo.wd.utilities.Bounds;
 
@@ -44,7 +48,7 @@ public class ControlGroup extends Container {
         width = w;
         height = h;
         this.label = label;
-        this.labelW = font.getStringWidth(label);
+        this.labelW = font.width(label);
         paddingX = 8;
         paddingY = 8;
     }
@@ -66,7 +70,7 @@ public class ControlGroup extends Container {
 
     public void setLabel(String label) {
         this.label = label;
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
     }
 
     public String getLabel() {
@@ -90,14 +94,14 @@ public class ControlGroup extends Container {
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
-        super.draw(mouseX, mouseY, ptt);
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
+        super.draw(poseStack, mouseX, mouseY, ptt);
 
         if(visible) {
-            glColor4f(0.5f, 0.5f, 0.5f, 1.f);
-            glDisable(GL_TEXTURE_2D);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderSystem.setShaderColor(0.5f, 0.5f, 0.5f, 1.f);
+            RenderSystem.disableTexture();
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
             double x1 = (double) x;
             double y1 = (double) y;
@@ -112,52 +116,52 @@ public class ControlGroup extends Container {
             y2 -= bp;
             lw += 12.0;
 
-            vBuffer.begin(GL_QUADS, DefaultVertexFormats.POSITION);
+            vBuffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
 
             //Top edge (y = y1)
             if(labelW == 0) {
-                vBuffer.pos(x1, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x2, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x2, y1, 0.0).endVertex();
-                vBuffer.pos(x1, y1, 0.0).endVertex();
+                vBuffer.vertex(x1, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x2, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x2, y1, 0.0).endVertex();
+                vBuffer.vertex(x1, y1, 0.0).endVertex();
             } else {
                 //Left
-                vBuffer.pos(x1, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x1 + 8.0, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x1 + 8.0, y1, 0.0).endVertex();
-                vBuffer.pos(x1, y1, 0.0).endVertex();
+                vBuffer.vertex(x1, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x1 + 8.0, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x1 + 8.0, y1, 0.0).endVertex();
+                vBuffer.vertex(x1, y1, 0.0).endVertex();
 
                 //Right
-                vBuffer.pos(x1 + lw, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x2, y1 + 1.0, 0.0).endVertex();
-                vBuffer.pos(x2, y1, 0.0).endVertex();
-                vBuffer.pos(x1 + lw, y1, 0.0).endVertex();
+                vBuffer.vertex(x1 + lw, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x2, y1 + 1.0, 0.0).endVertex();
+                vBuffer.vertex(x2, y1, 0.0).endVertex();
+                vBuffer.vertex(x1 + lw, y1, 0.0).endVertex();
             }
 
             //Bottom edge (y = y2)
-            vBuffer.pos(x1, y2, 0.0).endVertex();
-            vBuffer.pos(x2, y2, 0.0).endVertex();
-            vBuffer.pos(x2, y2 - 1.0, 0.0).endVertex();
-            vBuffer.pos(x1, y2 - 1.0, 0.0).endVertex();
+            vBuffer.vertex(x1, y2, 0.0).endVertex();
+            vBuffer.vertex(x2, y2, 0.0).endVertex();
+            vBuffer.vertex(x2, y2 - 1.0, 0.0).endVertex();
+            vBuffer.vertex(x1, y2 - 1.0, 0.0).endVertex();
 
             //Left edge (x = x1)
-            vBuffer.pos(x1, y2, 0.0).endVertex();
-            vBuffer.pos(x1 + 1.0, y2, 0.0).endVertex();
-            vBuffer.pos(x1 + 1.0, y1, 0.0).endVertex();
-            vBuffer.pos(x1, y1, 0.0).endVertex();
+            vBuffer.vertex(x1, y2, 0.0).endVertex();
+            vBuffer.vertex(x1 + 1.0, y2, 0.0).endVertex();
+            vBuffer.vertex(x1 + 1.0, y1, 0.0).endVertex();
+            vBuffer.vertex(x1, y1, 0.0).endVertex();
 
             //Right edge (x = x2)
-            vBuffer.pos(x2 - 1.0, y2, 0.0).endVertex();
-            vBuffer.pos(x2, y2, 0.0).endVertex();
-            vBuffer.pos(x2, y1, 0.0).endVertex();
-            vBuffer.pos(x2 - 1.0, y1, 0.0).endVertex();
-            tessellator.draw();
+            vBuffer.vertex(x2 - 1.0, y2, 0.0).endVertex();
+            vBuffer.vertex(x2, y2, 0.0).endVertex();
+            vBuffer.vertex(x2, y1, 0.0).endVertex();
+            vBuffer.vertex(x2 - 1.0, y1, 0.0).endVertex();
+            tessellator.end();
 
             glDisable(GL_BLEND);
             glEnable(GL_TEXTURE_2D);
 
             if(labelW != 0)
-                font.drawString(label, x + 10 + ((int) bp), y, labelColor, labelShadowed);
+                font.drawShadow(poseStack, label, x + 10 + ((int) bp), y, labelColor, labelShadowed);
         }
     }
 
@@ -176,7 +180,7 @@ public class ControlGroup extends Container {
         width = json.getInt("width", 100);
         height = json.getInt("height", 100);
         label = tr(json.getString("label", ""));
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
         labelColor = json.getColor("labelColor", COLOR_WHITE);
         labelShadowed = json.getBool("labelShadowed", true);
 

@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.world.item.ItemStack;
@@ -25,7 +26,7 @@ public class UpgradeGroup extends BasicControl {
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(upgrades != null) {
             int x = this.x;
 
@@ -41,9 +42,9 @@ public class UpgradeGroup extends BasicControl {
     }
 
     @Override
-    public void postDraw(int mouseX, int mouseY, float ptt) {
+    public void postDraw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(overStack != null)
-            parent.drawItemStackTooltip(overStack, mouseX, mouseY);
+            parent.drawItemStackTooltip(poseStack, overStack, mouseX, mouseY);
     }
 
     @Override
@@ -80,34 +81,47 @@ public class UpgradeGroup extends BasicControl {
     }
 
     @Override
-    public void mouseMove(int mouseX, int mouseY) {
+    public boolean mouseMove(double mouseX, double mouseY) {
         if(upgrades != null) {
             overStack = null;
 
             if(mouseY >= y && mouseY <= y + 16 && mouseX >= x) {
                 mouseX -= x;
-                int sel = mouseX / 18;
+                int sel = (int) (mouseX / 18);
 
                 if(sel < upgrades.size() && mouseX % 18 <= 16)
                     overStack = upgrades.get(sel);
+
+                return true;
             }
         }
+
+        return false;
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if(mouseButton == 0)
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if(mouseButton == 0) {
             clickStack = overStack;
+
+            return true;
+        }
+
+        return false;
     }
 
     @Override
-    public void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
         if(state == 0 && clickStack != null) {
             if(clickStack == overStack && !disabled && upgrades.contains(clickStack)) //HOTFIX: Make sure it's actually in the list :p
                 parent.actionPerformed(new ClickEvent(this));
 
             clickStack = null;
+
+            return true;
         }
+
+        return false;
     }
 
     public ItemStack getMouseOverUpgrade() {

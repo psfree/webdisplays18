@@ -4,27 +4,21 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import com.mojang.blaze3d.vertex.BufferBuilder;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
-import com.mojang.blaze3d.vertex.Tesselator;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.blaze3d.pipeline.RenderTarget;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
-import net.minecraft.client.shader.Framebuffer;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.resources.ResourceLocation;
 import net.montoyo.wd.client.gui.WDScreen;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import net.montoyo.wd.utilities.Bounds;
 
-import java.io.IOException;
-
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.glEnable;
 
 public abstract class Control {
 
@@ -62,22 +56,26 @@ public abstract class Control {
     }
 
     public boolean keyTyped(char typedChar, int keyCode) {
+        return false;
     }
 
     public boolean keyUp(int key) {
+        return false;
     }
 
     public boolean keyDown(int key) {
+        return false;
     }
 
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        return false;
     }
 
     public boolean mouseReleased(double mouseX, double mouseY, int state) {
         return false;
     }
 
-    public boolean mouseClickMove(double mouseX, double mouseY, int clickedMouseButton, long timeSinceLastClick) {
+    public boolean mouseClickMove(double mouseX, double mouseY, int button, double dragX, double dragY) {
         return false;
     }
 
@@ -85,14 +83,14 @@ public abstract class Control {
         return false;
     }
 
-    public boolean mouseScroll(int mouseX, int mouseY, int amount) {
+    public boolean mouseScroll(double mouseX, double mouseY, double amount) {
         return false;
     }
 
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
     }
 
-    public void postDraw(int mouseX, int mouseY, float ptt) {
+    public void postDraw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
     }
 
     public void destroy() {
@@ -108,7 +106,7 @@ public abstract class Control {
     public abstract int getHeight();
     public abstract void setPos(int x, int y);
 
-    public void fillRect(int x, int y, int w, int h, int color) {
+    public void fillRect(int x, double y, int w, int h, int color) {
         double x1 = (double) x;
         double y1 = (double) y;
         double x2 = (double) (x + w);
@@ -118,10 +116,10 @@ public abstract class Control {
         int g = (color >> 8 ) & 0xFF;
         int b =  color & 0xFF;
 
-        glColor4f(((float) r) / 255.f, ((float) g) / 255.f, ((float) b) / 255.f, ((float) a) / 255.f);
-        glDisable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        RenderSystem.setShaderColor(((float) r) / 255.f, ((float) g) / 255.f, ((float) b) / 255.f, ((float) a) / 255.f);
+        RenderSystem.disableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
         vBuffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         vBuffer.vertex(x1, y2, 0.0).endVertex();
@@ -130,44 +128,44 @@ public abstract class Control {
         vBuffer.vertex(x1, y1, 0.0).endVertex();
         tessellator.end();
 
-        glDisable(GL_BLEND);
-        glEnable(GL_TEXTURE_2D);
+        RenderSystem.disableBlend();
+        RenderSystem.enableTexture();glEnable(GL_TEXTURE_2D);
     }
 
-    public void fillTexturedRect(int x, int y, int w, int h, double u1, double v1, double u2, double v2) {
+    public void fillTexturedRect(PoseStack poseStack, int x, int y, int w, int h, double u1, double v1, double u2, double v2) {
         double x1 = (double) x;
         double y1 = (double) y;
         double x2 = (double) (x + w);
         double y2 = (double) (y + h);
 
-        vBuffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX_COLOR);
-        vBuffer.pos(x1, y2, 0.0).tex(u1, v2).color(255, 255, 255, 255).endVertex();
-        vBuffer.pos(x2, y2, 0.0).tex(u2, v2).color(255, 255, 255, 255).endVertex();
-        vBuffer.pos(x2, y1, 0.0).tex(u2, v1).color(255, 255, 255, 255).endVertex();
-        vBuffer.pos(x1, y1, 0.0).tex(u1, v1).color(255, 255, 255, 255).endVertex();
-        tessellator.draw();
+        vBuffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        vBuffer.vertex(x1, y2, 0.0).uv((float) u1, (float) v2).color(255, 255, 255, 255).endVertex();
+        vBuffer.vertex(x2, y2, 0.0).uv((float) u2, (float) v2).color(255, 255, 255, 255).endVertex();
+        vBuffer.vertex(x2, y1, 0.0).uv((float) u2, (float) v1).color(255, 255, 255, 255).endVertex();
+        vBuffer.vertex(x1, y1, 0.0).uv((float) u1, (float) v1).color(255, 255, 255, 255).endVertex();
+        tessellator.end();
     }
 
     public static void blend(boolean enable) {
         if(enable) {
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderSystem.enableBlend();
+            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_CONSTANT_ALPHA);
         } else
-            glDisable(GL_BLEND);
+            RenderSystem.disableBlend();
     }
 
     public void bindTexture(ResourceLocation resLoc) {
         if(resLoc == null)
-            GlStateManager.bindTexture(0); //Damn state manager
+            RenderSystem.setShaderTexture(0, 0); //Damn state manager
         else
-            mc.renderEngine.bindTexture(resLoc);
+            RenderSystem.setShaderTexture(0, resLoc);
     }
 
-    public void drawBorder(int x, int y, int w, int h, int color) {
-        drawBorder(x, y, w, h, color, 1.0);
+    public void drawBorder(PoseStack poseStack, int x, int y, int w, int h, int color) {
+        drawBorder(poseStack, x, y, w, h, color, 1.0);
     }
 
-    public void drawBorder(int x, int y, int w, int h, int color, double sz) {
+    public void drawBorder(PoseStack poseStack, int x, int y, int w, int h, int color, double sz) {
         double x1 = (double) x;
         double y1 = (double) y;
         double x2 = (double) (x + w);
@@ -177,65 +175,70 @@ public abstract class Control {
         int g = (color >> 8 ) & 0xFF;
         int b =  color & 0xFF;
 
-        glColor4f(((float) r) / 255.f, ((float) g) / 255.f, ((float) b) / 255.f, ((float) a) / 255.f);
-        glDisable(GL_TEXTURE_2D);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        RenderSystem.setShaderColor(((float) r) / 255.f, ((float) g) / 255.f, ((float) b) / 255.f, ((float) a) / 255.f);
+        RenderSystem.enableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
 
-        vBuffer.begin(GL_QUADS, DefaultVertexFormats.POSITION);
+        vBuffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         //Top edge (y = y1)
-        vBuffer.pos(x1, y1 + sz, 0.0).endVertex();
-        vBuffer.pos(x2, y1 + sz, 0.0).endVertex();
-        vBuffer.pos(x2, y1, 0.0).endVertex();
-        vBuffer.pos(x1, y1, 0.0).endVertex();
+        vBuffer.vertex(x1, y1 + sz, 0.0).endVertex();
+        vBuffer.vertex(x2, y1 + sz, 0.0).endVertex();
+        vBuffer.vertex(x2, y1, 0.0).endVertex();
+        vBuffer.vertex(x1, y1, 0.0).endVertex();
 
         //Bottom edge (y = y2)
-        vBuffer.pos(x1, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y2 - sz, 0.0).endVertex();
-        vBuffer.pos(x1, y2 - sz, 0.0).endVertex();
+        vBuffer.vertex(x1, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y2 - sz, 0.0).endVertex();
+        vBuffer.vertex(x1, y2 - sz, 0.0).endVertex();
 
         //Left edge (x = x1)
-        vBuffer.pos(x1, y2, 0.0).endVertex();
-        vBuffer.pos(x1 + sz, y2, 0.0).endVertex();
-        vBuffer.pos(x1 + sz, y1, 0.0).endVertex();
-        vBuffer.pos(x1, y1, 0.0).endVertex();
+        vBuffer.vertex(x1, y2, 0.0).endVertex();
+        vBuffer.vertex(x1 + sz, y2, 0.0).endVertex();
+        vBuffer.vertex(x1 + sz, y1, 0.0).endVertex();
+        vBuffer.vertex(x1, y1, 0.0).endVertex();
 
         //Right edge (x = x2)
-        vBuffer.pos(x2 - sz, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y2, 0.0).endVertex();
-        vBuffer.pos(x2, y1, 0.0).endVertex();
-        vBuffer.pos(x2 - sz, y1, 0.0).endVertex();
-        tessellator.draw();
+        vBuffer.vertex(x2 - sz, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y2, 0.0).endVertex();
+        vBuffer.vertex(x2, y1, 0.0).endVertex();
+        vBuffer.vertex(x2 - sz, y1, 0.0).endVertex();
+        tessellator.end();
 
-        glDisable(GL_BLEND);
-        glEnable(GL_TEXTURE_2D);
+        RenderSystem.disableBlend();
+        RenderSystem.enableTexture();
     }
 
-    public void beginFramebuffer(Framebuffer fbo, int vpW, int vpH) {
-        fbo.bindFramebuffer(true);
-        glMatrixMode(GL_PROJECTION);
-        glPushMatrix();
-        glLoadIdentity();
-        glOrtho(0.0, (double) vpW, (double) vpH, 0.0, -1.0,1.0);
-        glMatrixMode(GL_MODELVIEW);
-        glPushMatrix();
-        glLoadIdentity();
+    public PoseStack beginFramebuffer(RenderTarget fbo, float vpW, float vpH) {
+        fbo.bindWrite(true);
+
+        RenderSystem.backupProjectionMatrix();
+        RenderSystem.setProjectionMatrix(Matrix4f.orthographic(0.0f, vpW, vpH, 0.0f, -1.0f,1.0f));
+
+        PoseStack poseStack = RenderSystem.getModelViewStack();
+        poseStack.pushPose();
+        poseStack.setIdentity();
+//        poseStack.mulPose(Vector3f.XP.rotationDegrees(180.0f));
+        RenderSystem.applyModelViewMatrix();
 
         if(!fbo.useDepth)
-            glDisable(GL_DEPTH_TEST);
+            RenderSystem.disableDepthTest();
+
+        return poseStack;
     }
 
-    public void endFramebuffer(Framebuffer fbo) {
+    public void endFramebuffer(PoseStack poseStack, RenderTarget fbo) {
         if(!fbo.useDepth)
-            glEnable(GL_DEPTH_TEST);
+            RenderSystem.enableDepthTest();
 
-        glPopMatrix();
-        glMatrixMode(GL_PROJECTION);
-        glPopMatrix();
-        glMatrixMode(GL_MODELVIEW);
-        fbo.unbindFramebuffer();
-        mc.getFramebuffer().bindFramebuffer(true);
+
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.restoreProjectionMatrix();
+        poseStack.popPose();
+        RenderSystem.applyModelViewMatrix();
+        fbo.unbindWrite();
+        mc.getMainRenderTarget().bindWrite(true);
     }
 
     public static String tr(String text) {
@@ -243,7 +246,7 @@ public abstract class Control {
             if(text.charAt(1) == '$')
                 return text.substring(1);
             else
-                return I18n.format(text.substring(1));
+                return I18n.get(text.substring(1));
         } else
             return text;
     }

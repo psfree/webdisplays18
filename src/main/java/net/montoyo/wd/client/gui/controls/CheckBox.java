@@ -4,13 +4,16 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.init.SoundEvents;
-import net.minecraft.util.ResourceLocation;
+import com.google.common.collect.Lists;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
-import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CheckBox extends BasicControl {
 
@@ -45,7 +48,7 @@ public class CheckBox extends BasicControl {
 
     public CheckBox(int x, int y, String label) {
         this.label = label;
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
         checked = false;
         this.x = x;
         this.y = y;
@@ -53,42 +56,46 @@ public class CheckBox extends BasicControl {
 
     public CheckBox(int x, int y, String label, boolean val) {
         this.label = label;
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
         checked = val;
         this.x = x;
         this.y = y;
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         if(mouseButton == 0 && !disabled) {
             if(mouseX >= x && mouseX <= x + WIDTH + 2 + labelW && mouseY >= y && mouseY < y + HEIGHT) {
                 checked = !checked;
-                mc.getSoundHandler().playSound(PositionedSoundRecord.getMasterRecord(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+                mc.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 parent.actionPerformed(new CheckedEvent(this));
             }
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(visible) {
-            GlStateManager.disableAlpha();
+//            GlStateManager.disableAlpha();
 
             bindTexture(checked ? texChecked : texUnchecked);
             blend(true);
-            fillTexturedRect(x, y, WIDTH, HEIGHT, 0.0, 0.0, 1.0, 1.0);
+            fillTexturedRect(poseStack, x, y, WIDTH, HEIGHT, 0.0, 0.0, 1.0, 1.0);
             blend(false);
             bindTexture(null);
 
             boolean inside = (!disabled && mouseX >= x && mouseX <= x + WIDTH + 2 + labelW && mouseY >= y && mouseY < y + HEIGHT);
-            font.drawString(label, x + WIDTH + 2, y + 4, inside ? 0xFF0080FF : COLOR_WHITE);
+            font.draw(poseStack, label, x + WIDTH + 2, y + 4, inside ? 0xFF0080FF : COLOR_WHITE);
         }
     }
 
     public void setLabel(String label) {
         this.label = label;
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
     }
 
     public String getLabel() {
@@ -117,20 +124,20 @@ public class CheckBox extends BasicControl {
     public void load(JsonOWrapper json) {
         super.load(json);
         label = tr(json.getString("label", ""));
-        labelW = font.getStringWidth(label);
+        labelW = font.width(label);
         checked = json.getBool("checked", false);
 
         String tt = tr(json.getString("tooltip", ""));
         if(!tt.isEmpty()) {
-            tooltip = Arrays.asList(tt.split("\\\\n"));
+            tooltip = Lists.newArrayList(tt.split("\\\\n"));
             parent.requirePostDraw(this);
         }
     }
 
     @Override
-    public void postDraw(int mouseX, int mouseY, float ptt) {
+    public void postDraw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(tooltip != null && !disabled && mouseX >= x && mouseX <= x + WIDTH + 2 + labelW && mouseY >= y && mouseY < y + HEIGHT)
-            parent.drawTooltip(tooltip, mouseX, mouseY);
+            parent.drawTooltip(poseStack, tooltip, mouseX, mouseY);
     }
 
 }

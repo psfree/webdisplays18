@@ -4,13 +4,14 @@
 
 package net.montoyo.wd.client.gui.controls;
 
-import net.minecraft.client.gui.GuiButton;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.network.chat.Component;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 
 public class Button extends Control {
 
-    protected final GuiButton btn;
+    protected final net.minecraft.client.gui.components.Button btn;
     protected boolean selected = false;
     protected boolean shiftDown = false;
     protected int originalColor = 0;
@@ -32,47 +33,55 @@ public class Button extends Control {
     }
 
     public Button() {
-        btn = new GuiButton(0, 0, 0, "");
+        btn = new net.minecraft.client.gui.components.Button(0,0, 0, 0, Component.nullToEmpty(null), a -> {});
     }
 
     public Button(String text, int x, int y, int width) {
-        btn = new GuiButton(0, x, y, width, 20, text);
+        btn = new net.minecraft.client.gui.components.Button(x, y, width, 20, Component.nullToEmpty(text), a -> {});
     }
 
     public Button(String text, int x, int y) {
-        btn = new GuiButton(0, x, y, text);
+        btn = new net.minecraft.client.gui.components.Button(0, 0, x, y, Component.nullToEmpty(text), a -> {});
     }
 
     @Override
-    public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if(mouseButton == 0 && btn.mousePressed(mc, mouseX, mouseY)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
+        if(mouseButton == 0 && btn.mouseClicked(mouseX, mouseY, mouseButton)) {
             selected = true;
-            btn.playPressSound(mc.getSoundHandler());
+            btn.playDownSound(mc.getSoundManager());
 
             if(!onClick())
                 parent.actionPerformed(new ClickEvent(this));
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void mouseReleased(int mouseX, int mouseY, int state) {
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
         if(selected && state == 0) {
-            btn.mouseReleased(mouseX, mouseY);
+            btn.mouseReleased(mouseX, mouseY,state);
             selected = false;
+
+            return true;
         }
+
+        return true;
     }
 
     @Override
-    public void draw(int mouseX, int mouseY, float ptt) {
-        btn.drawButton(mc, mouseX, mouseY, ptt);
+    public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
+        btn.render(poseStack, mouseX, mouseY, ptt);
     }
 
     public void setLabel(String label) {
-        btn.displayString = label;
+        btn.setMessage(Component.nullToEmpty(label));
     }
 
     public String getLabel() {
-        return btn.displayString;
+        return btn.getMessage().getString();
     }
 
     public void setWidth(int width) {
@@ -81,7 +90,7 @@ public class Button extends Control {
 
     @Override
     public int getWidth() {
-        return btn.getButtonWidth();
+        return btn.getWidth();
     }
 
     @Override
@@ -105,24 +114,24 @@ public class Button extends Control {
         return btn.y;
     }
 
-    public GuiButton getMcButton() {
+    public net.minecraft.client.gui.components.Button getMcButton() {
         return btn;
     }
 
     public void setDisabled(boolean dis) {
-        btn.enabled = !dis;
+        btn.active = !dis;
     }
 
     public boolean isDisabled() {
-        return !btn.enabled;
+        return !btn.active;
     }
 
     public void enable() {
-        btn.enabled = true;
+        btn.active = true;
     }
 
     public void disable() {
-        btn.enabled = false;
+        btn.active = false;
     }
 
     public void setVisible(boolean visible) {
@@ -146,35 +155,43 @@ public class Button extends Control {
     }
 
     @Override
-    public void keyUp(int key) {
-        if(key == Keyboard.KEY_LSHIFT || key == Keyboard.KEY_RSHIFT) {
+    public boolean keyUp(int key) {
+        if(key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             shiftDown = false;
-            btn.packedFGColour = originalColor;
+            btn.setFGColor(originalColor);
+
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    public void keyDown(int key) {
-        if(key == Keyboard.KEY_LSHIFT || key == Keyboard.KEY_RSHIFT) {
+    public boolean keyDown(int key) {
+        if(key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             shiftDown = true;
-            btn.packedFGColour = shiftColor;
+            btn.setFGColor(shiftColor);
+
+            return true;
         }
+
+        return false;
     }
 
     public void setTextColor(int color) {
         originalColor = color;
         if(!shiftDown)
-            btn.packedFGColour = color;
+            btn.setFGColor(color);
     }
 
     public int getTextColor() {
-        return btn.packedFGColour;
+        return btn.getFGColor();
     }
 
     public void setShiftTextColor(int shiftColor) {
         this.shiftColor = shiftColor;
         if(shiftDown)
-            btn.packedFGColour = shiftColor;
+            btn.setFGColor(shiftColor);
     }
 
     public int getShiftTextColor() {
@@ -186,14 +203,14 @@ public class Button extends Control {
         super.load(json);
         btn.x = json.getInt("x", 0);
         btn.y = json.getInt("y", 0);
-        btn.width = json.getInt("width", 200);
-        btn.displayString = tr(json.getString("label", btn.displayString));
-        btn.enabled = !json.getBool("disabled", !btn.enabled);
+        btn.setWidth(json.getInt("width", 200));
+        btn.setMessage(Component.nullToEmpty(tr(json.getString("label", btn.getMessage().getContents()))));
+        btn.active = !json.getBool("disabled", !btn.active);
         btn.visible = json.getBool("visible", btn.visible);
 
         originalColor = json.getColor("color", originalColor);
         shiftColor = json.getColor("shiftColor", shiftColor);
-        btn.packedFGColour = originalColor;
+        btn.setFGColor(originalColor);
     }
 
     protected boolean onClick() {
