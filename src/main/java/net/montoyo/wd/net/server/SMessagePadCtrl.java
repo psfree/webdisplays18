@@ -20,7 +20,7 @@ import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.net.Message;
 
 @Message(messageId = 7, side = Side.SERVER)
-public class SMessagePadCtrl implements IMessage, Runnable {
+public class SMessagePadCtrl implements Runnable {
 
     private int id;
     private String url;
@@ -81,7 +81,7 @@ public class SMessagePadCtrl implements IMessage, Runnable {
     }
 
     @Override
-    public void fromBytes(ByteBuf buf) {
+    public void encode(ByteBuf buf) {
         id = buf.readInt();
         url = ByteBufUtils.readUTF8String(buf);
     }

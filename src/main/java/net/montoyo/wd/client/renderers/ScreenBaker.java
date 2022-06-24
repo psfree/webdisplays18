@@ -5,9 +5,7 @@
 package net.montoyo.wd.client.renderers;
 
 import com.google.common.collect.ImmutableList;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import net.minecraft.client.renderer.block.model.BakedQuad;
-import net.minecraft.client.renderer.block.model.ItemOverrideList;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
@@ -87,7 +85,7 @@ public class ScreenBaker implements IModelBaker {
         putVertex(data, 1, rotateVec(new Vector3f(1.0f, 0.0f, 1.0f), side), tex, rotateTex(side, 16.0f, 16.0f), side.backward);
         putVertex(data, 0, rotateVec(new Vector3f(1.0f, 0.0f, 0.0f), side), tex, rotateTex(side, 16.0f, 0.0f ), side.backward);
 
-        return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true, DefaultVertexFormat.ITEM);
+        return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true);
     }
 
     @Nonnull

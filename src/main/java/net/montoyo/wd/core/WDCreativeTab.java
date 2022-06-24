@@ -4,13 +4,9 @@
 
 package net.montoyo.wd.core;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.ItemStack;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.montoyo.wd.WebDisplays;
-
-import javax.annotation.Nonnull;
+import net.montoyo.wd.init.BlockInit;
 
 public class WDCreativeTab extends CreativeModeTab {
 
@@ -20,6 +16,6 @@ public class WDCreativeTab extends CreativeModeTab {
 
     @Override
     public ItemStack makeIcon() {
-        return WebDisplays.INSTANCE.blockScreen.getItem();
+        return new ItemStack(BlockInit.blockScreen.get());
     }
 }

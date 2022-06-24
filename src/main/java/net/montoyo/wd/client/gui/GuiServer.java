@@ -4,22 +4,24 @@
 
 package net.montoyo.wd.client.gui;
 
-import net.minecraft.client.audio.ISound;
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.renderer.BufferBuilder;
-import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
-import net.minecraft.client.resources.I18n;
+import com.mojang.blaze3d.platform.GlStateManager;
+import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.miniserv.Constants;
 import net.montoyo.wd.miniserv.client.*;
+import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.utilities.*;
-import org.lwjgl.input.Keyboard;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
 import javax.swing.filechooser.FileSystemView;
@@ -32,8 +34,9 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.function.Supplier;
 
-import static org.lwjgl.opengl.GL11.*;
+import static net.montoyo.wd.client.gui.GuiMinePad.getChar;
 
 public class GuiServer extends WDScreen {
 
@@ -59,7 +62,7 @@ public class GuiServer extends WDScreen {
     private int accessTrials;
     private int accessTime;
     private int accessState = -1;
-    private PositionedSoundRecord accessSound;
+    private SimpleSoundInstance accessSound;
 
     //Upload wizard
     private boolean uploadWizard;
@@ -71,6 +74,7 @@ public class GuiServer extends WDScreen {
     private long uploadFilterTime;
 
     public GuiServer(Vector3i vec, NameUUIDPair owner) {
+        super(Component.nullToEmpty(null));
         serverPos = vec;
         this.owner = owner;
         //userPrompt = owner.name + "@miniserv$ ";
@@ -85,75 +89,73 @@ public class GuiServer extends WDScreen {
     }
 
     private static String tr(String key, Object ... args) {
-        return I18n.format("webdisplays.server." + key, args);
+        return I18n.get("webdisplays.server." + key, args);
     }
 
     @Override
-    public void drawScreen(int mouseX, int mouseY, float ptt) {
-        super.drawScreen(mouseX, mouseY, ptt);
+    public void render(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
+        super.render(poseStack, mouseX, mouseY, ptt);
 
         int x = (width - 256) / 2;
         int y = (height - 176) / 2;
 
-        GlStateManager.enableTexture2D();
-        mc.renderEngine.bindTexture(BG_IMAGE);
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-        drawTexturedModalRect(x, y, 0, 0, 256, 176);
+        RenderSystem.enableTexture();
+        RenderSystem.setShaderTexture(0, BG_IMAGE);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        blit(poseStack, x, y, 0, 0, 256, 176);
 
         x += 18;
         y += 18;
 
         for(int i = 0; i < lines.size(); i++) {
             if(selectedLine == i) {
-                drawWhiteQuad(x - 1, y - 2, fontRenderer.getStringWidth(lines.get(i)) + 1, 12);
-                fontRenderer.drawString(lines.get(i), x, y, 0xFF129700, false);
+                drawWhiteQuad(x - 1, y - 2, font.width(lines.get(i)) + 1, 12);
+                font.drawShadow(poseStack, lines.get(i), x, y, 0xFF129700, false);
             } else
-                fontRenderer.drawString(lines.get(i), x, y, 0xFFFFFFFF, false);
+                font.drawShadow(poseStack, lines.get(i), x, y, 0xFFFFFFFF, false);
 
             y += 12;
         }
 
         if(!promptLocked) {
-            x = fontRenderer.drawString(userPrompt, x, y, 0xFFFFFFFF, false);
-            x = fontRenderer.drawString(prompt, x, y, 0xFFFFFFFF, false);
+            x = font.drawShadow(poseStack, userPrompt, x, y, 0xFFFFFFFF, false);
+            x = font.drawShadow(poseStack, prompt, x, y, 0xFFFFFFFF, false);
         }
 
         if(!uploadWizard && blinkTime < 5)
             drawWhiteQuad(x + 1, y, 6, 8);
 
-        GlStateManager.disableAlpha();
-        GlStateManager.enableTexture2D();
-        GlStateManager.enableBlend();
-        GlStateManager.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
-        mc.renderEngine.bindTexture(FG_IMAGE);
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-        drawTexturedModalRect((width - 256) / 2, (height - 176) / 2, 0, 0, 256, 176);
-        GlStateManager.enableAlpha();
+        RenderSystem.enableTexture();
+        RenderSystem.enableBlend();
+        RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA);
+        RenderSystem.setShaderTexture(0, FG_IMAGE);
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        blit(poseStack,(width - 256) / 2, (height - 176) / 2, 0, 0, 256, 176);
     }
 
     private void drawWhiteQuad(int x, int y, int w, int h) {
-        double xd = (double) x;
-        double xd2 = (double) (x + w);
-        double yd = (double) y;
-        double yd2 = (double) (y + h);
-        double zd = (double) zLevel;
+        float xd = (float) x;
+        float xd2 = (float) (x + w);
+        float yd = (float) y;
+        float yd2 = (float) (y + h);
+        float zd = (float) getBlitOffset();
 
-        GlStateManager.disableTexture2D();
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 1.0f);
-        Tessellator t = Tessellator.getInstance();
-        BufferBuilder bb = t.getBuffer();
-        bb.begin(GL_QUADS, DefaultVertexFormats.POSITION);
-        bb.pos(xd, yd2, zd).endVertex();
-        bb.pos(xd2, yd2, zd).endVertex();
-        bb.pos(xd2, yd, zd).endVertex();
-        bb.pos(xd, yd, zd).endVertex();
-        t.draw();
-        GlStateManager.enableTexture2D();
+        RenderSystem.disableTexture();
+        RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+        Tesselator t = Tesselator.getInstance();
+        BufferBuilder bb = t.getBuilder();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
+        bb.vertex(xd, yd2, zd).endVertex();
+        bb.vertex(xd2, yd2, zd).endVertex();
+        bb.vertex(xd2, yd, zd).endVertex();
+        bb.vertex(xd, yd, zd).endVertex();
+        t.end();
+        RenderSystem.enableTexture();
     }
 
     @Override
-    public void updateScreen() {
-        super.updateScreen();
+    public void tick() {
+        super.tick();
 
         if(accessState >= 0) {
             if(--accessTime <= 0) {
@@ -167,8 +169,8 @@ public class GuiServer extends WDScreen {
                     accessTime = 20;
                 } else {
                     if(accessSound == null) {
-                        accessSound = new PositionedSoundRecord(WebDisplays.INSTANCE.soundServer.getSoundName(), SoundCategory.MASTER, 1.0f, 1.0f, true, 0, ISound.AttenuationType.NONE, 0.0f, 0.0f, 0.0f);
-                        mc.getSoundHandler().playSound(accessSound);
+                        accessSound = new SimpleSoundInstance(WebDisplays.INSTANCE.soundServer.getLocation(), SoundSource.MASTER, 1.0f, 1.0f, true, 0, SoundInstance.Attenuation.NONE, 0.0f, 0.0f, 0.0f, false);
+                        minecraft.getSoundManager().play(accessSound);
                     }
 
                     writeLine("YOU DIDN'T SAY THE MAGIC WORD!");
@@ -199,10 +201,38 @@ public class GuiServer extends WDScreen {
     }
 
     @Override
-    public void handleKeyboardInput() throws IOException {
-        boolean keyState = Keyboard.getEventKeyState();
-        int keyCode = Keyboard.getEventKey();
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        Supplier<Boolean> predicate = () -> super.keyReleased(keyCode, scanCode, modifiers);
 
+        try {
+            return handleKeyboardInput(keyCode, true, predicate);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        Supplier<Boolean> predicate = () -> super.keyPressed(keyCode, scanCode, modifiers);
+
+        getChar(keyCode, scanCode).ifPresent(c -> {
+            try {
+                keyTyped(c, keyCode);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        try {
+            return handleKeyboardInput(keyCode, true, predicate);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean handleKeyboardInput(int keyCode, boolean keyState, Supplier<Boolean> booleanSupplier) throws IOException {
         if(uploadWizard) {
             if(keyState) {
                 if(keyCode == Keyboard.KEY_UP) {
@@ -249,20 +279,20 @@ public class GuiServer extends WDScreen {
 
             if(keyCode == Keyboard.KEY_ESCAPE) {
                 quitUploadWizard();
-                return; //Don't let the screen handle this
+                return true; //Don't let the screen handle this
             }
 
-            super.handleKeyboardInput();
+            return booleanSupplier.get();
         } else {
-            super.handleKeyboardInput();
+            boolean value = booleanSupplier.get();
 
             if(keyState) {
-                boolean ctrl = Keyboard.isKeyDown(Keyboard.KEY_LCONTROL) || Keyboard.isKeyDown(Keyboard.KEY_RCONTROL);
+                boolean ctrl = Screen.hasControlDown();
 
-                if(keyCode == Keyboard.KEY_L && ctrl)
+                if(keyCode == GLFW.GLFW_KEY_L && ctrl)
                     lines.clear();
                 else if(keyCode == Keyboard.KEY_V && ctrl) {
-                    prompt += getClipboardString();
+                    prompt += minecraft.keyboardHandler.getClipboard();
 
                     if(prompt.length() > MAX_LINE_LEN)
                         prompt = prompt.substring(0, MAX_LINE_LEN);
@@ -274,12 +304,18 @@ public class GuiServer extends WDScreen {
                     }
                 }
             }
+
+            return value;
         }
     }
 
     @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        return super.charTyped(codePoint, modifiers);
+    }
+
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
-        super.keyTyped(typedChar, keyCode);
+//        super.keyTyped(typedChar, keyCode);
 
         if(uploadWizard) {
             boolean found = false;
@@ -374,11 +410,11 @@ public class GuiServer extends WDScreen {
     }
 
     @Override
-    public void onGuiClosed() {
-        super.onGuiClosed();
+    public void onClose() {
+        super.onClose();
 
         if(accessSound != null)
-            mc.getSoundHandler().stopSound(accessSound);
+            minecraft.getSoundManager().stop(accessSound);
     }
 
     private boolean queueTask(ClientTask<?> task) {
@@ -432,7 +468,7 @@ public class GuiServer extends WDScreen {
 
     @CommandHandler("exit")
     public void commandExit() {
-        mc.displayGuiScreen(null);
+        minecraft.setScreen(null);
     }
 
     @CommandHandler("access")
@@ -466,7 +502,7 @@ public class GuiServer extends WDScreen {
 
     @CommandHandler("quota")
     public void commandQuota() {
-        if(!mc.player.getGameProfile().getId().equals(owner.uuid)) {
+        if(!minecraft.player.getGameProfile().getId().equals(owner.uuid)) {
             writeLine(tr("errowner"));
             return;
         }
@@ -512,7 +548,7 @@ public class GuiServer extends WDScreen {
             int status = t.getStatus();
             if(status == 0) {
                 writeLine(tr("urlcopied"));
-                setClipboardString(t.getURL());
+                Minecraft.getInstance().keyboardHandler.setClipboard(t.getURL());
             } else if(status == Constants.GETF_STATUS_NOT_FOUND)
                 writeLine(tr("notfound"));
             else
@@ -588,7 +624,7 @@ public class GuiServer extends WDScreen {
 
     @CommandHandler("upload")
     public void commandUpload(String[] args) {
-        if(!mc.player.getGameProfile().getId().equals(owner.uuid)) {
+        if(!minecraft.player.getGameProfile().getId().equals(owner.uuid)) {
             writeLine(tr("errowner"));
             return;
         }
@@ -620,7 +656,7 @@ public class GuiServer extends WDScreen {
 
     @CommandHandler("rm")
     public void commandDelete(String[] args) {
-        if(!mc.player.getGameProfile().getId().equals(owner.uuid)) {
+        if(!minecraft.player.getGameProfile().getId().equals(owner.uuid)) {
             writeLine(tr("errowner"));
             return;
         }
@@ -653,7 +689,7 @@ public class GuiServer extends WDScreen {
     @CommandHandler("reconnect")
     public void commandReconnect() {
         Client.getInstance().stop();
-        WebDisplays.NET_HANDLER.sendToServer(Client.getInstance().beginConnection());
+        Messages.INSTANCE.sendToServer(Client.getInstance().beginConnection());
     }
 
     private void startFileUpload(File f, boolean quit) {

@@ -4,15 +4,11 @@
 
 package net.montoyo.wd.client.gui;
 
-import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.language.I18n;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.*;
@@ -176,7 +172,7 @@ public class GuiScreenConfig extends WDScreen {
         updateMyRights();
         updateRotationStr();
 
-        minecraft.getSoundManager().play(PositionedSoundRecord.getRecord(WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
     }
 
     private void updateRotationStr() {
@@ -247,8 +243,8 @@ public class GuiScreenConfig extends WDScreen {
         } else if(ev.getSource() == tfResX) {
             tfResX.setFocused(false);
             tfResY.focus();
-            tfResY.getMcField().setCursorPositionZero();
-            tfResY.getMcField().setSelectionPos(tfResY.getText().length());
+            tfResY.getMcField().setCursorPosition(0);
+            tfResY.getMcField().setHighlightPos(tfResY.getText().length());
         }
     }
 
@@ -371,8 +367,8 @@ public class GuiScreenConfig extends WDScreen {
     }
 
     @Override
-    public void updateScreen() {
-        super.updateScreen();
+    public void tick() {
+        super.tick();
 
         if(acFailTicks >= 0) {
             if(++acFailTicks >= 10) {

@@ -4,43 +4,28 @@
 
 package net.montoyo.wd.net.server;
 
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.core.BlockPos;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
-import net.minecraft.world.WorldServer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ForgeMod;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
-import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
-import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
-import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.network.NetworkEvent;
-import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.core.MissingPermissionException;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Message;
+import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.utilities.*;
 
 import java.util.function.Supplier;
 
-@Message(messageId = 2, side = Side.SERVER)
-public class SMessageScreenCtrl implements IMessage, Runnable {
+public class SMessageScreenCtrl implements Runnable {
 
     public static final int CTRL_SET_URL = 0;
     public static final int CTRL_SHUT_DOWN = 1;
@@ -306,7 +291,7 @@ public class SMessageScreenCtrl implements IMessage, Runnable {
                 return; //Out of range (player reach distance)
 
             BlockState bs = world.getBlockState(blockPos);
-            if(bs.getBlock() != WebDisplays.INSTANCE.blockPeripheral || bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
+            if(bs.getBlock() != BlockInit.blockPeripheral.get() || bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
                 return; //I call it hax...
         } else if(player.shouldRenderAtSqrDistance(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ())))
             return; //Out of range (range problem)

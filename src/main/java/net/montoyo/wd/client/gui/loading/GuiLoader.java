@@ -7,10 +7,8 @@ package net.montoyo.wd.client.gui.loading;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.resources.IResource;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.util.ResourceLocation;
 import net.montoyo.wd.client.gui.controls.*;
 import net.montoyo.wd.utilities.Log;
 

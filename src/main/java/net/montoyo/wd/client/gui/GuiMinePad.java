@@ -14,6 +14,8 @@ import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.utilities.BlockSide;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.Optional;
+
 import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 import static org.lwjgl.opengl.GL11.glColor4f;
 
@@ -94,16 +96,18 @@ public class GuiMinePad extends WDScreen {
     }
 
     public void key(int keyCode, int scanCode, boolean pressed) {
-        char key = getChar(keyCode, scanCode);
+        Optional<Character> key = getChar(keyCode, scanCode);
 
-        if (pad.view != null) {
+        if (pad.view != null && key.isPresent()) {
+            char c = key.get();
+
             if (pressed)
-                pad.view.injectKeyPressedByKeyCode(keyCode, key, 0);
+                pad.view.injectKeyPressedByKeyCode(keyCode, c, 0);
             else
-                pad.view.injectKeyReleasedByKeyCode(keyCode, key, 0);
+                pad.view.injectKeyReleasedByKeyCode(keyCode, c, 0);
 
-            if (key != 0)
-                pad.view.injectKeyTyped(key, 0);
+            if (c != 0)
+                pad.view.injectKeyTyped(c, 0);
         }
 
     }
@@ -150,7 +154,7 @@ public class GuiMinePad extends WDScreen {
         }
     }
 
-    public char getChar(int keyCode, int scanCode) {
+    public static Optional<Character> getChar(int keyCode, int scanCode) {
         String keystr = GLFW.glfwGetKeyName(keyCode, scanCode);
         if(keystr == null){
             keystr = "\0";
@@ -159,10 +163,10 @@ public class GuiMinePad extends WDScreen {
             keystr = "\n";
         }
         if(keystr.length() == 0){
-            return (char) -1;
+            return Optional.empty();
         }
 
-        return keystr.charAt(keystr.length() - 1);
+        return Optional.of(keystr.charAt(keystr.length() - 1));
     }
 
     @Override
