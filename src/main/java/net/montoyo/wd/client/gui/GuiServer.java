@@ -235,35 +235,35 @@ public class GuiServer extends WDScreen {
     public boolean handleKeyboardInput(int keyCode, boolean keyState, Supplier<Boolean> booleanSupplier) throws IOException {
         if(uploadWizard) {
             if(keyState) {
-                if(keyCode == Keyboard.KEY_UP) {
+                if(keyCode == GLFW.GLFW_KEY_UP) {
                     if(selectedLine > 3)
                         selectedLine--;
                     else if(uploadOffset > 0) {
                         uploadOffset--;
                         updateUploadScreen();
                     }
-                } else if(keyCode == Keyboard.KEY_DOWN) {
+                } else if(keyCode == GLFW.GLFW_KEY_DOWN) {
                     if(selectedLine < MAX_LINES - 1)
                         selectedLine++;
                     else if(uploadOffset + selectedLine - 2 < uploadFiles.size()) {
                         uploadOffset++;
                         updateUploadScreen();
                     }
-                } else if(keyCode == Keyboard.KEY_PRIOR) {
+                } else if(keyCode == GLFW.GLFW_KEY_PAGE_DOWN) {
                     selectedLine = 3;
                     int dst = uploadOffset - (MAX_LINES - 3);
                     if(dst < 0)
                         dst = 0;
 
                     selectFile(dst);
-                } else if(keyCode == Keyboard.KEY_NEXT) {
+                } else if(keyCode == GLFW.GLFW_KEY_PAGE_UP) {
                     selectedLine = 3;
                     int dst = uploadOffset + (MAX_LINES - 3);
                     if(dst >= uploadFiles.size())
                         dst = uploadFiles.size() - 1;
 
                     selectFile(dst);
-                } else if(keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
+                } else if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
                     File file = uploadFiles.get(uploadOffset + selectedLine - 3);
 
                     if(file.isDirectory()) {
@@ -271,13 +271,13 @@ public class GuiServer extends WDScreen {
                         updateUploadScreen();
                     } else
                         startFileUpload(file, true);
-                } else if(keyCode == Keyboard.KEY_F5) {
+                } else if(keyCode == GLFW.GLFW_KEY_F5) {
                     uploadCD(uploadDir);
                     updateUploadScreen();
                 }
             }
 
-            if(keyCode == Keyboard.KEY_ESCAPE) {
+            if(keyCode == GLFW.GLFW_KEY_ESCAPE) {
                 quitUploadWizard();
                 return true; //Don't let the screen handle this
             }
@@ -291,12 +291,12 @@ public class GuiServer extends WDScreen {
 
                 if(keyCode == GLFW.GLFW_KEY_L && ctrl)
                     lines.clear();
-                else if(keyCode == Keyboard.KEY_V && ctrl) {
+                else if(keyCode == GLFW.GLFW_KEY_V && ctrl) {
                     prompt += minecraft.keyboardHandler.getClipboard();
 
                     if(prompt.length() > MAX_LINE_LEN)
                         prompt = prompt.substring(0, MAX_LINE_LEN);
-                } else if(keyCode == Keyboard.KEY_UP) {
+                } else if(keyCode == GLFW.GLFW_KEY_UP) {
                     if(lastCmd != null) {
                         String tmp = prompt;
                         prompt = lastCmd;
@@ -337,10 +337,10 @@ public class GuiServer extends WDScreen {
         } else if(promptLocked)
             return;
 
-        if(keyCode == Keyboard.KEY_BACK) {
+        if(keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             if(prompt.length() > 0)
                 prompt = prompt.substring(0, prompt.length() - 1);
-        } else if(keyCode == Keyboard.KEY_RETURN || keyCode == Keyboard.KEY_NUMPADENTER) {
+        } else if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER) {
             if(prompt.length() > 0) {
                 writeLine(userPrompt + prompt);
                 evaluateCommand(prompt);

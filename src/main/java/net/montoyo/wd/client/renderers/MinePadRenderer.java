@@ -26,7 +26,7 @@ public final class MinePadRenderer implements IItemRenderer {
     private static final float PI = (float) Math.PI;
     private final Minecraft mc = Minecraft.getInstance();
     private final ResourceLocation tex = new ResourceLocation("webdisplays", "textures/models/minepad.png");
-    private final ModelMinePad model = new ModelMinePad();
+   // private final ModelMinePad model = new ModelMinePad();
     private final ClientProxy clientProxy = (ClientProxy) WebDisplays.PROXY;
 
     private float sinSqrtSwingProg1;
@@ -87,7 +87,7 @@ public final class MinePadRenderer implements IItemRenderer {
         glRotatef(-90.0f, 1.0f, 0.0f, 0.0f);
         glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.setShaderTexture(0, tex);
-        model.render(1.f / 16.f);
+       // model.render(1.f / 16.f);
         glPopMatrix();
 
         //Render web view
