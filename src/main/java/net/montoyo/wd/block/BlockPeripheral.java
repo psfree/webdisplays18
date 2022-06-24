@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -112,12 +113,12 @@ public class BlockPeripheral extends BaseEntityBlock {
     @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        Class<? extends BlockEntity> cls = state.getValue(type).getTEClass();
+        BlockEntityType.BlockEntitySupplier<? extends BlockEntity> cls = state.getValue(type).getTEClass();
         if(cls == null)
             return null;
 
         try {
-            return cls.newInstance();
+            return cls.create(pos, state); //TODO does this even work!
         } catch(Throwable t) {
             Log.errorEx("Couldn't instantiate peripheral TileEntity:", t);
         }

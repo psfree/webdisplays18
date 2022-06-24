@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.KeyboardData;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
@@ -23,8 +24,8 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
 
     private static final String RANDOM_CHARS = "AZERTYUIOPQSDFGHJKLMWXCVBNazertyuiopqsdfghjklmwxcvbn0123456789"; //Yes I have an AZERTY keyboard, u care?
 
-    public TileEntityKeyboard(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
-        super(arg, arg2, arg3);
+    public TileEntityKeyboard(BlockPos arg2, BlockState arg3) {
+        super(TileInit.PERIPHERAL.get(), arg2, arg3);
     }
 
     @Override

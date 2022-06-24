@@ -34,7 +34,7 @@ public class BlockInit {
 
     public static final RegistryObject<Block> blockScreen = registerBlock("screen_block", BlockScreen::new);
 
-    public static final RegistryObject<Block> blockPeripheral = registerBlock("peripheral_block", () -> new BlockPeripheral());
+    public static final RegistryObject<Block> blockPeripheral = registerBlock("peripheral_block", BlockPeripheral::new);
 
-    public static final RegistryObject<Block> blockKbRight = registerBlock("kb_right_block", () -> new BlockKeyboardRight());
+    public static final RegistryObject<Block> blockKbRight = registerBlock("kb_right_block", BlockKeyboardRight::new);
 }

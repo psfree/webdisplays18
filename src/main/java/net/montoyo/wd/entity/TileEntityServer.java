@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.data.ServerData;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.utilities.NameUUIDPair;
 import net.montoyo.wd.utilities.Util;
 
@@ -22,8 +23,8 @@ public class TileEntityServer extends BlockEntity {
 
     private NameUUIDPair owner;
 
-    public TileEntityServer(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
-        super(arg, arg2, arg3);
+    public TileEntityServer(BlockPos arg2, BlockState arg3) {
+        super(TileInit.PERIPHERAL.get(), arg2, arg3);
     }
 
     @Override

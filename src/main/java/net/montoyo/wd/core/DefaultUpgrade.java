@@ -6,6 +6,8 @@ package net.montoyo.wd.core;
 
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.config.ModConfig;
+import net.montoyo.wd.init.ItemInit;
 
 public enum DefaultUpgrade {
 
@@ -28,6 +30,6 @@ public enum DefaultUpgrade {
     }
 
     public boolean matches(ItemStack is) {
-        return is.getItem() == WebDisplays.INSTANCE.itemUpgrade;
+        return is.getItem() == ItemInit.itemUpgrade.get();
     }
 }

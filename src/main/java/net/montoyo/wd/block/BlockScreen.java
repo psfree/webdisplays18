@@ -5,17 +5,12 @@
 package net.montoyo.wd.block;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.tileentity.TileEntity;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
@@ -33,6 +28,7 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
@@ -45,6 +41,7 @@ import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.utilities.*;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -98,7 +95,7 @@ public class BlockScreen extends BaseEntityBlock {
         return super.updateShape(state, direction, neighborState, level, currentPos, neighborPos);
     }
 
-    @Override
+   /* @Override
     @Nonnull
     public BlockState getExtendedState(@Nonnull BlockState ret, Level world, BlockPos bpos) {
         Vector3i pos = new Vector3i(bpos);
@@ -114,7 +111,7 @@ public class BlockScreen extends BaseEntityBlock {
         }
 
         return ret;
-    }
+    }*/
 
 //    @Override
 //    @Nonnull
@@ -328,28 +325,23 @@ public class BlockScreen extends BaseEntityBlock {
     private void destroySide(Level world, Vector3i pos, BlockSide side, Multiblock.BlockOverride override, Player source) {
         Multiblock.findOrigin(world, pos, side, override);
         BlockPos bp = pos.toBlock();
-        TileEntity te = world.getTileEntity(bp);
+        BlockEntity te = world.getBlockEntity(bp);
 
         if(te != null && te instanceof TileEntityScreen) {
             ((TileEntityScreen) te).onDestroy(source);
-            world.setBlockState(bp, world.getBlockState(bp).withProperty(hasTE, false)); //Destroy tile entity.
+            world.setBlock(bp, world.getBlockState(bp).setValue(hasTE, false), Block.UPDATE_ALL_IMMEDIATE); //Destroy tile entity.
         }
     }
 
     @Override
-    public boolean removedByPlayer(@Nonnull IBlockState state, World world, @Nonnull BlockPos pos, @Nonnull EntityPlayer ply, boolean willHarvest) {
-        onDestroy(world, pos, ply);
-        return super.removedByPlayer(state, world, pos, ply, willHarvest);
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
+        onDestroy(level, pos, player);
+        return super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
     }
 
     @Override
-    public void onBlockDestroyedByExplosion(World world, BlockPos pos, Explosion explosion) {
-        onDestroy(world, pos, null);
-    }
-
-    @Override
-    public void onBlockPlacedBy(World world, BlockPos pos, IBlockState state, EntityLivingBase whoDidThisShit, ItemStack stack) {
-        if(world.isRemote)
+    public void setPlacedBy(Level world, @NotNull BlockPos pos, @NotNull BlockState state, @org.jetbrains.annotations.Nullable LivingEntity whoDidThisShit, @NotNull ItemStack stack) {
+        if(world.isClientSide)
             return;
 
         Multiblock.BlockOverride override = new Multiblock.BlockOverride(new Vector3i(pos), Multiblock.OverrideAction.IGNORE);
@@ -365,13 +357,13 @@ public class BlockScreen extends BaseEntityBlock {
         for(Vector3i neighbor: neighbors) {
             if(world.getBlockState(neighbor.toBlock()).getBlock() instanceof BlockScreen) {
                 for(BlockSide bs: BlockSide.values())
-                    destroySide(world, neighbor.clone(), bs, override, (whoDidThisShit instanceof EntityPlayer) ? ((EntityPlayer) whoDidThisShit) : null);
+                    destroySide(world, neighbor.clone(), bs, override, (whoDidThisShit instanceof Player) ? ((Player) whoDidThisShit) : null);
             }
         }
     }
 
     @Override
-    public PushReaction getPistonPushReaction(BlockState state) {
+    public @NotNull PushReaction getPistonPushReaction(BlockState state) {
         return PushReaction.IGNORE;
     }
 

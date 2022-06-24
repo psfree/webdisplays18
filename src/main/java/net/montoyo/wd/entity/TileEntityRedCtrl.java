@@ -8,12 +8,15 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.RedstoneCtrlData;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
@@ -25,8 +28,8 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     private String fallingEdgeURL = "";
     private boolean state = false;
 
-    public TileEntityRedCtrl(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
-        super(arg, arg2, arg3);
+    public TileEntityRedCtrl(BlockPos arg2, BlockState arg3) {
+        super(TileInit.PERIPHERAL.get(), arg2, arg3);
     }
 
     @Override
@@ -51,29 +54,29 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     }
 
     @Override
-    public boolean onRightClick(Player player, InteractionHand hand, BlockSide side) {
+    public InteractionResult onRightClick(Player player, InteractionHand hand) {
         if(level.isClientSide)
-            return true;
+            return InteractionResult.SUCCESS;
 
         if(!isScreenChunkLoaded()) {
             Util.toast(player, "chunkUnloaded");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         TileEntityScreen tes = getConnectedScreen();
         if(tes == null) {
             Util.toast(player, "notLinked");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         TileEntityScreen.Screen scr = tes.getScreen(screenSide);
         if((scr.rightsFor(player) & ScreenRights.CHANGE_URL) == 0) {
             Util.toast(player, "restrictions");
-            return true;
+            return InteractionResult.SUCCESS;
         }
 
         (new RedstoneCtrlData(level.dimension().location(), getBlockPos(), risingEdgeURL, fallingEdgeURL)).sendTo((ServerPlayer) player);
-        return true;
+        return InteractionResult.SUCCESS;
     }
 
     @Override

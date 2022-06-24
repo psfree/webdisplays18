@@ -4,8 +4,10 @@
 
 package net.montoyo.wd.data;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
@@ -33,7 +35,7 @@ public class RedstoneCtrlData extends GuiData {
     @OnlyIn(Dist.CLIENT)
     @Override
     public Screen createGui(Screen old, Level world) {
-        return new GuiRedstoneCtrl(dimension, pos, risingEdgeURL, fallingEdgeURL);
+        return new GuiRedstoneCtrl(old.getTitle(), dimension, pos, risingEdgeURL, fallingEdgeURL); //TODO is getTitle() correct?
     }
 
     @Override

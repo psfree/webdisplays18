@@ -36,7 +36,7 @@ public final class LaserPointerRenderer implements IItemRenderer {
     }
 
     @Override
-    public final void render(ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
+    public void render(PoseStack poseStack, ItemStack is, float handSideSign, float swingProgress, float equipProgress) {
         //This whole method is a fucking hack
         float sqrtSwingProg = (float) Math.sqrt(swingProgress);
         float sinSqrtSwingProg1 = (float) Math.sin(sqrtSwingProg * PI);

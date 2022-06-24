@@ -34,6 +34,7 @@ import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.ScreenConfigData;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageAddScreen;
 import net.montoyo.wd.net.client.CMessageCloseGui;
@@ -54,7 +55,7 @@ import static net.montoyo.wd.block.BlockPeripheral.point;
 public class TileEntityScreen extends BlockEntity{
 
     public TileEntityScreen(BlockPos arg2, BlockState arg3) {
-        super(null /*TODO: add blockEnityTYpe */ , arg2, arg3);
+        super(TileInit.SCREEN_BLOCK_ENTITY.get(), arg2, arg3);
     }
 
     public static class Screen {

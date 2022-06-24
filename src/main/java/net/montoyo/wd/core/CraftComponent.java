@@ -6,6 +6,7 @@ package net.montoyo.wd.core;
 
 import net.minecraft.world.item.ItemStack;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.init.ItemInit;
 
 public enum CraftComponent {
 
@@ -33,7 +34,7 @@ public enum CraftComponent {
     }
 
     public ItemStack makeItemStack() {
-        return new ItemStack(WebDisplays.INSTANCE.itemCraftComp, 1);
+        return new ItemStack(ItemInit.itemCraftComp.get(), 1);
     }
 
 }

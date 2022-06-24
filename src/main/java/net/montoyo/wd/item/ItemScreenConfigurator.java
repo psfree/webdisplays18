@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.montoyo.wd.WebDisplays;
@@ -18,6 +19,7 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Multiblock;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.system.CallbackI;
 
 import javax.annotation.Nonnull;
@@ -59,4 +61,8 @@ public class ItemScreenConfigurator extends Item implements WDItem {
         return InteractionResult.SUCCESS;
     }
 
+    @Override
+    public String getWikiName(@NotNull ItemStack is) {
+        return is.getItem().getName(is).getString();
+    }
 }

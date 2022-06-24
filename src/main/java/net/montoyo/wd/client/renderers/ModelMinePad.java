@@ -20,6 +20,7 @@ public final class ModelMinePad extends Model {
     private final ModelPart right;
 
     public ModelMinePad() {
+        super();
         textureWidth = 64;
         textureHeight = 32;
 

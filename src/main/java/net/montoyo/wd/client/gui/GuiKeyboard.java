@@ -5,9 +5,11 @@
 package net.montoyo.wd.client.gui;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.Control;
@@ -20,7 +22,7 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
-import org.lwjgl.system.CallbackI;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -44,9 +46,11 @@ public class GuiKeyboard extends WDScreen {
     private Button btnOk;
 
     public GuiKeyboard() {
+        super(Component.nullToEmpty(null));
     }
 
     public GuiKeyboard(TileEntityScreen tes, BlockSide side, BlockPos kbPos) {
+        this();
         this.tes = tes;
         this.side = side;
         this.kbPos = kbPos;
@@ -61,20 +65,20 @@ public class GuiKeyboard extends WDScreen {
     public void init() {
         super.init();
 
-        if(minecraft.getSingleplayerServer() != null && !minecraft.getSingleplayerServer().isPublished())
+        if (minecraft.getSingleplayerServer() != null && !minecraft.getSingleplayerServer().isPublished())
             showWarning = false; //NO NEED
         else
             showWarning = !hasUserReadWarning();
 
         loadFrom(new ResourceLocation("webdisplays", "gui/keyboard.json"));
 
-        if(showWarning) {
+        if (showWarning) {
             int maxLabelW = 0;
             int totalH = 0;
 
-            for(Control ctrl : controls) {
-                if(ctrl != lblInfo && ctrl instanceof Label) {
-                    if(ctrl.getWidth() > maxLabelW)
+            for (Control ctrl : controls) {
+                if (ctrl != lblInfo && ctrl instanceof Label) {
+                    if (ctrl.getWidth() > maxLabelW)
                         maxLabelW = ctrl.getWidth();
 
                     totalH += ctrl.getHeight();
@@ -87,8 +91,8 @@ public class GuiKeyboard extends WDScreen {
             totalH += btnOk.getHeight();
 
             int y = (height - totalH) / 2;
-            for(Control ctrl : controls) {
-                if(ctrl != lblInfo) {
+            for (Control ctrl : controls) {
+                if (ctrl != lblInfo) {
                     ctrl.setPos(ctrl.getX(), y);
                     y += ctrl.getHeight();
                 }
@@ -103,39 +107,45 @@ public class GuiKeyboard extends WDScreen {
     }
 
     @Override
-    public void handleKeyboardInput() throws IOException {
-        if(showWarning) {
-            try {
-                super.handleKeyboardInput();
-            } catch(IOException ex) {
-                Log.warningEx("Caught exception while handling screen input", ex);
-            }
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        key(keyCode, scanCode, true);
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
 
-            return;
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        key(keyCode, scanCode, false);
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    public void key(int keyCode, int scanCode, boolean pressed) {
+        char chr = getChar(keyCode, scanCode);
+        if (pressed) {
+            int kc = keyCode;
+
+            evStack.add(new TypeData(TypeData.Action.PRESS, kc, chr));
+            evStack.add(new TypeData(TypeData.Action.RELEASE, kc, chr));
         }
 
-        if(Keyboard.isCreated()) {
-            while(Keyboard.next()) {
-                if(Keyboard.getEventKey() == Keyboard.KEY_ESCAPE)
-                    mc.displayGuiScreen(null);
-                else {
-                    char chr = Keyboard.getEventCharacter();
+        if (chr != 0)
+            evStack.add(new TypeData(TypeData.Action.TYPE, 0, chr));
 
-                    if(Keyboard.getEventKeyState()) {
-                        int kc = Keyboard.getEventKey();
+        if (!evStack.isEmpty() && !syncRequested())
+            requestSync();
+    }
 
-                        evStack.add(new TypeData(TypeData.Action.PRESS, kc, chr));
-                        evStack.add(new TypeData(TypeData.Action.RELEASE, kc, chr));
-                    }
-
-                    if(chr != 0)
-                        evStack.add(new TypeData(TypeData.Action.TYPE, 0, chr));
-                }
-            }
-
-            if(!evStack.isEmpty() && !syncRequested())
-                requestSync();
+    public char getChar(int keyCode, int scanCode) {
+        String keystr = GLFW.glfwGetKeyName(keyCode, scanCode);
+        if(keystr == null){
+            keystr = "\0";
         }
+        if(keyCode == GLFW.GLFW_KEY_ENTER){
+            keystr = "\n";
+        }
+        if(keystr.length() == 0){
+            return (char) -1;
+        }
+        return keystr.charAt(keystr.length() - 1);
     }
 
     @Override
@@ -162,14 +172,14 @@ public class GuiKeyboard extends WDScreen {
             btnOk.setVisible(false);
             showWarning = false;
             defaultBackground = false;
-            mc.inGameHasFocus = true;
-            mc.mouseHelper.grabMouseCursor();
+            minecraft.setWindowActive(true);
+            minecraft.mouseHandler.grabMouse();
         }
     }
 
     private boolean hasUserReadWarning() {
         try {
-            File f = new File(mc.mcDataDir, WARNING_FNAME);
+            File f = new File(FMLPaths.GAMEDIR.name(), WARNING_FNAME);
 
             if(f.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(f));
@@ -187,7 +197,7 @@ public class GuiKeyboard extends WDScreen {
 
     private void writeUserAcknowledge() {
         try {
-            File f = new File(mc.mcDataDir, WARNING_FNAME);
+            File f = new File(FMLPaths.GAMEDIR.name(), WARNING_FNAME);
 
             BufferedWriter bw = new BufferedWriter(new FileWriter(f));
             bw.write("read\n");
@@ -199,7 +209,7 @@ public class GuiKeyboard extends WDScreen {
 
     @Override
     public boolean isForBlock(BlockPos bp, BlockSide side) {
-        return bp.equals(kbPos) || (bp.equals(tes.getPos()) && side == this.side);
+        return bp.equals(kbPos) || (bp.equals(tes.getBlockPos()) && side == this.side);
     }
 
 }
