@@ -148,7 +148,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             throw new RuntimeException("MCEF is missing");
 
         mcef.registerDisplayHandler(this);
-        mcef.registerJSQueryHandler(this);
+      //  mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();
     }
 

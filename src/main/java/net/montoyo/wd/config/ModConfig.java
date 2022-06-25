@@ -8,6 +8,7 @@ import net.montoyo.mcef.easy_forge_compat.Configuration;
 
 import java.util.List;
 
+@Config(name = "webdisplays")
 public class ModConfig implements ConfigData {
     @ConfigEntry.Category("main")
     public Main main = new Main();

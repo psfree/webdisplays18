@@ -1,10 +1,12 @@
 package net.montoyo.wd.init;
 
+import net.minecraft.core.Registry;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.IForgeRegistry;
 import net.minecraftforge.registries.RegistryObject;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
@@ -16,7 +18,7 @@ import java.util.function.Supplier;
 
 public class BlockInit {
 
-    public static DeferredRegister<Block> BLOCKS = DeferredRegister.create(Block.class, "webdisplays");
+    public static DeferredRegister<Block> BLOCKS = DeferredRegister.create(Registry.BLOCK_REGISTRY, "webdisplays");
 
     public static void init(IEventBus bus) {
         BLOCKS.register(bus);

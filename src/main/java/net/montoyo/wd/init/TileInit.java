@@ -7,6 +7,8 @@ import net.minecraftforge.registries.RegistryObject;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.entity.TileEntityScreen;
 
+import java.util.Locale;
+
 public class TileInit {
 
     public static final DeferredRegister<BlockEntityType<?>> TILE_TYPES = DeferredRegister
@@ -22,7 +24,7 @@ public class TileInit {
     public static void registerPeripherals() {
         for (DefaultPeripheral dp : DefaultPeripheral.values()) {
             if (dp.getTEClass() != null)
-                PERIPHERAL = TILE_TYPES.register(dp.name(), () -> BlockEntityType.Builder
+                PERIPHERAL = TILE_TYPES.register(dp.name().toLowerCase(Locale.ROOT), () -> BlockEntityType.Builder
                     .of(dp.getTEClass(), BlockInit.blockPeripheral.get()).build(null));
 
         }

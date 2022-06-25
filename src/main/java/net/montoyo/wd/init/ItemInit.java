@@ -24,12 +24,12 @@ public class ItemInit {
         return register(id, c);
     }
 
-    public static final RegistryObject<Item> itemScreenCfg = register("itemScreenConfig", () -> new ItemScreenConfigurator(new Item.Properties()));
-    public static final RegistryObject<Item> itemOwnerThief = register("itemOwnerThief", () -> new ItemOwnershipThief(new Item.Properties()));
-    public static final RegistryObject<Item> itemLinker = register("itemLinker", () -> new ItemLinker(new Item.Properties()));
-    public static final RegistryObject<Item> itemMinePad = register("itemMinePad", () -> new ItemMinePad2(new Item.Properties()));
-    public static final RegistryObject<Item> itemUpgrade = register("itemUpgrade", ItemUpgrade::new);
-    public static final RegistryObject<Item> itemCraftComp = register("itemCraftComp", () -> new ItemCraftComponent(new Item.Properties()));
-    public static final RegistryObject<Item> itemLaserPointer = register("itemLaserPointer", () -> new ItemLaserPointer(new Item.Properties()));
+    public static final RegistryObject<Item> itemScreenCfg = register("item_screen_config", () -> new ItemScreenConfigurator(new Item.Properties()));
+    public static final RegistryObject<Item> itemOwnerThief = register("item_owner_thief", () -> new ItemOwnershipThief(new Item.Properties()));
+    public static final RegistryObject<Item> itemLinker = register("item_linker", () -> new ItemLinker(new Item.Properties()));
+    public static final RegistryObject<Item> itemMinePad = register("item_mine_pad", () -> new ItemMinePad2(new Item.Properties()));
+    public static final RegistryObject<Item> itemUpgrade = register("item_upgrade", ItemUpgrade::new);
+    public static final RegistryObject<Item> itemCraftComp = register("item_craftcomp", () -> new ItemCraftComponent(new Item.Properties()));
+    public static final RegistryObject<Item> itemLaserPointer = register("item_laserpointer", () -> new ItemLaserPointer(new Item.Properties()));
 
 }
