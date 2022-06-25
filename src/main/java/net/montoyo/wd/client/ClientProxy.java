@@ -574,7 +574,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             //Laser pointer raycast
             boolean raycastHit = false;
 
-            if(mc.player != null && mc.level != null && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get())
+            if(mc.player != null && mc.level != null && ItemInit.itemLaserPointer.isPresent() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get())
                                                      && mc.options.keyUse.isDown()
                                                      && (mc.hitResult == null || mc.hitResult.getType() != HitResult.Type.BLOCK)) {
                 laserPointerRenderer.isOn = true;
@@ -628,19 +628,20 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         Item item = ev.getItemStack().getItem();
         IItemRenderer renderer;
 
-        if(item == ItemInit.itemMinePad.get())
-            renderer = minePadRenderer;
-        else if(item == ItemInit.itemLaserPointer.get())
-            renderer = laserPointerRenderer;
-        else
-            return;
+        if(ItemInit.itemMinePad.isPresent() && ItemInit.itemLaserPointer.isPresent()) {
+            if (item == ItemInit.itemMinePad.get())
+                renderer = minePadRenderer;
+            else if (item == ItemInit.itemLaserPointer.get())
+                renderer = laserPointerRenderer;
+            else
+                return;
+            HumanoidArm handSide = mc.player.getMainArm();
+            if (ev.getHand() == InteractionHand.OFF_HAND)
+                handSide = handSide.getOpposite();
 
-        HumanoidArm handSide = mc.player.getMainArm();
-        if(ev.getHand() == InteractionHand.OFF_HAND)
-            handSide = handSide.getOpposite();
-
-        renderer.render(ev.getPoseStack(), ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress(), ev.getMultiBufferSource(), ev.getPackedLight());
-        ev.setCanceled(true);
+            renderer.render(ev.getPoseStack(), ev.getItemStack(), (handSide == HumanoidArm.RIGHT) ? 1.0f : -1.0f, ev.getSwingProgress(), ev.getEquipProgress(), ev.getMultiBufferSource(), ev.getPackedLight());
+            ev.setCanceled(true);
+        }
     }
 
     @SubscribeEvent
@@ -693,11 +694,13 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         for(int i = 0; i < cnt; i++) {
             ItemStack item = inv.get(i);
 
-            if(item.getItem() == ItemInit.itemMinePad.get()) {
-                CompoundTag tag = item.getTag();
+            if(ItemInit.itemMinePad.isPresent()) {
+                if (item.getItem() == ItemInit.itemMinePad.get()) {
+                    CompoundTag tag = item.getTag();
 
-                if(tag != null && tag.contains("PadID"))
-                    updatePad(tag.getInt("PadID"), tag, item == heldStack);
+                    if (tag != null && tag.contains("PadID"))
+                        updatePad(tag.getInt("PadID"), tag, item == heldStack);
+                }
             }
         }
     }

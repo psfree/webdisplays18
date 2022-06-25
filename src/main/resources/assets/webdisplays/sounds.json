@@ -1,5 +1,5 @@
 {
-  "keyboardType": {
+  "keyboard_type": {
     "category": "block",
     "sounds": [
       "webdisplays:keyboard1",
@@ -12,19 +12,19 @@
       "webdisplays:keyboard8"
     ]
   },
-  "upgradeAdd": {
+  "upgrade_add": {
     "category": "block",
     "sounds": [
       "webdisplays:upgrade_add"
     ]
   },
-  "upgradeDel": {
+  "upgrade_del": {
     "category": "block",
     "sounds": [
       "webdisplays:upgrade_del"
     ]
   },
-  "screencfgOpen": {
+  "screencfg_open": {
     "category": "master",
     "sounds": [
       "webdisplays:screencfg_open"

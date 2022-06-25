@@ -6,6 +6,7 @@ package net.montoyo.wd.item;
 
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -18,9 +19,7 @@ import javax.annotation.Nullable;
 public class ItemUpgrade extends ItemMulti implements IUpgrade, WDItem {
 
     public ItemUpgrade() {
-        super(DefaultUpgrade.class, new Properties());
-        setRegistryName("upgrade");
-        //TODO set creative tab to WebDisplays.CREATIVE_TAB
+        super(DefaultUpgrade.class, new Properties().tab(WebDisplays.CREATIVE_TAB));
     }
 
     @Override

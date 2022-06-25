@@ -13,16 +13,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -45,12 +42,9 @@ import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.ItemLinker;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
-import net.montoyo.wd.utilities.Log;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Nonnull;
-
-public class BlockPeripheral extends BaseEntityBlock {
+public class BlockPeripheral extends Block {
 
     public static final EnumProperty<DefaultPeripheral> type = EnumProperty.create("type", DefaultPeripheral.class);
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
@@ -59,7 +53,6 @@ public class BlockPeripheral extends BaseEntityBlock {
     public BlockPeripheral() {
         super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
 //                setName("peripheral");
-
     }
 
 //    @Override
@@ -110,7 +103,7 @@ public class BlockPeripheral extends BaseEntityBlock {
 //    }
 
 
-    @Nullable
+    /*@Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         BlockEntityType.BlockEntitySupplier<? extends BlockEntity> cls = state.getValue(type).getTEClass();
@@ -118,13 +111,13 @@ public class BlockPeripheral extends BaseEntityBlock {
             return null;
 
         try {
-            return cls.create(pos, state); //TODO does this even work!
+            return cls.create(pos, state);
         } catch(Throwable t) {
             Log.errorEx("Couldn't instantiate peripheral TileEntity:", t);
         }
 
         return null;
-    }
+    } */
 
     @Override
     public RenderShape getRenderShape(BlockState state) {

@@ -24,7 +24,7 @@ public class TileEntityServer extends BlockEntity {
     private NameUUIDPair owner;
 
     public TileEntityServer(BlockPos arg2, BlockState arg3) {
-        super(TileInit.PERIPHERAL.get(), arg2, arg3);
+        super(TileInit.SERVER.get(), arg2, arg3);
     }
 
     @Override

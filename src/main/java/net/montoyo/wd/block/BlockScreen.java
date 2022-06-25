@@ -18,18 +18,16 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.FluidState;
-import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.montoyo.wd.WebDisplays;
@@ -46,32 +44,28 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class BlockScreen extends BaseEntityBlock {
+public class BlockScreen extends Block {
 
     public static final BooleanProperty hasTE = BooleanProperty.create("haste");
     public static final BooleanProperty emitting = BooleanProperty.create("emitting");
     private static final Property<?>[] properties = new Property<?>[] { hasTE, emitting };
-    public static final IntegerProperty[] sideFlags = new IntegerProperty[6];
-    static {
-        for(int i = 0; i < sideFlags.length; i++)
-            sideFlags[i] = IntegerProperty.create("neighbor" + i, 0, 15);
-    }
+    public static final DirectionProperty FACING = BlockStateProperties.FACING;
 
     private static final int BAR_BOT = 1;
     private static final int BAR_RIGHT = 2;
     private static final int BAR_TOP = 4;
     private static final int BAR_LEFT = 8;
 
-    public BlockScreen() {
-        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
+    public BlockScreen(Properties properties) {
+        super(properties.strength(1.5f, 10.f));
 //        setCreativeTab(WebDisplays.CREATIVE_TAB);
 //        setName("screen");
-        registerDefaultState(getStateDefinition().any().setValue(hasTE, false).setValue(emitting, false));
+        this.registerDefaultState(this.defaultBlockState().setValue(hasTE, false).setValue(emitting, false));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(properties).add(sideFlags);
+        builder.add(properties).add(FACING);
     }
 
     @Override
@@ -299,7 +293,7 @@ public class BlockScreen extends BaseEntityBlock {
         return false;
     }
 
-    @org.jetbrains.annotations.Nullable
+   /* @org.jetbrains.annotations.Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         int meta = getMetaFromState(state);
@@ -308,7 +302,7 @@ public class BlockScreen extends BaseEntityBlock {
             return null;
 
         return ((meta & 1) == 0) ? null : new TileEntityScreen(pos, state);
-    }
+    }*/
 
     /************************************************* DESTRUCTION HANDLING *************************************************/
 

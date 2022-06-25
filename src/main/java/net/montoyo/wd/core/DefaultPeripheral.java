@@ -59,6 +59,6 @@ public enum DefaultPeripheral implements StringRepresentable {
 
     @Override
     public String getSerializedName() {
-        return "DefaultPeripheral";
+        return "default_peripheral_" + name;
     }
 }

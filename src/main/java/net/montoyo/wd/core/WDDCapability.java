@@ -29,7 +29,9 @@ public class WDDCapability implements IWDDCapability {
 
     public static class Provider implements ICapabilitySerializable<CompoundTag> {
 
-        public static Capability<IWDDCapability> cap = CapabilityManager.get(new CapabilityToken<>(){});
+        public static Capability<IWDDCapability> cap = CapabilityManager.get(new CapabilityToken<>() {
+        });
+        private WDDCapability wddCap = null;
         private final LazyOptional<IWDDCapability> INSTANCE = LazyOptional.of(this::createWDDCapability);
 
         @NotNull
@@ -58,7 +60,7 @@ public class WDDCapability implements IWDDCapability {
 
         @Nonnull
         private IWDDCapability createWDDCapability() {
-            return cap == null ? new WDDCapability() : (IWDDCapability) cap;
+            return wddCap == null ? new WDDCapability() : wddCap;
         }
 
     }

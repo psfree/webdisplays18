@@ -25,7 +25,7 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
     private static final String RANDOM_CHARS = "AZERTYUIOPQSDFGHJKLMWXCVBNazertyuiopqsdfghjklmwxcvbn0123456789"; //Yes I have an AZERTY keyboard, u care?
 
     public TileEntityKeyboard(BlockPos arg2, BlockState arg3) {
-        super(TileInit.PERIPHERAL.get(), arg2, arg3);
+        super(TileInit.KEYBOARD.get(), arg2, arg3);
     }
 
     @Override

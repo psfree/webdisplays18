@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkRegistry;
@@ -15,6 +16,7 @@ import net.minecraftforge.network.simple.SimpleChannel;
 import net.montoyo.wd.net.client.*;
 import net.montoyo.wd.net.server.*;
 
+@Mod.EventBusSubscriber
 public class Messages {
 
     private static final String PROTOCOL_VERSION = "1";
@@ -25,11 +27,6 @@ public class Messages {
             PROTOCOL_VERSION::equals,
             PROTOCOL_VERSION::equals
     );
-
-    @OnlyIn(Dist.CLIENT)
-    @SubscribeEvent
-    public static void registryNetworkPackets (FMLClientSetupEvent event) {
-    }
 
     @SubscribeEvent
     public static void registryNetworkPackets (FMLCommonSetupEvent event) {

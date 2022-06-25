@@ -29,7 +29,7 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     private boolean state = false;
 
     public TileEntityRedCtrl(BlockPos arg2, BlockState arg3) {
-        super(TileInit.PERIPHERAL.get(), arg2, arg3);
+        super(TileInit.REDSTONE_CONTROLLER.get(), arg2, arg3);
     }
 
     @Override

@@ -12,7 +12,10 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3f;
@@ -98,9 +101,12 @@ public class ScreenBaker implements IModelBaker {
         int sid = BlockSide.reverse(side.ordinal());
         BlockSide s = blockSides[sid];
         TextureAtlasSprite tex = texs[15];
-        if(bs != null)
-            tex = texs[bs.getValue(BlockScreen.sideFlags[sid])];
-
+        if(bs != null) {
+            IntegerProperty[] sideFlags = new IntegerProperty[6];
+            for(int i = 0; i < sideFlags.length; i++)
+                sideFlags[i] = IntegerProperty.create("neighbor" + i, 0, 15);
+            tex = texs[bs.getValue(sideFlags[sid])];
+        }
         ret.add(bakeSide(s, tex));
         return ret;
     }

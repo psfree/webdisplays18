@@ -11,7 +11,6 @@ import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
-import net.minecraft.core.Registry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -21,10 +20,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -34,24 +31,17 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.PacketDistributor;
-import net.montoyo.wd.block.BlockKeyboardRight;
-import net.montoyo.wd.block.BlockPeripheral;
-import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
-import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
-import net.montoyo.wd.init.TileInit;
-import net.montoyo.wd.item.*;
 import net.montoyo.wd.miniserv.server.Server;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageServerInfo;
@@ -154,16 +144,13 @@ public class WebDisplays {
         padResY = config.main.padHeight;
         padResX = padResY * PAD_RATIO;
 
-        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        ItemInit.init(bus);
-        BlockInit.init(bus);
+        ItemInit.init();
+        BlockInit.init();
         PROXY.preInit();
         MinecraftForge.EVENT_BUS.register(this);
 
         //Other things
         PROXY.init();
-
-        TileInit.registerPeripherals();
 
         PROXY.postInit();
         hasOC = ModList.get().isLoaded("opencomputers");
@@ -293,7 +280,7 @@ public class WebDisplays {
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
         if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
             Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) ev.getPlayer()), new CMessageServerInfo(miniservPort));
-            IWDDCapability cap = (IWDDCapability) ev.getPlayer().getCapability(WDDCapability.Provider.cap, null);
+            IWDDCapability cap = ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
             if(cap == null)
                 Log.warning("Player %s (%s) has null IWDDCapability!", ev.getPlayer().getName(), ev.getPlayer().getGameProfile().getId().toString());
@@ -321,8 +308,8 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone ev) {
-        IWDDCapability src = (IWDDCapability) ev.getOriginal().getCapability(WDDCapability.Provider.cap, null);
-        IWDDCapability dst = (IWDDCapability) ev.getPlayer().getCapability(WDDCapability.Provider.cap, null);
+        IWDDCapability src =  ev.getOriginal().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
+        IWDDCapability dst =  ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
         if(src == null) {
             Log.error("src is null");
