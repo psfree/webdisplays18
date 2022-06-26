@@ -11,7 +11,9 @@ import java.util.function.Supplier;
 
 public class ItemInit {
 
-    public static void init() {}
+    public static void init(IEventBus bus) {
+        ITEMS.register(bus);
+    }
 
     public static DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "webdisplays");
 

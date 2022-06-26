@@ -31,17 +31,20 @@ import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.miniserv.server.Server;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageServerInfo;
@@ -144,10 +147,15 @@ public class WebDisplays {
         padResY = config.main.padHeight;
         padResX = padResY * PAD_RATIO;
 
-        ItemInit.init();
-        BlockInit.init();
+        IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
+        bus.addListener(Messages::registryNetworkPackets);
+        ItemInit.init(bus);
+        BlockInit.init(bus);
+        TileInit.init(bus);
         PROXY.preInit();
+
         MinecraftForge.EVENT_BUS.register(this);
+
 
         //Other things
         PROXY.init();
@@ -279,8 +287,8 @@ public class WebDisplays {
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
         if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> (ServerPlayer) ev.getPlayer()), new CMessageServerInfo(miniservPort));
-            IWDDCapability cap = ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
+            IWDDCapability cap =
+                    ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
             if(cap == null)
                 Log.warning("Player %s (%s) has null IWDDCapability!", ev.getPlayer().getName(), ev.getPlayer().getGameProfile().getId().toString());
@@ -291,6 +299,15 @@ public class WebDisplays {
 
                 cap.clearFirstRun();
             }
+
+            PacketDistributor.PacketTarget packetDistrutor = PacketDistributor.PLAYER
+                    .with(
+                    () ->
+                                    (ServerPlayer) ev.getPlayer());
+
+            CMessageServerInfo message = new CMessageServerInfo(miniservPort);
+
+            Messages.INSTANCE.send(packetDistrutor, message);
         }
     }
 

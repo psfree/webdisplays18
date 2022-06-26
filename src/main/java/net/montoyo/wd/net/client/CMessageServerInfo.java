@@ -24,15 +24,13 @@ public class CMessageServerInfo {
         return new CMessageServerInfo(buf.readShort() & 0xFFFF);
     }
 
-    public CMessageServerInfo encode(FriendlyByteBuf buf) {
+    public void encode(FriendlyByteBuf buf) {
         buf.writeShort(miniservPort);
-        return new CMessageServerInfo(miniservPort);
     }
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
             WebDisplays.PROXY.setMiniservClientPort(miniservPort);
-
             if (miniservPort > 0)
                 Messages.INSTANCE.sendToServer(Client.getInstance().beginConnection());
         });

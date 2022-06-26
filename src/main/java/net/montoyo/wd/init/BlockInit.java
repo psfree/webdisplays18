@@ -19,7 +19,9 @@ import java.util.function.Supplier;
 
 public class BlockInit {
 
-    public static void init() {}
+    public static void init(IEventBus bus) {
+        BLOCKS.register(bus);
+    }
 
     public static DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "webdisplays");
 

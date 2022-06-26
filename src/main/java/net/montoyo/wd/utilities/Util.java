@@ -7,8 +7,9 @@ package net.montoyo.wd.utilities;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.FormattedText;
-import net.minecraft.network.chat.NbtComponent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.TextComponent;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
 
@@ -135,8 +136,8 @@ public abstract class Util {
     }
 
     public static void toast(Player player, ChatFormatting color, String key, Object... data) {
-        NbtComponent root = (NbtComponent) FormattedText.of("[WebDisplays] ");
-        root.withStyle(color);
+        TextComponent root = new TextComponent("[WebDisplays] ");
+        root.setStyle(Style.EMPTY.withColor(color));
         root.append(new TranslatableComponent("webdisplays.message." + key, data));
 
         player.sendMessage(root, player.getUUID());
