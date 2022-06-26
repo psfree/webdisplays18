@@ -42,21 +42,11 @@ public class WDDCapability implements IWDDCapability {
 
         @Override
         public CompoundTag serializeNBT() {
-            CompoundTag tag = new CompoundTag();
-            if (INSTANCE.isPresent()) {
-               INSTANCE.ifPresent(cap -> tag.put("Tag", tag));
-            }
-            return tag;
+            return new CompoundTag();
         }
 
         @Override
-        public void deserializeNBT(CompoundTag tag) {
-            if (INSTANCE.isPresent()) {
-                INSTANCE.ifPresent(cap -> {
-                    tag.get("Tag");
-                });
-            }
-        }
+        public void deserializeNBT(CompoundTag tag) {}
 
         @Nonnull
         private IWDDCapability createWDDCapability() {
