@@ -4,15 +4,19 @@
 
 package net.montoyo.wd.block;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
@@ -29,6 +33,7 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -44,7 +49,10 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockPeripheral extends Block {
+import java.util.List;
+import java.util.Objects;
+
+public class BlockPeripheral extends WDBlockContainer {
 
     public static final EnumProperty<DefaultPeripheral> type = EnumProperty.create("type", DefaultPeripheral.class);
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
@@ -53,19 +61,15 @@ public class BlockPeripheral extends Block {
     public BlockPeripheral() {
         super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
 //                setName("peripheral");
-    }
 
-//    @Override
-//    protected BlockItem createItemBlock() {
-//        return new ItemPeripheral(this);
-//    }
+    }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         builder.add(properties);
     }
 
-//    @Nullable TODO: Fix
+    //    @Nullable TODO: Fix
 //    @Override
 //    public BlockState getStateForPlacement(BlockPlaceContext context) {
 //        Direction rot = Direction.fromYRot(placer.getYHeadRot());

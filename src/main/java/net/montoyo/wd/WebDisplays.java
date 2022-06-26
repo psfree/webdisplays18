@@ -20,6 +20,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.ClientChatEvent;
@@ -39,6 +41,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.PacketDistributor;
+import net.montoyo.wd.block.WDBlockContainer;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
@@ -149,9 +152,12 @@ public class WebDisplays {
 
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(Messages::registryNetworkPackets);
-        ItemInit.init(bus);
         BlockInit.init(bus);
+        ItemInit.init(bus);
+        ItemInit.registerUpgrade();
+        ItemInit.registerComponents();
         TileInit.init(bus);
+
         PROXY.preInit();
 
         MinecraftForge.EVENT_BUS.register(this);

@@ -1,6 +1,8 @@
 {
+	"forge_marker": 1,
+	"uvlock": false,
 	"variants": {
-		"normal": { "model": "webdisplays:screen" },
-		"inventory": { "model": "webdisplays:screen_item" }
+		"normal": { "model": "webdisplays:block/screen" },
+		"inventory": { "model": "webdisplays:block/screen_item" }
 	}
 }

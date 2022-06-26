@@ -8,6 +8,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
@@ -22,9 +23,21 @@ import javax.annotation.Nonnull;
 public class TileEntityServer extends BlockEntity {
 
     private NameUUIDPair owner;
+    private static BlockPos blockPos;
+    private static BlockState blockState;
 
     public TileEntityServer(BlockPos arg2, BlockState arg3) {
         super(TileInit.SERVER.get(), arg2, arg3);
+        blockPos = arg2;
+        blockState = arg3;
+    }
+
+    public static Block getBlockFromTE() {
+        if(blockPos != null && blockState != null) {
+            return new TileEntityKeyboard(blockPos, blockState).getBlockState().getBlock();
+        } else {
+            throw new RuntimeException();
+        }
     }
 
     @Override

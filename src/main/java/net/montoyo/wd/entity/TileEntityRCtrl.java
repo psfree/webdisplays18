@@ -9,6 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.core.ScreenRights;
@@ -18,9 +19,21 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
 public class TileEntityRCtrl extends TileEntityPeripheralBase {
+    private static BlockPos blockPos;
+    private static BlockState blockState;
 
     public TileEntityRCtrl(BlockPos arg2, BlockState arg3) {
             super(TileInit.REMOTE_CONTROLLER.get(), arg2, arg3);
+            blockPos = arg2;
+            blockState = arg3;
+    }
+
+    public static Block getBlockFromTE() {
+        if(blockPos != null && blockState != null) {
+            return new TileEntityKeyboard(blockPos, blockState).getBlockState().getBlock();
+        } else {
+            throw new RuntimeException();
+        }
     }
 
     @Override

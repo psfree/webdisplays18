@@ -70,7 +70,7 @@ public class GuiKeyboard extends WDScreen {
         else
             showWarning = !hasUserReadWarning();
 
-        loadFrom(new ResourceLocation("webdisplays", "gui/keyboard.json"));
+        loadFrom(new ResourceLocation("webdisplays", "gui/kb_right.json"));
 
         if (showWarning) {
             int maxLabelW = 0;

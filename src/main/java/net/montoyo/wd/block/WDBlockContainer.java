@@ -4,33 +4,33 @@
 
 package net.montoyo.wd.block;
 
-import net.minecraft.core.BlockPos;
 import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.minecraft.world.level.block.state.BlockState;
-import net.montoyo.wd.item.ItemPeripheral;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.Block;
+import net.montoyo.wd.WebDisplays;
 
-public abstract class WDBlockContainer extends BaseContainerBlockEntity {
+public abstract class WDBlockContainer extends Block {
 
-    protected BlockItem itemBlock;
+    protected static BlockItem itemBlock;
 
-    public WDBlockContainer(BlockEntityType<?> type, BlockPos blockPos, BlockState state) {
-        super(type, blockPos, state);
+    public WDBlockContainer(Properties arg) {
+        super(arg);
     }
 
     protected void setName(String name) {
        // setRegistryName(name);
     }
 
-    protected abstract BlockItem createItemBlock();
+    protected static BlockItem createItemBlock(Block block) {
+        return new BlockItem(block, new Item.Properties().tab(WebDisplays.CREATIVE_TAB));
+    }
 
-    public void makeItemBlock() {
+    public static void makeItemBlock(Block block) {
         if(itemBlock != null)
             throw new RuntimeException("WDBlockContainer.makeItemBlock() called twice!");
 
-        itemBlock = createItemBlock();
-        itemBlock.setRegistryName(getName().getString());
+        itemBlock = createItemBlock(block);
+       // itemBlock.setRegistryName(getName().getString());
     }
 
     public BlockItem getItem() {

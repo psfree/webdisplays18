@@ -1,7 +1,5 @@
 package net.montoyo.wd.init;
 
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.Material;
@@ -12,10 +10,6 @@ import net.minecraftforge.registries.RegistryObject;
 import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.block.BlockScreen;
-import net.montoyo.wd.core.WDCreativeTab;
-
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class BlockInit {
 
@@ -25,9 +19,15 @@ public class BlockInit {
 
     public static DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, "webdisplays");
 
-    public static final RegistryObject<Block> blockScreen = BLOCKS.register("screen_block", () -> new BlockScreen(BlockBehaviour.Properties.of(Material.STONE)));
+    public static final RegistryObject<Block> blockScreen = BLOCKS.register("screen", () -> new BlockScreen(BlockBehaviour.Properties.of(Material.STONE)));
 
-    public static final RegistryObject<Block> blockPeripheral = BLOCKS.register("peripheral_block", BlockPeripheral::new);
+    public static final RegistryObject<Block> blockKeyBoard = BlockInit.BLOCKS.register("kb_left", BlockPeripheral::new);
 
-    public static final RegistryObject<Block> blockKbRight = BLOCKS.register("kb_right_block", BlockKeyboardRight::new);
+    public static final RegistryObject<Block> blockRedControl = BlockInit.BLOCKS.register("redctrl", BlockPeripheral::new);
+
+    public static final RegistryObject<Block> blockRControl = BlockInit.BLOCKS.register("rctrl", BlockPeripheral::new);
+
+    public static final RegistryObject<Block> blockServer = BlockInit.BLOCKS.register("server", BlockPeripheral::new);
+
+    public static final RegistryObject<Block> blockKbRight = BLOCKS.register("kb_right", BlockKeyboardRight::new);
 }

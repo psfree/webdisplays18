@@ -21,6 +21,7 @@ import net.montoyo.wd.core.MissingPermissionException;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.utilities.*;
 
 import java.util.function.Supplier;
@@ -291,7 +292,9 @@ public class SMessageScreenCtrl implements Runnable {
                 return; //Out of range (player reach distance)
 
             BlockState bs = world.getBlockState(blockPos);
-            if(bs.getBlock() != BlockInit.blockPeripheral.get() || bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
+            if(bs.getBlock() != BlockInit.blockServer.get() || bs.getBlock() != BlockInit.blockRControl.get() ||
+                    bs.getBlock() != BlockInit.blockKeyBoard.get() || bs.getBlock() != BlockInit.blockRedControl.get()
+                    || bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
                 return; //I call it hax...
         } else if(player.shouldRenderAtSqrDistance(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ())))
             return; //Out of range (range problem)
