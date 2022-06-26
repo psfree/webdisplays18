@@ -37,7 +37,7 @@ public class ItemMinePad2 extends Item implements WDItem {
 
     private static String getURL(ItemStack is) {
         if(is.getTag() == null || !is.getTag().contains("PadURL"))
-            return WebDisplays.INSTANCE.homePage;
+            return  new WebDisplays().homePage;
         else
             return is.getTag().getString("PadURL");
     }
@@ -92,7 +92,7 @@ public class ItemMinePad2 extends Item implements WDItem {
 
                     Player ply = ent.getLevel().getPlayerByUUID(thrower);
                     if(ply != null && ply instanceof ServerPlayer)
-                        WebDisplays.INSTANCE.criterionPadBreak.trigger(((ServerPlayer) ply).getAdvancements());
+                        new WebDisplays().criterionPadBreak.trigger(((ServerPlayer) ply).getAdvancements());
                 }
             }
         }

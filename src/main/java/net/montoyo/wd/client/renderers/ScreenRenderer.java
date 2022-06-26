@@ -8,6 +8,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.phys.AABB;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
@@ -20,6 +21,13 @@ import static com.mojang.math.Vector3f.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
+
+    public static class ScreenRendererProvider implements BlockEntityRendererProvider<TileEntityScreen> {
+        @Override
+        public @NotNull BlockEntityRenderer<TileEntityScreen> create(@NotNull Context arg) {
+            return new ScreenRenderer();
+        }
+    }
 
     private final Vector3f mid = new Vector3f();
     private final Vector3i tmpi = new Vector3i();

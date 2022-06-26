@@ -9,6 +9,7 @@ import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -79,13 +80,14 @@ public class Server implements Runnable {
         thread.start();
     }
 
-    public void stopServer() {
+    public void stopServer() throws IOException {
         if(getRunning()) {
             Thread thread = this.thread;
 
             synchronized(this) {
                 running = false;
                 selector.wakeup();
+                server.close();
             }
 
             while(thread.isAlive()) {
@@ -234,7 +236,7 @@ public class Server implements Runnable {
     }
 
     public long getMaxQuota() {
-        return WebDisplays.INSTANCE.miniservQuota;
+        return new WebDisplays().miniservQuota;
     }
 
 }

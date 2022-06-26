@@ -31,6 +31,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.ScreenRights;
@@ -165,7 +166,7 @@ public class BlockScreen extends Block {
 
                     Util.toast(player, ChatFormatting.AQUA, "upgradeOk");
                     if(player instanceof ServerPlayer)
-                        WebDisplays.INSTANCE.criterionUpgradeScreen.trigger(((ServerPlayer) player).getAdvancements());
+                       new WebDisplays().criterionUpgradeScreen.trigger(((ServerPlayer) player).getAdvancements());
                 } else
                     Util.toast(player, "upgradeError");
 
@@ -193,8 +194,8 @@ public class BlockScreen extends Block {
             return InteractionResult.SUCCESS;
         }
 
-        if(size.x > WebDisplays.INSTANCE.maxScreenX || size.y > WebDisplays.INSTANCE.maxScreenY) {
-            Util.toast(player, "tooBig", WebDisplays.INSTANCE.maxScreenX, WebDisplays.INSTANCE.maxScreenY);
+        if(size.x > new WebDisplays().maxScreenX || size.y >  new WebDisplays().maxScreenY) {
+            Util.toast(player, "tooBig",  new WebDisplays().maxScreenX,  new WebDisplays().maxScreenY);
             return InteractionResult.SUCCESS;
         }
 

@@ -2,7 +2,29 @@
 	"forge_marker": 1,
 	"uvlock": false,
 	"variants": {
-		"normal": { "model": "webdisplays:block/screen" },
-		"inventory": { "model": "webdisplays:block/screen_item" }
+		"emitting=true,facing=north,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=south,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=east,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=west,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=up,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=down,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=north,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=south,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=east,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=west,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=up,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=down,haste=true" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=north,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=south,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=east,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=west,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=up,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=true,facing=down,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=north,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=south,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=east,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=west,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=up,haste=false" : { "model": "webdisplays:block/screen" },
+		"emitting=false,facing=down,haste=false" : { "model": "webdisplays:block/screen" }
 	}
 }

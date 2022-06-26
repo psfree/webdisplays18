@@ -63,7 +63,7 @@ public class TileEntityServer extends BlockEntity {
         if(level.isClientSide)
             return;
 
-        if(WebDisplays.INSTANCE.miniservPort == 0)
+        if( new WebDisplays().miniservPort == 0)
             Util.toast(ply, "noMiniserv");
         else if(owner != null && ply instanceof ServerPlayer)
             (new ServerData(getBlockPos(), owner)).sendTo((ServerPlayer) ply);

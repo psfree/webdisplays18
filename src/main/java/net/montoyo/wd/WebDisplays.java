@@ -66,8 +66,6 @@ public class WebDisplays {
 
     public static final String MOD_VERSION = "1.1";
 
-    public static WebDisplays INSTANCE;
-
     public static SharedProxy PROXY = DistExecutor.<SharedProxy>runForDist(() -> ClientProxy::new, () -> SharedProxy::new);
 
     public static WDCreativeTab CREATIVE_TAB;
@@ -236,6 +234,16 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
+    public void onWorldLeave(WorldEvent.Unload ev) throws IOException {
+        if(ev.getWorld() instanceof Level level) {
+            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
+                return;
+            Server sw = Server.getInstance();
+            sw.stopServer();
+        }
+    }
+
+    @SubscribeEvent
     public void onWorldSave(WorldEvent.Save ev) {
         if(ev.getWorld() instanceof Level level) {
             if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
@@ -286,7 +294,7 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public static void onServerStop(ServerStoppingEvent ev) {
+    public static void onServerStop(ServerStoppingEvent ev) throws IOException {
         Server.getInstance().stopServer();
     }
 
@@ -380,7 +388,7 @@ public class WebDisplays {
     }
 
     public static int getNextAvailablePadID() {
-        return INSTANCE.lastPadId++;
+        return new WebDisplays().lastPadId++;
     }
 
     private static SoundEvent registerSound(RegistryEvent.Register<SoundEvent> ev, String resName) {
@@ -397,18 +405,18 @@ public class WebDisplays {
             CriteriaTriggers.register(c);
     }
 
-    public static boolean isOpenComputersAvailable() {
-        return INSTANCE.hasOC;
-    }
+   // public static boolean isOpenComputersAvailable() {
+   //     return INSTANCE.hasOC;
+  //  }
 
-    public static boolean isComputerCraftAvailable() {
-        return INSTANCE.hasCC;
-    }
+  //  public static boolean isComputerCraftAvailable() {
+  //      return INSTANCE.hasCC;
+  //  }
 
     public static boolean isSiteBlacklisted(String url) {
         try {
             URL url2 = new URL(Util.addProtocol(url));
-            return INSTANCE.blacklist.stream().anyMatch(str -> str.equalsIgnoreCase(url2.getHost()));
+            return new ModConfig.Main().blacklist.stream().anyMatch(str -> str.equalsIgnoreCase(url2.getHost()));
         } catch(MalformedURLException ex) {
             return false;
         }

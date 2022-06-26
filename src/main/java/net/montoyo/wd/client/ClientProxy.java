@@ -13,6 +13,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
+import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
+import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
@@ -30,24 +34,28 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.model.IModelLoader;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.montoyo.mcef.api.*;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.gui.*;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
-import net.montoyo.wd.client.renderers.IItemRenderer;
-import net.montoyo.wd.client.renderers.LaserPointerRenderer;
-import net.montoyo.wd.client.renderers.MinePadRenderer;
+import net.montoyo.wd.client.renderers.*;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
@@ -55,6 +63,7 @@ import net.montoyo.wd.data.GuiData;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.miniserv.client.Client;
 import net.montoyo.wd.net.Messages;
@@ -69,6 +78,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
 
+@Mod.EventBusSubscriber(modid = "webdisplays", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQueryHandler, ResourceManagerReloadListener {
 
     public class PadData {
@@ -80,7 +90,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
         private PadData(String url, int id) {
             view = mcef.createBrowser(WebDisplays.applyBlacklist(url));
-            view.resize((int) WebDisplays.INSTANCE.padResX, (int) WebDisplays.INSTANCE.padResY);
+            view.resize((int)  new WebDisplays().padResX, (int)  new WebDisplays().padResY);
             isInHotbar = true;
             this.id = id;
         }
@@ -120,13 +130,15 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     private int minePadTickCounter = 0;
 
     /**************************************** INHERITED METHODS ****************************************/
+    @SubscribeEvent
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
+    }
 
     @Override
     public void preInit() {
         mc = Minecraft.getInstance();
         MinecraftForge.EVENT_BUS.register(this);
-//        registerCustomBlockBaker(new ScreenBaker(), WebDisplays.INSTANCE.blockScreen);
-
         mcef = MCEFApi.getAPI();
         if(mcef != null)
             mcef.registerScheme("wd", WDScheme.class, true, false, false, true, true, false, false);
@@ -134,7 +146,6 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void init() {
-        //ClientRegistry.bindTileEntitySpecialRenderer(TileEntityScreen.class, new ScreenRenderer());
         jsDispatcher = new JSQueryDispatcher(this);
         minePadRenderer = new MinePadRenderer();
         laserPointerRenderer = new LaserPointerRenderer();
@@ -476,7 +487,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @SubscribeEvent
     public void onRegisterModels(ModelRegistryEvent ev) {
-        final WebDisplays wd = WebDisplays.INSTANCE;
+        final WebDisplays wd =  new WebDisplays();
 
         //I hope I'm doing this right because it doesn't seem like it...
 //        registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
@@ -536,11 +547,11 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 double dist2 = mc.player.distanceToSqr(tes.getBlockPos().getX(), tes.getBlockPos().getY(), tes.getBlockPos().getZ());
 
                 if(tes.isLoaded()) {
-                    if(dist2 > WebDisplays.INSTANCE.unloadDistance2)
+                    if(dist2 >  new WebDisplays().unloadDistance2)
                         tes.unload();
                     //else if(WebDisplays.INSTANCE.enableSoundDistance)
                        // tes.updateTrackDistance(dist2, SoundSystemConfig.getMasterGain());
-                } else if(dist2 <= WebDisplays.INSTANCE.loadDistance2)
+                } else if(dist2 <=  new WebDisplays().loadDistance2)
                     tes.load();
             }
 
@@ -691,10 +702,10 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     private void updateInventory(NonNullList<ItemStack> inv, ItemStack heldStack, int cnt) {
-        for(int i = 0; i < cnt; i++) {
+        for (int i = 0; i < cnt; i++) {
             ItemStack item = inv.get(i);
 
-            if(ItemInit.itemMinePad.isPresent()) {
+            if (ItemInit.itemMinePad.isPresent()) {
                 if (item.getItem() == ItemInit.itemMinePad.get()) {
                     CompoundTag tag = item.getTag();
 
@@ -704,24 +715,6 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             }
         }
     }
-
-//    private void registerCustomBlockBaker(IModelBaker baker, Block block0) {
-//        ModelResourceLocation normalLoc = new ModelResourceLocation(block0.getRegistryName(), "normal");
-//        ResourceModelPair pair = new ResourceModelPair(normalLoc, baker);
-//        modelBakers.add(pair);
-//        ModelLoader.setCustomStateMapper(block0, new StaticStateMapper(normalLoc));
-//    }
-//
-//    private void registerItemModel(Item item, int meta, String variant) {
-//        ModelLoader.setCustomModelResourceLocation(item, meta, new ModelResourceLocation(item.getRegistryName(), variant));
-//    }
-//
-//    private void registerItemMultiModels(ItemMulti item) {
-//        Enum[] values = item.getEnumValues();
-//
-//        for(int i = 0; i < values.length; i++)
-//            ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(item.getRegistryName().toString() + '_' + values[i], "normal"));
-//    }
 
     private void updatePad(int id, CompoundTag tag, boolean isSelected) {
         PadData pd = padMap.get(id);

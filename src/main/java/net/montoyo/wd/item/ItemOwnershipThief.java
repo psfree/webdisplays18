@@ -38,7 +38,7 @@ public class ItemOwnershipThief extends Item implements WDItem {
         if(context.getLevel().isClientSide)
             return InteractionResult.SUCCESS;
 
-        if(WebDisplays.INSTANCE.disableOwnershipThief) {
+        if( new WebDisplays().disableOwnershipThief) {
             Util.toast(context.getPlayer(), "otDisabled");
             return InteractionResult.SUCCESS;
         }

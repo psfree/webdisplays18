@@ -91,7 +91,7 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
 
                     Player owner = level.getPlayerByUUID(scr.owner.uuid);
                     if(owner != null && owner instanceof ServerPlayer && ent instanceof Ocelot)
-                        WebDisplays.INSTANCE.criterionKeyboardCat.trigger(((ServerPlayer) owner).getAdvancements());
+                        new WebDisplays().criterionKeyboardCat.trigger(((ServerPlayer) owner).getAdvancements());
                 }
             }
         }
