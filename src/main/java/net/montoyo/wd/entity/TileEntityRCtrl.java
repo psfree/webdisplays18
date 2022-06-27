@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
+import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.SetURLData;
 import net.montoyo.wd.init.TileInit;
@@ -29,11 +30,7 @@ public class TileEntityRCtrl extends TileEntityPeripheralBase {
     }
 
     public static Block getBlockFromTE() {
-        if(blockPos != null && blockState != null) {
-            return new TileEntityKeyboard(blockPos, blockState).getBlockState().getBlock();
-        } else {
-            throw new RuntimeException();
-        }
+       return new BlockPeripheral().defaultBlockState().getBlock();
     }
 
     @Override

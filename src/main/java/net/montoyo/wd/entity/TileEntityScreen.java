@@ -203,16 +203,16 @@ public class TileEntityScreen extends BlockEntity{
 
 
         public void clampResolution() {
-            if(resolution.x >  new WebDisplays().maxResX) {
-                float newY = ((float) resolution.y) * ((float)  new WebDisplays().maxResX) / ((float) resolution.x);
-                resolution.x =  new WebDisplays().maxResX;
+            if(resolution.x >  WebDisplays.INSTANCE.maxResX) {
+                float newY = ((float) resolution.y) * ((float)  WebDisplays.INSTANCE.maxResX) / ((float) resolution.x);
+                resolution.x =  WebDisplays.INSTANCE.maxResX;
                 resolution.y = (int) newY;
             }
 
-            if(resolution.y >  new WebDisplays().maxResY) {
-                float newX = ((float) resolution.x) * ((float)  new WebDisplays().maxResY) / ((float) resolution.y);
+            if(resolution.y > WebDisplays.INSTANCE.maxResY) {
+                float newX = ((float) resolution.x) * ((float)  WebDisplays.INSTANCE.maxResY) / ((float) resolution.y);
                 resolution.x = (int) newX;
-                resolution.y =  new WebDisplays().maxResY;
+                resolution.y =  WebDisplays.INSTANCE.maxResY;
             }
         }
 
@@ -289,7 +289,7 @@ public class TileEntityScreen extends BlockEntity{
         Screen ret = new Screen();
         ret.side = side;
         ret.size = size;
-        ret.url =  new WebDisplays().homePage;
+        ret.url =  WebDisplays.INSTANCE.homePage;
         ret.friends = new ArrayList<>();
         ret.friendRights = ScreenRights.DEFAULTS;
         ret.otherRights = ScreenRights.DEFAULTS;
@@ -661,7 +661,7 @@ public class TileEntityScreen extends BlockEntity{
 
     //FIXME: Not called if enableSoundDistance is false
     public void updateTrackDistance(double d, float masterVolume) {
-        final WebDisplays wd =  new WebDisplays();
+        final WebDisplays wd = WebDisplays.INSTANCE;
         boolean needsComputation = true;
         int intPart = 0; //Need to initialize those because the compiler is stupid
         int fracPart = 0;
@@ -804,7 +804,7 @@ public class TileEntityScreen extends BlockEntity{
             Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.type(this, side, text));
 
             if(soundPos != null)
-                playSoundAt( new WebDisplays().soundTyping, soundPos, 0.25f, 1.f);
+                playSoundAt( WebDisplays.INSTANCE.soundTyping, soundPos, 0.25f, 1.f);
         }
     }
 
@@ -871,7 +871,7 @@ public class TileEntityScreen extends BlockEntity{
         scr.upgrades.add(isCopy);
         Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
         itemAsUpgrade.onInstall(this, side, player, isCopy);
-        playSoundAt(new WebDisplays().soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
+        playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
         setChanged();
         return true;
     }
@@ -922,7 +922,7 @@ public class TileEntityScreen extends BlockEntity{
             dropUpgrade(scr.upgrades.get(idxToRemove), side, player);
             scr.upgrades.remove(idxToRemove);
             Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
-            playSoundAt(new WebDisplays().soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
+            playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
             setChanged();
         } else
             Log.warning("Tried to remove non-existing upgrade %s to screen %s at %s", safeName(is), side.toString(), getBlockPos().toString());

@@ -236,7 +236,7 @@ public class Server implements Runnable {
     }
 
     public long getMaxQuota() {
-        return new WebDisplays().miniservQuota;
+        return WebDisplays.INSTANCE.miniservQuota;
     }
 
 }

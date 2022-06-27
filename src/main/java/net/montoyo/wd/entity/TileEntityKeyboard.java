@@ -20,6 +20,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockKeyboardRight;
+import net.montoyo.wd.block.BlockPeripheral;
+import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.KeyboardData;
 import net.montoyo.wd.init.TileInit;
@@ -39,11 +41,7 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
     }
 
     public static Block getBlockFromTE() {
-        if(blockPos != null && blockState != null) {
-            return new TileEntityKeyboard(blockPos, blockState).getBlockState().getBlock();
-        } else {
-            throw new RuntimeException();
-        }
+       return new BlockPeripheral().defaultBlockState().getBlock();
     }
 
     @Override
@@ -91,7 +89,7 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
 
                     Player owner = level.getPlayerByUUID(scr.owner.uuid);
                     if(owner != null && owner instanceof ServerPlayer && ent instanceof Ocelot)
-                        new WebDisplays().criterionKeyboardCat.trigger(((ServerPlayer) owner).getAdvancements());
+                        WebDisplays.INSTANCE.criterionKeyboardCat.trigger(((ServerPlayer) owner).getAdvancements());
                 }
             }
         }

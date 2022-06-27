@@ -169,7 +169,7 @@ public class GuiServer extends WDScreen {
                     accessTime = 20;
                 } else {
                     if(accessSound == null) {
-                        accessSound = new SimpleSoundInstance( new WebDisplays().soundServer.getLocation(), SoundSource.MASTER, 1.0f, 1.0f, true, 0, SoundInstance.Attenuation.NONE, 0.0f, 0.0f, 0.0f, false);
+                        accessSound = new SimpleSoundInstance( WebDisplays.INSTANCE.soundServer.getLocation(), SoundSource.MASTER, 1.0f, 1.0f, true, 0, SoundInstance.Attenuation.NONE, 0.0f, 0.0f, 0.0f, false);
                         minecraft.getSoundManager().play(accessSound);
                     }
 

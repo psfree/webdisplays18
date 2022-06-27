@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.ServerChatEvent;
@@ -65,6 +66,8 @@ import java.util.UUID;
 public class WebDisplays {
 
     public static final String MOD_VERSION = "1.1";
+
+    public static WebDisplays INSTANCE;
 
     public static SharedProxy PROXY = DistExecutor.<SharedProxy>runForDist(() -> ClientProxy::new, () -> SharedProxy::new);
 
@@ -113,6 +116,7 @@ public class WebDisplays {
     public float avDist0;
 
     public WebDisplays() {
+        INSTANCE = this;
         AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
         ConfigHolder<ModConfig> configHolder = AutoConfig.getConfigHolder(ModConfig.class);
         ModConfig config = configHolder.getConfig();
@@ -338,9 +342,9 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public void onPlayerClone(net.minecraftforge.event.entity.player.PlayerEvent.Clone ev) {
-        IWDDCapability src =  ev.getOriginal().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
-        IWDDCapability dst =  ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
+    public void onPlayerClone(PlayerEvent.Clone ev) {
+        IWDDCapability src =  ev.getOriginal().getCapability(WDDCapability.Provider.cap, null).orElse(new WDDCapability.Factory().call());
+        IWDDCapability dst =  ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElse(new WDDCapability.Factory().call());
 
         if(src == null) {
             Log.error("src is null");

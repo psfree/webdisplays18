@@ -72,7 +72,7 @@ public class ItemLinker extends Item implements WDItem {
                     Util.toast(context.getPlayer(), ChatFormatting.AQUA, "linked");
 
                     if(context.getPlayer() instanceof ServerPlayer)
-                        new WebDisplays().criterionLinkPeripheral.trigger(((ServerPlayer) context.getPlayer()).getAdvancements());
+                        WebDisplays.INSTANCE.criterionLinkPeripheral.trigger(((ServerPlayer) context.getPlayer()).getAdvancements());
                 } else
                     Util.toast(context.getPlayer(), "linkError");
 

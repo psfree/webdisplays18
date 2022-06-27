@@ -7,9 +7,8 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
-import net.montoyo.wd.block.BlockKeyboardRight;
-import net.montoyo.wd.block.BlockPeripheral;
-import net.montoyo.wd.block.BlockScreen;
+import net.montoyo.wd.block.*;
+import net.montoyo.wd.core.DefaultPeripheral;
 
 public class BlockInit {
 
@@ -21,13 +20,13 @@ public class BlockInit {
 
     public static final RegistryObject<Block> blockScreen = BLOCKS.register("screen", () -> new BlockScreen(BlockBehaviour.Properties.of(Material.STONE)));
 
-    public static final RegistryObject<Block> blockKeyBoard = BlockInit.BLOCKS.register("kb_left", BlockPeripheral::new);
+    public static final RegistryObject<Block> blockKeyBoard = BlockInit.BLOCKS.register("kb_left", BlockKeyboardLeft::new);
 
-    public static final RegistryObject<Block> blockRedControl = BlockInit.BLOCKS.register("redctrl", BlockPeripheral::new);
+    public static final RegistryObject<Block> blockRedControl = BlockInit.BLOCKS.register("redctrl", BlockRedCTRL::new);
 
-    public static final RegistryObject<Block> blockRControl = BlockInit.BLOCKS.register("rctrl", BlockPeripheral::new);
+    public static final RegistryObject<Block> blockRControl = BlockInit.BLOCKS.register("rctrl", BlockRCTRL::new);
 
-    public static final RegistryObject<Block> blockServer = BlockInit.BLOCKS.register("server", BlockPeripheral::new);
+    public static final RegistryObject<Block> blockServer = BlockInit.BLOCKS.register("server", BlockServer::new);
 
     public static final RegistryObject<Block> blockKbRight = BLOCKS.register("kb_right", BlockKeyboardRight::new);
 }

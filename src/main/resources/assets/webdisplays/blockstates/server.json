@@ -2,9 +2,9 @@
   "forge_marker": 1,
   "uvlock": false,
   "variants": {
-    "facing=north,type=default_peripheral_server": { "model": "webdisplays:block/server" },
-    "facing=east,type=default_peripheral_server": { "model": "webdisplays:block/server" },
-    "facing=south,type=default_peripheral_server": { "model": "webdisplays:block/server" },
-    "facing=west,type=default_peripheral_server": { "model": "webdisplays:block/server" }
+    "facing=north": { "model": "webdisplays:block/server" },
+    "facing=east": { "model": "webdisplays:block/server" },
+    "facing=south": { "model": "webdisplays:block/server" },
+    "facing=west": { "model": "webdisplays:block/server" }
   }
 }

@@ -13,6 +13,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.data.ServerData;
 import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.utilities.NameUUIDPair;
@@ -33,11 +34,7 @@ public class TileEntityServer extends BlockEntity {
     }
 
     public static Block getBlockFromTE() {
-        if(blockPos != null && blockState != null) {
-            return new TileEntityKeyboard(blockPos, blockState).getBlockState().getBlock();
-        } else {
-            throw new RuntimeException();
-        }
+        return new TileEntityServer(blockPos, blockState).getBlockState().getBlock();
     }
 
     @Override
@@ -63,7 +60,7 @@ public class TileEntityServer extends BlockEntity {
         if(level.isClientSide)
             return;
 
-        if( new WebDisplays().miniservPort == 0)
+        if( WebDisplays.INSTANCE.miniservPort == 0)
             Util.toast(ply, "noMiniserv");
         else if(owner != null && ply instanceof ServerPlayer)
             (new ServerData(getBlockPos(), owner)).sendTo((ServerPlayer) ply);

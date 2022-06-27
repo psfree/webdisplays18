@@ -172,7 +172,7 @@ public class GuiScreenConfig extends WDScreen {
         updateMyRights();
         updateRotationStr();
 
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI( new WebDisplays().soundScreenCfg, 1.0f, 1.0f));
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI( WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
     }
 
     private void updateRotationStr() {

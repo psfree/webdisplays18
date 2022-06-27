@@ -18,6 +18,7 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -45,7 +46,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
-public class BlockScreen extends Block {
+public class BlockScreen extends BaseEntityBlock {
 
     public static final BooleanProperty hasTE = BooleanProperty.create("haste");
     public static final BooleanProperty emitting = BooleanProperty.create("emitting");
@@ -71,7 +72,7 @@ public class BlockScreen extends Block {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.INVISIBLE;
     }
 
     public static boolean isntScreenBlock(Level world, Vector3i pos) {
@@ -166,7 +167,7 @@ public class BlockScreen extends Block {
 
                     Util.toast(player, ChatFormatting.AQUA, "upgradeOk");
                     if(player instanceof ServerPlayer)
-                       new WebDisplays().criterionUpgradeScreen.trigger(((ServerPlayer) player).getAdvancements());
+                        WebDisplays.INSTANCE.criterionUpgradeScreen.trigger(((ServerPlayer) player).getAdvancements());
                 } else
                     Util.toast(player, "upgradeError");
 
@@ -194,8 +195,8 @@ public class BlockScreen extends Block {
             return InteractionResult.SUCCESS;
         }
 
-        if(size.x > new WebDisplays().maxScreenX || size.y >  new WebDisplays().maxScreenY) {
-            Util.toast(player, "tooBig",  new WebDisplays().maxScreenX,  new WebDisplays().maxScreenY);
+        if(size.x > WebDisplays.INSTANCE.maxScreenX || size.y > WebDisplays.INSTANCE.maxScreenY) {
+            Util.toast(player, "tooBig",  WebDisplays.INSTANCE.maxScreenX,  WebDisplays.INSTANCE.maxScreenY);
             return InteractionResult.SUCCESS;
         }
 
@@ -294,7 +295,7 @@ public class BlockScreen extends Block {
         return false;
     }
 
-   /* @org.jetbrains.annotations.Nullable
+    @org.jetbrains.annotations.Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         int meta = getMetaFromState(state);
@@ -303,7 +304,7 @@ public class BlockScreen extends Block {
             return null;
 
         return ((meta & 1) == 0) ? null : new TileEntityScreen(pos, state);
-    }*/
+    }
 
     /************************************************* DESTRUCTION HANDLING *************************************************/
 

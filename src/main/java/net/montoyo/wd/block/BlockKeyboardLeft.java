@@ -20,7 +20,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -44,14 +43,14 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockPeripheral extends WDBlockContainer {
+public class BlockKeyboardLeft extends WDBlockContainer {
 
     public static final EnumProperty<DefaultPeripheral> type = EnumProperty.create("type", DefaultPeripheral.class);
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     private static final Property<?>[] properties = new Property<?>[] { type, facing };
 
-    public BlockPeripheral() {
-        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
+    public BlockKeyboardLeft() {
+        super(Properties.of(Material.STONE).strength(1.5f, 10.f));
 //                setName("peripheral");
     }
 

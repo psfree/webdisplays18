@@ -90,7 +90,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
         private PadData(String url, int id) {
             view = mcef.createBrowser(WebDisplays.applyBlacklist(url));
-            view.resize((int)  new WebDisplays().padResX, (int)  new WebDisplays().padResY);
+            view.resize((int)  WebDisplays.INSTANCE.padResX, (int)  WebDisplays.INSTANCE.padResY);
             isInHotbar = true;
             this.id = id;
         }
@@ -487,7 +487,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @SubscribeEvent
     public void onRegisterModels(ModelRegistryEvent ev) {
-        final WebDisplays wd =  new WebDisplays();
+        final WebDisplays wd = WebDisplays.INSTANCE;
 
         //I hope I'm doing this right because it doesn't seem like it...
 //        registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
@@ -547,11 +547,11 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 double dist2 = mc.player.distanceToSqr(tes.getBlockPos().getX(), tes.getBlockPos().getY(), tes.getBlockPos().getZ());
 
                 if(tes.isLoaded()) {
-                    if(dist2 >  new WebDisplays().unloadDistance2)
+                    if(dist2 >  WebDisplays.INSTANCE.unloadDistance2)
                         tes.unload();
                     //else if(WebDisplays.INSTANCE.enableSoundDistance)
                        // tes.updateTrackDistance(dist2, SoundSystemConfig.getMasterGain());
-                } else if(dist2 <=  new WebDisplays().loadDistance2)
+                } else if(dist2 <=  WebDisplays.INSTANCE.loadDistance2)
                     tes.load();
             }
 

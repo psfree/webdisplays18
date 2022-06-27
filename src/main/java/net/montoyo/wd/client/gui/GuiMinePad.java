@@ -143,8 +143,8 @@ public class GuiMinePad extends WDScreen {
             sy = vh - sy;
 
             //Scale again according to the webview
-            sx = (int) (((double) sx) / ((double) vw) *  new WebDisplays().padResX);
-            sy = (int) (((double) sy) / ((double) vh) *  new WebDisplays().padResY);
+            sx = (int) (((double) sx) / ((double) vw) *  WebDisplays.INSTANCE.padResX);
+            sy = (int) (((double) sy) / ((double) vh) *  WebDisplays.INSTANCE.padResY);
 
             if (btn == -1)
                 pad.view.injectMouseMove(sx, sy, 0, false);

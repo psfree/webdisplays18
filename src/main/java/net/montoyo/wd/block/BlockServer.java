@@ -20,7 +20,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -44,14 +43,13 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockPeripheral extends WDBlockContainer {
+public class BlockServer extends WDBlockContainer {
 
-    public static final EnumProperty<DefaultPeripheral> type = EnumProperty.create("type", DefaultPeripheral.class);
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-    private static final Property<?>[] properties = new Property<?>[] { type, facing };
+    private static final Property<?>[] properties = new Property<?>[] {facing};
 
-    public BlockPeripheral() {
-        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
+    public BlockServer() {
+        super(Properties.of(Material.STONE).strength(1.5f, 10.f));
 //                setName("peripheral");
     }
 
@@ -170,39 +168,10 @@ public class BlockPeripheral extends WDBlockContainer {
 //    }
 
     @Override
-    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        return state.getValue(type) == DefaultPeripheral.KEYBOARD ? BlockKeyboardRight.KEYBOARD_AABB : Shapes.block();
-    }
-
-    @Override
     public void setPlacedBy(Level world, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         if(world.isClientSide)
             return;
-
-        if(state.getValue(type) == DefaultPeripheral.KEYBOARD) {
-            //Keyboard special treatment
-            Direction f = state.getValue(facing);
-            Vec3i dir = f.getClockWise().getNormal();
-            BlockPos left = pos.offset(dir);
-            BlockPos right = pos.subtract(dir);
-
-            if(!world.isEmptyBlock(pos.below()) && BlockKeyboardRight.checkNeighborhood(world, pos, null)) {
-                if(world.isEmptyBlock(right) && !world.isEmptyBlock(right.below()) && BlockKeyboardRight.checkNeighborhood(world, right, pos)) {
-                    world.setBlock(right, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
-                    return;
-                } else if(world.isEmptyBlock(left) && !world.isEmptyBlock(left.below()) && BlockKeyboardRight.checkNeighborhood(world, left, pos)) {
-                    world.setBlock(left, state, 3);
-                    world.setBlock(pos, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
-                    return;
-                }
-            }
-
-            //Not good; remove this shit...
-            world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            if(!(placer instanceof Player) || !((Player) placer).isCreative()) {
-//                dropBlockAsItem(world, pos, state, 0); TODO: Loottable?
-            }
-        } else if(placer instanceof Player) {
+        if(placer instanceof Player) {
             BlockEntity te = world.getBlockEntity(pos);
 
             if(te instanceof TileEntityServer)
@@ -217,28 +186,16 @@ public class BlockPeripheral extends WDBlockContainer {
         return PushReaction.IGNORE;
     }
 
-    private void removeRightPiece(Level world, BlockPos pos) {
-        for(Direction nf: Direction.Plane.HORIZONTAL) {
-            BlockPos np = pos.offset(nf.getNormal());
-
-            if(world.getBlockState(np).getBlock() instanceof BlockKeyboardRight) {
-                world.setBlock(np, Blocks.AIR.defaultBlockState(), 3);
-                break;
-            }
-        }
-    }
-
     @Override
     public void neighborChanged(BlockState state, Level world, BlockPos pos, Block neighborType, BlockPos neighbor, boolean isMoving) {
         BlockEntity te = world.getBlockEntity(pos);
         if(te != null && te instanceof TileEntityPeripheralBase)
             ((TileEntityPeripheralBase) te).onNeighborChange(neighborType, neighbor);
 
-        if(world.isClientSide || state.getValue(type) != DefaultPeripheral.KEYBOARD)
+        if(world.isClientSide)
             return;
 
         if(neighbor.getX() == pos.getX() && neighbor.getY() == pos.getY() - 1 && neighbor.getZ() == pos.getZ() && world.isEmptyBlock(neighbor)) {
-            removeRightPiece(world, pos);
             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 //            dropBlockAsItem(world, pos, state, 0); //TODO Loottable
             Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
@@ -248,9 +205,6 @@ public class BlockPeripheral extends WDBlockContainer {
     @Override
     public void playerDestroy(Level world, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         if(!world.isClientSide) {
-            if(state.getBlock() == this && state.getValue(type) == DefaultPeripheral.KEYBOARD)
-                removeRightPiece(world, pos);
-
             Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
         }
     }
@@ -262,7 +216,7 @@ public class BlockPeripheral extends WDBlockContainer {
 
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
-        if(!world.isClientSide && world.getBlockState(pos).getValue(type) == DefaultPeripheral.KEYBOARD) {
+        if(!world.isClientSide) {
             double rpos = (entity.getY() - ((double) pos.getY())) * 16.0;
 
             if(rpos >= 1.0 && rpos <= 2.0 && Math.random() < 0.25) {

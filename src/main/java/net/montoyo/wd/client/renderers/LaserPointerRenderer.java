@@ -51,7 +51,7 @@ public final class LaserPointerRenderer implements IItemRenderer {
         poseStack.pushPose();
         poseStack.translate(handSideSign * -0.4f * sinSqrtSwingProg1, (float) (0.2f * Math.sin(sqrtSwingProg * PI * 2.0f)), (float) (-0.2f * Math.sin(swingProgress * PI)));
         poseStack.translate(handSideSign * 0.56f, -0.52f - equipProgress * 0.6f, -0.72f);
-        poseStack.mulPose(Vector3f.YP.rotationDegrees((float) (handSideSign * (45.0f - Math.sin(swingProgress * swingProgress * PI) * 20.0f)));
+        poseStack.mulPose(Vector3f.YP.rotationDegrees((float) (handSideSign * (45.0f - Math.sin(swingProgress * swingProgress * PI) * 20.0f))));
         poseStack.mulPose(Vector3f.ZP.rotationDegrees(handSideSign * sinSqrtSwingProg1 * -20.0f));
         poseStack.mulPose(Vector3f.XP.rotationDegrees(sinSqrtSwingProg1 * -80.0f));
         poseStack.mulPose(Vector3f.YP.rotationDegrees(handSideSign * -30.0f));
@@ -60,6 +60,7 @@ public final class LaserPointerRenderer implements IItemRenderer {
         poseStack.scale(1.0f / 16.0f, 1.0f / 16.0f, 1.0f / 16.0f);
 
         RenderSystem.setShaderColor(0.5f, 0.5f, 0.5f, 1.0f);
+
         bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         bb.vertex(0.0, 0.0, 0.0).endVertex();
         bb.vertex(1.0, 0.0, 0.0).endVertex();
@@ -80,39 +81,35 @@ public final class LaserPointerRenderer implements IItemRenderer {
         bb.vertex(1.0, -1.0, 4.0).endVertex();
         bb.vertex(1.0, 0.0, 4.0).endVertex();
         bb.vertex(0.0, 0.0, 4.0).endVertex();
-        vb.draw();
-
-//        if(isOn) {
-//            glTranslatef(0.5f, -0.5f, 0.0f);
-//            matrix1.position(0);
-//            glGetFloat(GL_MODELVIEW_MATRIX); //Hax to get that damn position
-//        }
+        t.end();
+        if(isOn) {
+            poseStack.translate(0.5f, -0.5f, 0.0f);
+            matrix1.position(0);
+            RenderSystem.getModelViewMatrix(); //Hax to get that damn position
+        }
 
         poseStack.popPose();
 
-//        if(isOn) {
-//            //Actual laser
-//            glPushMatrix();
-//            glLoadIdentity();
-//            RenderSystem.enableBlend();
-//            RenderSystem.blendFunc(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.DST_ALPHA);
-//            glColor4f(1.0f, 0.0f, 0.0f, 0.5f);
-//            RenderSystem.lineWidth(3.0f);
-//
-//            matrix1.position(12);
-//            renderBuffer.put(matrix1.get());
-//            renderBuffer.put(matrix1.get());
-//            renderBuffer.put(matrix1.get() - 0.02f); //I know this is stupid, but it's the only thing that worked...
-//            renderBuffer.put(matrix1.get());
-//            renderBuffer.position(0);
-//            glVertexPointer(4, 0, 0 , renderBuffer);
-//            glEnableClientState(GL_VERTEX_ARRAY);
-//            glDrawArrays(GL_LINES, 0, 2);
-//            glDisableClientState(GL_VERTEX_ARRAY);
-//            glPopMatrix();
-//        }
+        if(isOn) {
+            //Actual laser
+          poseStack.pushPose();
+          RenderSystem.enableBlend();
+          RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.DST_ALPHA);
+            RenderSystem.setShaderColor(1.0f, 0.0f, 0.0f, 0.5f);
+            RenderSystem.lineWidth(3.0f);
+
+            matrix1.position(12);
+            renderBuffer.put(matrix1.get());
+            renderBuffer.put(matrix1.get());
+            renderBuffer.put(matrix1.get() - 0.02f); //I know this is stupid, but it's the only thing that worked...
+            renderBuffer.put(matrix1.get());
+            renderBuffer.position(0);
+            RenderSystem.drawElements(GL_LINES, 0, GL_UNSIGNED_INT);
+            poseStack.popPose();
+        }
 
         RenderSystem.enableTexture(); //Fix for shitty minecraft fire
+        RenderSystem.enableCull();
     }
 
 }
