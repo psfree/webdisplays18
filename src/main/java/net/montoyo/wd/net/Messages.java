@@ -43,5 +43,6 @@ public class Messages {
         INSTANCE.registerMessage(index++, SMessageRequestTEData.class, SMessageRequestTEData::encode, SMessageRequestTEData::decode, SMessageRequestTEData::handle);
         INSTANCE.registerMessage(index++, SMessageScreenCtrl.class, SMessageScreenCtrl::encode, SMessageScreenCtrl::decode, SMessageScreenCtrl::handle);
         INSTANCE.registerMessage(index++, SMessagePadCtrl.class, SMessagePadCtrl::encode, SMessagePadCtrl::decode, SMessagePadCtrl::handle);
+        INSTANCE.registerMessage(index++, CMessageOpenGui.class, CMessageOpenGui::encode, CMessageOpenGui::decode, CMessageOpenGui::handle);
     }
 }

@@ -21,16 +21,16 @@ public class CMessageOpenGui implements Runnable {
         this.data = data;
     }
 
-    public void decode(FriendlyByteBuf buf) {
+    public static CMessageOpenGui decode(FriendlyByteBuf buf) {
         String name = buf.readUtf();
         Class<? extends GuiData> cls = GuiData.classOf(name);
 
         if(cls == null) {
             Log.error("Could not create GuiData of type %s because it doesn't exist!", name);
-            return;
+            return null;
         }
 
-        data = (GuiData) Util.unserialize(buf, cls);
+        return new CMessageOpenGui((GuiData) Util.unserialize(buf, cls));
     }
 
     public void encode(FriendlyByteBuf buf) {
