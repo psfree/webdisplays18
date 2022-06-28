@@ -17,6 +17,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -36,7 +37,9 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.entity.TileEntityKeyboard;
+import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.item.ItemLinker;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3i;
@@ -55,9 +58,6 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
     public BlockKeyboardRight() {
         super(Properties.of(Material.STONE)
                 .strength(1.5f, 10.f));
-
-        //("keyboard")
-        //fullBlock = false;
     }
 
     @Override
@@ -77,12 +77,12 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
 
     private TileEntityKeyboard getTileEntity(Level world, BlockPos pos) {
         for (Direction nf : Direction.Plane.HORIZONTAL) {
-            BlockPos np = pos.above(nf.getNormal().getX()); //TODO is X correct?
+            BlockPos np = pos.offset(nf.getNormal());
             BlockState ns = world.getBlockState(np);
 
-            if (ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
-                BlockEntity te = world.getBlockEntity(np);
-                if (te != null && te instanceof TileEntityKeyboard)
+            if(ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
+                BlockEntity te = world.getBlockEntity(pos);
+                if (te instanceof TileEntityKeyboard)
                     return (TileEntityKeyboard) te;
 
                 break;
@@ -100,7 +100,7 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
 
     public static boolean checkNeighborhood(Level world, BlockPos bp, BlockPos ignore) {
         for (Direction neighbor : Direction.Plane.HORIZONTAL) {
-            BlockPos np = bp.above(neighbor.getNormal().getX()); //TODO is X correct?
+            BlockPos np = bp.offset(neighbor.getNormal());
 
             if (ignore == null || !np.equals(ignore)) {
                 BlockState state = world.getBlockState(np);
@@ -118,7 +118,7 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
 
     public void removeLeftPiece(Level world, BlockPos pos, boolean dropItem) {
         for (Direction nf : Direction.Plane.HORIZONTAL) {
-            BlockPos np = pos.above(nf.getNormal().getX()); //TODO is X correct?
+            BlockPos np = pos.offset(nf.getNormal());
             BlockState ns = world.getBlockState(np);
 
             if (ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
@@ -205,5 +205,4 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
 
         return InteractionResult.PASS;
     }
-
 }

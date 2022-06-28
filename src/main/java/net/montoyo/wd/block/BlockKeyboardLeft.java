@@ -43,15 +43,13 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockKeyboardLeft extends WDBlockContainer {
+public class BlockKeyboardLeft extends BlockPeripheral {
 
     public static final EnumProperty<DefaultPeripheral> type = EnumProperty.create("type", DefaultPeripheral.class);
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     private static final Property<?>[] properties = new Property<?>[] { type, facing };
 
     public BlockKeyboardLeft() {
-        super(Properties.of(Material.STONE).strength(1.5f, 10.f));
-//                setName("peripheral");
     }
 
     @Override

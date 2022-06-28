@@ -16,6 +16,8 @@ import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
+import net.minecraft.client.resources.model.BakedModel;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
@@ -23,6 +25,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -42,6 +45,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.client.model.IModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -137,6 +141,12 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
+
+    }
+
+    @SubscribeEvent
+    public static void onModelRegistryEvent(ModelRegistryEvent event) {
+        ModelLoaderRegistry.registerLoader(ScreenModelLoader.SCREEN_LOADER, new ScreenModelLoader());
     }
 
     @Override

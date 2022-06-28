@@ -10,22 +10,26 @@ import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.DirectionProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.montoyo.wd.block.BlockScreen;
+import net.minecraft.world.level.material.Material;
+import net.minecraftforge.client.model.data.IDynamicBakedModel;
+import net.minecraftforge.client.model.data.IModelData;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Function;
 
 public class ScreenBaker implements IModelBaker {
 
@@ -33,6 +37,17 @@ public class ScreenBaker implements IModelBaker {
     private final TextureAtlasSprite[] texs = new TextureAtlasSprite[16];
     private final BlockSide[] blockSides = BlockSide.values();
     private final Direction[] blockFacings = Direction.values();
+    private final ModelState modelState;
+    private final Function<net.minecraft.client.resources.model.Material, TextureAtlasSprite> spriteGetter;
+    private final ItemOverrides overrides;
+    private final ItemTransforms itemTransforms;
+
+    public ScreenBaker(ModelState modelState, Function<net.minecraft.client.resources.model.Material, TextureAtlasSprite> spriteGetter, ItemOverrides overrides, ItemTransforms itemTransforms) {
+        this.modelState = modelState;
+        this.spriteGetter = spriteGetter;
+        this.overrides = overrides;
+        this.itemTransforms = itemTransforms;
+    }
 
     @Override
     public void loadTextures(TextureAtlas texMap) {
@@ -91,8 +106,9 @@ public class ScreenBaker implements IModelBaker {
         return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true);
     }
 
-    @Nonnull
-    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, Random rand) {
+    @NotNull
+    @Override
+    public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull Random random, @NotNull IModelData iModelData) {
         if(side == null)
             return noQuads;
         BlockState bs = state;

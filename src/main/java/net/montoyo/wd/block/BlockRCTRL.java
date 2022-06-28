@@ -43,14 +43,13 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockRCTRL extends WDBlockContainer {
+public class BlockRCTRL extends BlockPeripheral {
 
+    public static final EnumProperty<DefaultPeripheral> type = BlockPeripheral.type;
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
-    private static final Property<?>[] properties = new Property<?>[] {facing};
+    private static final Property<?>[] properties = new Property<?>[] {type, facing};
 
     public BlockRCTRL() {
-        super(Properties.of(Material.STONE).strength(1.5f, 10.f));
-//                setName("peripheral");
     }
 
     @Override

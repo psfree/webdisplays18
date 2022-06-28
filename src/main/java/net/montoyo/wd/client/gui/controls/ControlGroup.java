@@ -98,6 +98,7 @@ public class ControlGroup extends Container {
         super.draw(poseStack, mouseX, mouseY, ptt);
 
         if(visible) {
+            poseStack.pushPose();
             RenderSystem.setShaderColor(0.5f, 0.5f, 0.5f, 1.f);
             RenderSystem.disableTexture();
             RenderSystem.enableBlend();
@@ -157,8 +158,9 @@ public class ControlGroup extends Container {
             vBuffer.vertex(x2 - 1.0, y1, 0.0).endVertex();
             tessellator.end();
 
-            glDisable(GL_BLEND);
-            glEnable(GL_TEXTURE_2D);
+            RenderSystem.disableBlend();
+            RenderSystem.enableTexture();
+            poseStack.popPose();
 
             if(labelW != 0)
                 font.drawShadow(poseStack, label, x + 10 + ((int) bp), y, labelColor, labelShadowed);

@@ -5,27 +5,19 @@
 package net.montoyo.wd.entity;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.animal.Ocelot;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.WebDisplays;
-import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.block.BlockPeripheral;
-import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.KeyboardData;
 import net.montoyo.wd.init.TileInit;
-import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
 public class TileEntityKeyboard extends TileEntityPeripheralBase {

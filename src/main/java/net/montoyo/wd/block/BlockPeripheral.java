@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -33,6 +34,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.PacketDistributor;
+import net.montoyo.mcef.utilities.Log;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.entity.TileEntityInterfaceBase;
 import net.montoyo.wd.entity.TileEntityKeyboard;
@@ -98,7 +100,7 @@ public class BlockPeripheral extends WDBlockContainer {
 //    }
 
 
-    /*@Nullable
+    @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
         BlockEntityType.BlockEntitySupplier<? extends BlockEntity> cls = state.getValue(type).getTEClass();
@@ -112,7 +114,7 @@ public class BlockPeripheral extends WDBlockContainer {
         }
 
         return null;
-    } */
+    }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {

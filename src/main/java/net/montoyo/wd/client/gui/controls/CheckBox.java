@@ -5,6 +5,7 @@
 package net.montoyo.wd.client.gui.controls;
 
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -83,13 +84,15 @@ public class CheckBox extends BasicControl {
     public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(visible) {
 //            GlStateManager.disableAlpha();
-
-            bindTexture(checked ? texChecked : texUnchecked);
-            blend(true);
+            poseStack.pushPose();
+            RenderSystem.setShaderTexture(2, checked ? texChecked : texUnchecked);
+            RenderSystem.bindTexture(2);
+            RenderSystem.enableBlend();
             fillTexturedRect(poseStack, x, y, WIDTH, HEIGHT, 0.0, 0.0, 1.0, 1.0);
-            blend(false);
-            bindTexture(null);
+            RenderSystem.disableBlend();
+            RenderSystem.bindTexture(-1);
 
+            poseStack.popPose();
             boolean inside = (!disabled && mouseX >= x && mouseX <= x + WIDTH + 2 + labelW && mouseY >= y && mouseY < y + HEIGHT);
             font.draw(poseStack, label, x + WIDTH + 2, y + 4, inside ? 0xFF0080FF : COLOR_WHITE);
         }

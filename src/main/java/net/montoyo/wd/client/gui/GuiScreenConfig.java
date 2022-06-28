@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
@@ -172,7 +173,7 @@ public class GuiScreenConfig extends WDScreen {
         updateMyRights();
         updateRotationStr();
 
-        minecraft.getSoundManager().play(SimpleSoundInstance.forUI( WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
+        Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI( WebDisplays.INSTANCE.soundScreenCfg, 1.0f, 1.0f));
     }
 
     private void updateRotationStr() {

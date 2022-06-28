@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.client.gui.controls;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.resources.ResourceLocation;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
@@ -45,12 +46,15 @@ public class Icon extends BasicControl {
     @Override
     public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         if(texture != null) {
-            GL11.glEnable(GL11.GL_TEXTURE_2D);
-            bindTexture(texture);
-            blend(true);
+            poseStack.pushPose();
+            RenderSystem.enableTexture();
+            RenderSystem.setShaderTexture(1, texture);
+            RenderSystem.bindTexture(1);
+            RenderSystem.enableBlend();
             fillTexturedRect(poseStack, x, y, width, height, u1, v1, u2, v2);
-            blend(false);
-            bindTexture(null);
+            RenderSystem.disableBlend();
+            RenderSystem.bindTexture(-1);
+            poseStack.popPose();
         }
     }
 

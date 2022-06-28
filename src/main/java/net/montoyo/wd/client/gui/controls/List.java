@@ -107,8 +107,9 @@ public class List extends BasicControl {
 
     private void renderToFBO() {
         PoseStack poseStack = beginFramebuffer(fbo, width, height);
+        poseStack.pushPose();
         fillRect(0, 0, width, height, COLOR_BLACK);
-        glColor4f(1.f, 1.f, 1.f, 1.f);
+        RenderSystem.setShaderColor(1.f, 1.f, 1.f, 1.f);
 
         int offset = 4 - getYOffset();
         for(int i = 0; i < content.size(); i++) {
@@ -125,6 +126,7 @@ public class List extends BasicControl {
 
         drawBorder(poseStack, 0, 0, width, height, 0xFF808080);
         endFramebuffer(poseStack, fbo);
+        poseStack.popPose();
     }
 
     @Override

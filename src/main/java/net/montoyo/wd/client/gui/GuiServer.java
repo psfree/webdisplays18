@@ -289,7 +289,7 @@ public class GuiServer extends WDScreen {
                 if(keyCode == GLFW.GLFW_KEY_L && ctrl)
                     lines.clear();
                 else if(keyCode == GLFW.GLFW_KEY_V && ctrl) {
-                    prompt += minecraft.keyboardHandler.getClipboard();
+                    prompt += Minecraft.getInstance().keyboardHandler.getClipboard();
 
                     if(prompt.length() > MAX_LINE_LEN)
                         prompt = prompt.substring(0, MAX_LINE_LEN);

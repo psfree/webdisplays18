@@ -123,15 +123,13 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             Tesselator tesselator = Tesselator.getInstance();
             BufferBuilder builder = tesselator.getBuilder();
             //TODO: Use tesselator
-            RenderSystem.setShaderTexture(0, scr.browser.getTextureID());
+            RenderSystem._setShaderTexture(0, scr.browser.getTextureID());
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-
             builder.vertex(poseStack.last().pose(),-sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 1.f).endVertex();
             builder.vertex(poseStack.last().pose(), sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 1.f).endVertex();
             builder.vertex(poseStack.last().pose(), sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 0.f).endVertex();
             builder.vertex(poseStack.last().pose(),-sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 0.f).endVertex();
             tesselator.end();//Minecraft does shit with mah texture otherwise...
-            RenderSystem.bindTexture(0);
             poseStack.popPose();
         }
 

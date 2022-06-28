@@ -6,10 +6,11 @@ package net.montoyo.wd.block;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.montoyo.wd.WebDisplays;
 
-public abstract class WDBlockContainer extends Block {
+public abstract class WDBlockContainer extends BaseEntityBlock {
 
     protected static BlockItem itemBlock;
 
