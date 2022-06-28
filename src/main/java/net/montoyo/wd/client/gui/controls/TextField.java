@@ -114,7 +114,7 @@ public class TextField extends Control {
             else
                 old = null;
 
-            field.charTyped((char) key, 0);
+            field.setValue(field.getValue().substring(0, field.getValue().length() - 1));
 
             if(enabled && field.isFocused() && !field.getValue().equals(old)) {
                 for(TextChangeListener tcl : listeners)
