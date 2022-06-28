@@ -21,7 +21,7 @@ public class Button extends Control {
 
         private final boolean shiftDown;
 
-        private ClickEvent(Button btn) {
+        public ClickEvent(Button btn) {
             source = btn;
             shiftDown = btn.shiftDown;
         }
@@ -52,7 +52,6 @@ public class Button extends Control {
 
             if(!onClick())
                 parent.actionPerformed(new ClickEvent(this));
-
             return true;
         }
 
@@ -88,6 +87,10 @@ public class Button extends Control {
         btn.setWidth(width);
     }
 
+    public void setHeight(int height) {
+        btn.setHeight(height);
+    }
+
     @Override
     public int getWidth() {
         return btn.getWidth();
@@ -95,7 +98,7 @@ public class Button extends Control {
 
     @Override
     public int getHeight() {
-        return 20;
+        return btn.getHeight();
     }
 
     @Override
@@ -204,8 +207,9 @@ public class Button extends Control {
         btn.x = json.getInt("x", 0);
         btn.y = json.getInt("y", 0);
         btn.setWidth(json.getInt("width", 200));
+        btn.setHeight(json.getInt("height", 20));
         btn.setMessage(Component.nullToEmpty(tr(json.getString("label", btn.getMessage().getContents()))));
-        btn.active = !json.getBool("disabled", !btn.active);
+        btn.active =  json.getBool("active", btn.active);
         btn.visible = json.getBool("visible", btn.visible);
 
         originalColor = json.getColor("color", originalColor);

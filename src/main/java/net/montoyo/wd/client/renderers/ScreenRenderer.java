@@ -122,7 +122,6 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
             Tesselator tesselator = Tesselator.getInstance();
             BufferBuilder builder = tesselator.getBuilder();
-            VertexBuffer vb = new VertexBuffer();
             //TODO: Use tesselator
             RenderSystem.setShaderTexture(0, scr.browser.getTextureID());
             builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
@@ -131,7 +130,6 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             builder.vertex(poseStack.last().pose(), sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 1.f).endVertex();
             builder.vertex(poseStack.last().pose(), sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 0.f).endVertex();
             builder.vertex(poseStack.last().pose(),-sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 0.f).endVertex();
-            vb.draw();
             tesselator.end();//Minecraft does shit with mah texture otherwise...
             RenderSystem.bindTexture(0);
             poseStack.popPose();
@@ -139,10 +137,10 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
 
         //Bounding box debugging
-        poseStack.pushPose();
+        /*poseStack.pushPose();
         poseStack.translate(-te.getBlockPos().getX(), -te.getBlockPos().getY(), -te.getBlockPos().getZ());
         renderAABB(te.getRenderBoundingBox());
-        poseStack.popPose();
+        poseStack.popPose();*/
 
         //Re-enable lighting
         RenderSystem.enableCull();

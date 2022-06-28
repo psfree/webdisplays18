@@ -16,6 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.montoyo.wd.client.gui.WDScreen;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import net.montoyo.wd.utilities.Bounds;
+import org.lwjgl.glfw.GLFW;
 
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.glEnable;
@@ -35,7 +36,7 @@ public abstract class Control {
     protected final Font font;
     protected final Tesselator tessellator;
     protected final BufferBuilder vBuffer;
-    protected final WDScreen parent;
+    protected static WDScreen parent;
     protected String name;
     protected Object userdata;
 
@@ -55,7 +56,7 @@ public abstract class Control {
         this.userdata = userdata;
     }
 
-    public boolean keyTyped(char typedChar, int keyCode) {
+    public boolean keyTyped(int keyCode, int modifier) {
         return false;
     }
 

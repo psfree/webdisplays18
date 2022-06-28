@@ -18,7 +18,7 @@ public class TextField extends Control {
 
         private final String text;
 
-        private EnterPressedEvent(TextField field) {
+        public EnterPressedEvent(TextField field) {
             source = field;
             text = field.field.getValue();
         }
@@ -33,7 +33,7 @@ public class TextField extends Control {
 
         private final String beginning;
 
-        private TabPressedEvent(TextField field) {
+        public TabPressedEvent(TextField field) {
             source = field;
 
             String text = field.field.getValue();
@@ -61,7 +61,7 @@ public class TextField extends Control {
         private final String oldContent;
         private final String newContent;
 
-        private TextChangedEvent(TextField tf, String old) {
+        public TextChangedEvent(TextField tf, String old) {
             source = tf;
             oldContent = old;
             newContent = tf.field.getValue();
@@ -106,7 +106,29 @@ public class TextField extends Control {
     }
 
     @Override
-    public boolean keyTyped(char typedChar, int keyCode) {
+    public boolean keyDown(int key) {
+        if(key == GLFW.GLFW_KEY_BACKSPACE) {
+            String old;
+            if(enabled && field.isFocused())
+                old = field.getValue();
+            else
+                old = null;
+
+            field.charTyped((char) key, 0);
+
+            if(enabled && field.isFocused() && !field.getValue().equals(old)) {
+                for(TextChangeListener tcl : listeners)
+                    tcl.onTextChange(this, old, field.getValue());
+
+                parent.actionPerformed(new TextChangedEvent(this, old));
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean keyTyped(int keyCode, int modifier) {
         if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER)
             parent.actionPerformed(new EnterPressedEvent(this));
         else if(keyCode == GLFW.GLFW_KEY_TAB)
@@ -118,7 +140,7 @@ public class TextField extends Control {
             else
                 old = null;
 
-            field.charTyped(typedChar, keyCode);
+            field.charTyped((char) keyCode, modifier);
 
             if(enabled && field.isFocused() && !field.getValue().equals(old)) {
                 for(TextChangeListener tcl : listeners)

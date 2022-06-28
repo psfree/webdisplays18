@@ -9,6 +9,7 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.TextComponent;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class List extends BasicControl {
         private final int id;
         private final Entry entry;
 
-        private EntryClick(List lst) {
+        public EntryClick(List lst) {
             source = lst;
             id = lst.selected;
             entry = lst.content.get(lst.selected);
@@ -69,6 +70,8 @@ public class List extends BasicControl {
     private double scrollGrab;
 
     public List() {
+        content.add(new Entry("", null));
+        selected = 0;
     }
 
     public List(int x, int y, int w, int h) {

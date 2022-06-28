@@ -44,6 +44,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.block.WDBlockContainer;
 import net.montoyo.wd.client.ClientProxy;
+import net.montoyo.wd.client.gui.controls.*;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.init.BlockInit;

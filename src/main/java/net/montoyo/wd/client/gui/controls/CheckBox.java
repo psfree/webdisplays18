@@ -10,6 +10,8 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraftforge.event.world.ChunkDataEvent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 import java.util.stream.Collectors;
@@ -26,7 +28,7 @@ public class CheckBox extends BasicControl {
 
         private final boolean checked;
 
-        private CheckedEvent(CheckBox cb) {
+        public CheckedEvent(CheckBox cb) {
             source = cb;
             checked = cb.checked;
         }

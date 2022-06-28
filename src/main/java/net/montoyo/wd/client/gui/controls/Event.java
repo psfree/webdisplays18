@@ -11,5 +11,4 @@ public abstract class Event<T extends Control> {
     public T getSource() {
         return source;
     }
-
 }

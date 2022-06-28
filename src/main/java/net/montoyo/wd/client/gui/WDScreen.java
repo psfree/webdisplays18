@@ -25,10 +25,7 @@ import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageACQuery;
-import net.montoyo.wd.utilities.BlockSide;
-import net.montoyo.wd.utilities.Bounds;
-import net.montoyo.wd.utilities.Log;
-import net.montoyo.wd.utilities.NameUUIDPair;
+import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nullable;
@@ -139,7 +136,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             typed = typed || ctrl.keyTyped(codePoint, modifiers);
 
-        return typed || charTyped(codePoint, modifiers);
+        return typed;
     }
 
     @Override
@@ -149,7 +146,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             clicked = clicked || ctrl.mouseClicked(mouseX, mouseY, button);
 
-        return clicked || mouseClicked(mouseX, mouseY, button);
+        return clicked;
     }
 
     @Override
@@ -169,7 +166,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: controls)
             dragged = dragged || ctrl.mouseClickMove(mouseX, mouseY, button, dragX, dragX);
 
-        return dragged || mouseDragged(mouseX, mouseY, button, dragX, dragY);
+        return dragged;
     }
 
     @Override
@@ -188,7 +185,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl : controls)
             ctrl.destroy();
 
-        minecraft.keyboardHandler.setSendRepeatsToGui(false);
+        Minecraft.getInstance().keyboardHandler.setSendRepeatsToGui(false);
         CURRENT_SCREEN = null;
     }
 
@@ -219,7 +216,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl : controls)
             down = down || ctrl.keyDown(keyCode);
 
-        return down || super.keyPressed(keyCode, scanCode, modifiers);
+        return new GuiServer(new Vector3i(), new NameUUIDPair()).keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override

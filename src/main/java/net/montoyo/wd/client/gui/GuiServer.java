@@ -49,7 +49,7 @@ public class GuiServer extends WDScreen {
     private final Vector3i serverPos;
     private final NameUUIDPair owner;
     private final ArrayList<String> lines = new ArrayList<>();
-    private String prompt = "";
+    private String prompt = "<";
     private String userPrompt;
     private int blinkTime;
     private String lastCmd;
@@ -77,7 +77,6 @@ public class GuiServer extends WDScreen {
         super(Component.nullToEmpty(null));
         serverPos = vec;
         this.owner = owner;
-        //userPrompt = owner.name + "@miniserv$ ";
         userPrompt = "> ";
 
         if(COMMAND_MAP.isEmpty())
@@ -214,8 +213,6 @@ public class GuiServer extends WDScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        Supplier<Boolean> predicate = () -> super.keyPressed(keyCode, scanCode, modifiers);
-
         getChar(keyCode, scanCode).ifPresent(c -> {
             try {
                 keyTyped(c, keyCode);
@@ -225,7 +222,7 @@ public class GuiServer extends WDScreen {
         });
 
         try {
-            return handleKeyboardInput(keyCode, true, predicate);
+            return handleKeyboardInput(keyCode, true, () -> true);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
@@ -349,6 +346,7 @@ public class GuiServer extends WDScreen {
             } else
                 writeLine(userPrompt);
         } else if(prompt.length() + 1 < MAX_LINE_LEN && typedChar >= 32 && typedChar <= 126)
+
             prompt = prompt + typedChar;
 
         blinkTime = 0;
@@ -414,7 +412,7 @@ public class GuiServer extends WDScreen {
         super.onClose();
 
         if(accessSound != null)
-            minecraft.getSoundManager().stop(accessSound);
+            Minecraft.getInstance().getSoundManager().stop(accessSound);
     }
 
     private boolean queueTask(ClientTask<?> task) {

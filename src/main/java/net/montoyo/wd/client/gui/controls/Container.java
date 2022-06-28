@@ -24,12 +24,12 @@ public abstract class Container extends BasicControl {
     }
 
     @Override
-    public boolean keyTyped(char typedChar, int keyCode) {
+    public boolean keyTyped(int keyCode, int modifiers) {
         boolean typed = false;
 
         if(!disabled) {
             for(Control ctrl : childs)
-                typed = typed || ctrl.keyTyped(typedChar, keyCode);
+                typed = typed || ctrl.keyTyped(keyCode, modifiers);
         }
 
         return typed;
