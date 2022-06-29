@@ -6,6 +6,8 @@ package net.montoyo.wd.client.renderers;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.math.Matrix3f;
+import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -97,7 +99,7 @@ public final class MinePadRenderer implements IItemRenderer {
             if(pd != null) {
                 stack.translate(0.063f, 0.28f, 0.001f);
                 RenderSystem.disableTexture();
-                pd.view.draw(0.0, 0.0, 27.65 / 32.0 + 0.01, 14.0 / 32.0 + 0.002);
+                pd.view.draw(stack,0.0, 0.0, 27.65 / 32.0 + 0.01, 14.0 / 32.0 + 0.002);
             }
         }
 

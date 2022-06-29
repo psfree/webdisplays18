@@ -163,18 +163,18 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         jsDispatcher = new JSQueryDispatcher(this);
         minePadRenderer = new MinePadRenderer();
         laserPointerRenderer = new LaserPointerRenderer();
-    }
-
-    @Override
-    public void postInit() {
-        ((ReloadableResourceManager) mc.getResourceManager()).registerReloadListener(this);
 
         if(mcef == null)
             throw new RuntimeException("MCEF is missing");
 
         mcef.registerDisplayHandler(this);
-      //  mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
+        //mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();
+    }
+
+    @Override
+    public void postInit() {
+        ((ReloadableResourceManager) mc.getResourceManager()).registerReloadListener(this);
     }
 
     @Override

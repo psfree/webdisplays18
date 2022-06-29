@@ -4,8 +4,10 @@
 
 package net.montoyo.wd.client.renderers;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -123,13 +125,17 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             Tesselator tesselator = Tesselator.getInstance();
             BufferBuilder builder = tesselator.getBuilder();
             //TODO: Use tesselator
+            RenderSystem.enableDepthTest();
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
             RenderSystem._setShaderTexture(0, scr.browser.getTextureID());
-            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX);
-            builder.vertex(poseStack.last().pose(),-sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 1.f).endVertex();
-            builder.vertex(poseStack.last().pose(), sw, -sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 1.f).endVertex();
-            builder.vertex(poseStack.last().pose(), sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(1.f, 0.f).endVertex();
-            builder.vertex(poseStack.last().pose(),-sw,  sh, 0.505f).color(1.f, 1.f, 1.f, 1.f).uv(0.f, 0.f).endVertex();
+            RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+            builder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+            builder.vertex(poseStack.last().pose(),-sw, -sh, 0.505f).uv(0.f, 1.f).color(1.f, 1.f, 1.f, 1.f).endVertex();
+            builder.vertex(poseStack.last().pose(), sw, -sh, 0.505f).uv(1.f, 1.f).color(1.f, 1.f, 1.f, 1.f).endVertex();
+            builder.vertex(poseStack.last().pose(), sw,  sh, 0.505f).uv(1.f, 0.f).color(1.f, 1.f, 1.f, 1.f).endVertex();
+            builder.vertex(poseStack.last().pose(),-sw,  sh, 0.505f).uv(0.f, 0.f).color(1.f, 1.f, 1.f, 1.f).endVertex();
             tesselator.end();//Minecraft does shit with mah texture otherwise...
+            RenderSystem.disableDepthTest();
             poseStack.popPose();
         }
 

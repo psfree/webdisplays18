@@ -75,7 +75,7 @@ public class GuiMinePad extends WDScreen {
 
         if (pad.view != null) {
             glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-            pad.view.draw(vx, vy + vh, vx + vw, vy);
+            pad.view.draw(poseStack, vx, vy + vh, vx + vw, vy);
         }
 
         RenderSystem.enableCull();

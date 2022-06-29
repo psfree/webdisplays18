@@ -27,7 +27,7 @@ public class ModConfig implements ConfigData {
         public boolean hardRecipes = true;
 
         @ConfigEntry.Gui.Tooltip
-        public String homepage = "mod://webdisplays/main.html";
+        public String homepage = "https://www.google.com";
 
         @ConfigEntry.Gui.Tooltip
         public boolean disableOwnershipThief = false;
