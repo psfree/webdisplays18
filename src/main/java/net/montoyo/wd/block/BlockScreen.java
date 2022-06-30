@@ -179,7 +179,7 @@ public class BlockScreen extends BaseEntityBlock {
                 }
 
                 Vector2i tmp = new Vector2i();
-                if(hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getLocation().x, (float) hit.getLocation().y, (float) hit.getLocation().z, tmp))
+                if(hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getBlockPos().getX(), (float) hit.getBlockPos().getY(), (float) hit.getBlockPos().getZ(), tmp))
                     te.click(side, tmp);
 
                 return InteractionResult.SUCCESS;

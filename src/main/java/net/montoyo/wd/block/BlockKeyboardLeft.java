@@ -132,8 +132,8 @@ public class BlockKeyboardLeft extends BlockPeripheral {
 
         BlockEntity te = world.getBlockEntity(pos);
 
-        if(te instanceof TileEntityPeripheralBase)
-            return ((TileEntityPeripheralBase) te).onRightClick(player, hand);
+        if(te instanceof TileEntityKeyboard)
+            return ((TileEntityKeyboard) te).onRightClick(player, hand);
         else if(te instanceof TileEntityServer) {
             ((TileEntityServer) te).onPlayerRightClick(player);
             return InteractionResult.PASS;

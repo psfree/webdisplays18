@@ -139,11 +139,10 @@ public abstract class TileEntityPeripheralBase extends BlockEntity implements IP
         return screenSide;
     }
 
-    public InteractionResult onRightClick(Player player, InteractionHand hand) {
-        return InteractionResult.PASS;
-    }
-
     public void onNeighborChange(Block neighborType, BlockPos neighborPos) {
     }
 
+    public InteractionResult onRightClick(Player player, InteractionHand hand) {
+        return InteractionResult.PASS;
+    }
 }

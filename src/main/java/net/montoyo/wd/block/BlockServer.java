@@ -20,6 +20,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
@@ -32,6 +34,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.PacketDistributor;
+import net.montoyo.mcef.utilities.Log;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.entity.TileEntityInterfaceBase;
 import net.montoyo.wd.entity.TileEntityKeyboard;
@@ -43,13 +46,14 @@ import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
-public class BlockServer extends BlockPeripheral {
+public class BlockServer extends WDBlockContainer{
 
     public static final EnumProperty<DefaultPeripheral> type = BlockPeripheral.type;
     public static final DirectionProperty facing = DirectionProperty.create("facing", Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST);
     private static final Property<?>[] properties = new Property<?>[] {type, facing};
 
     public BlockServer() {
+        super(BlockBehaviour.Properties.of(Material.STONE).strength(1.5f, 10.f));
     }
 
     @Override
@@ -95,21 +99,11 @@ public class BlockServer extends BlockPeripheral {
 //    }
 
 
-    /*@Nullable
+    @Nullable
     @Override
     public BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        BlockEntityType.BlockEntitySupplier<? extends BlockEntity> cls = state.getValue(type).getTEClass();
-        if(cls == null)
-            return null;
-
-        try {
-            return cls.create(pos, state);
-        } catch(Throwable t) {
-            Log.errorEx("Couldn't instantiate peripheral TileEntity:", t);
-        }
-
-        return null;
-    } */
+        return new TileEntityServer(pos, state);
+    }
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
@@ -132,9 +126,7 @@ public class BlockServer extends BlockPeripheral {
 
         BlockEntity te = world.getBlockEntity(pos);
 
-        if(te instanceof TileEntityPeripheralBase)
-            return ((TileEntityPeripheralBase) te).onRightClick(player, hand);
-        else if(te instanceof TileEntityServer) {
+        if(te instanceof TileEntityServer) {
             ((TileEntityServer) te).onPlayerRightClick(player);
             return InteractionResult.PASS;
         } else
