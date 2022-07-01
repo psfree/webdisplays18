@@ -4,6 +4,7 @@
 
 package net.montoyo.wd.entity;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -42,9 +43,11 @@ import net.montoyo.wd.net.client.CMessageJSResponse;
 import net.montoyo.wd.net.client.CMessageScreenUpdate;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
 import net.montoyo.wd.utilities.*;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
@@ -789,9 +792,9 @@ public class TileEntityScreen extends BlockEntity{
 
                         for(TypeData ev : data) {
                             switch (ev.getAction()) {
-                                case PRESS -> scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
-                                case RELEASE -> scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), ev.getKeyChar(), 0);
-                                case TYPE -> scr.browser.injectKeyTyped(ev.getKeyChar(), 0);
+                                case PRESS -> scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), 0);
+                                case RELEASE -> scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), 0);
+                                case TYPE -> scr.browser.injectKeyTyped(ev.getKeyCode(), 0);
                                 default -> throw new RuntimeException("Invalid type action '" + ev.getAction() + '\'');
                             }
                         }

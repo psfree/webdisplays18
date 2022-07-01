@@ -75,11 +75,11 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
             switch(scr.side) {
                 case BOTTOM:
-                    poseStack.mulPose(XP.rotation(90.f));
+                    poseStack.mulPose(XP.rotation(90.f + 49.8f));
                     break;
 
                 case TOP:
-                    poseStack.mulPose(XN.rotation(90.f));
+                    poseStack.mulPose(XN.rotation(90.f + 49.8f));
                     break;
 
                 case NORTH:
@@ -110,8 +110,8 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
                 poseStack.scale(ft, ft, 1.0f);
             }
 
-           // if(!scr.rotation.isNull)
-             //   poseStack.mulPose(YP.rotationDegrees(scr.rotation.angle));
+            if(!scr.rotation.isNull)
+                poseStack.mulPose(ZP.rotationDegrees(scr.rotation.angle));
 
             float sw = ((float) scr.size.x) * 0.5f - 2.f / 16.f;
             float sh = ((float) scr.size.y) * 0.5f - 2.f / 16.f;

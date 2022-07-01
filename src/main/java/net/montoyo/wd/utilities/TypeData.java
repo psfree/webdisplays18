@@ -24,30 +24,30 @@ public class TypeData {
 
     private Action a;
     private int k;
-    private int c;
+    private int m;
 
     public TypeData() {
         a = Action.INVALID;
         k = 0;
-        c = 0;
+        m = 0;
     }
 
-    public TypeData(Action action, int code, char chr) {
+    public TypeData(Action action, int code, int modifier) {
         a = action;
         k = code;
-        c = (int) chr;
+        m = modifier;
     }
 
     public Action getAction() {
         return a;
     }
 
-    public char getKeyChar() {
-        return (char) c;
-    }
-
     public int getKeyCode() {
         return k;
+    }
+
+    public int getModifier() {
+        return m;
     }
 
 }

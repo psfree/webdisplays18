@@ -13,6 +13,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
@@ -85,6 +87,7 @@ import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Mod.EventBusSubscriber(modid = "webdisplays", value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQueryHandler, ResourceManagerReloadListener {
@@ -141,12 +144,16 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
-
     }
 
     @SubscribeEvent
     public static void onModelRegistryEvent(ModelRegistryEvent event) {
         ModelLoaderRegistry.registerLoader(ScreenModelLoader.SCREEN_LOADER, new ScreenModelLoader());
+        registerBlockRenderLayers(RenderType.cutout(), BlockInit.blockKeyBoard.get(), BlockInit.blockKbRight.get());
+    }
+
+    private static void registerBlockRenderLayers(RenderType layer, Block... blocks) {
+        Stream.of(blocks).forEach(block -> ItemBlockRenderTypes.setRenderLayer(block, layer));
     }
 
     @Override

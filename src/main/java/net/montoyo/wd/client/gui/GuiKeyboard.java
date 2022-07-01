@@ -4,11 +4,19 @@
 
 package net.montoyo.wd.client.gui;
 
+import com.mojang.blaze3d.platform.InputConstants;
+import com.sun.jna.platform.unix.X11;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.client.event.InputEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Button;
@@ -22,11 +30,19 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
+import org.apache.commons.lang3.CharUtils;
+import org.cef.browser.CefBrowserOsr;
+import org.jline.utils.Display;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.Map;
+
+import static com.mojang.blaze3d.platform.InputConstants.*;
+import static java.awt.event.KeyEvent.*;
 
 @OnlyIn(Dist.CLIENT)
 public class GuiKeyboard extends WDScreen {
@@ -98,8 +114,10 @@ public class GuiKeyboard extends WDScreen {
                 }
             }
         } else {
-            minecraft.setWindowActive(true);
-            minecraft.mouseHandler.grabMouse();
+            if (!minecraft.isWindowActive()) {
+                minecraft.setWindowActive(true);
+                minecraft.mouseHandler.grabMouse();
+            }
         }
 
         defaultBackground = showWarning;
@@ -108,44 +126,54 @@ public class GuiKeyboard extends WDScreen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        key(keyCode, scanCode, true);
+        key(keyCode, scanCode, true, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        key(keyCode, scanCode, false);
+        key(keyCode, scanCode, false, modifiers);
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
-    public void key(int keyCode, int scanCode, boolean pressed) {
-        char chr = getChar(keyCode, scanCode);
+    public void key(int keyCode, int scanCode, boolean pressed, int mod) {
         if (pressed) {
-            int kc = keyCode;
+            if(quitOnEscape && keyCode == GLFW.GLFW_KEY_ESCAPE) {
+                Minecraft.getInstance().setScreen(null);
+            }
 
-            evStack.add(new TypeData(TypeData.Action.PRESS, kc, chr));
-            evStack.add(new TypeData(TypeData.Action.RELEASE, kc, chr));
+            int chr = getChar(keyCode, scanCode);
+            evStack.add(new TypeData(TypeData.Action.PRESS, chr, mod));
+            evStack.add(new TypeData(TypeData.Action.RELEASE, chr, mod));
+
+            if (keyCode != 0)
+                evStack.add(new TypeData(TypeData.Action.TYPE, chr, mod));
+
+            if (!evStack.isEmpty() && !syncRequested())
+                requestSync();
         }
-
-        if (chr != 0)
-            evStack.add(new TypeData(TypeData.Action.TYPE, 0, chr));
-
-        if (!evStack.isEmpty() && !syncRequested())
-            requestSync();
     }
 
-    public char getChar(int keyCode, int scanCode) {
+    public int getChar(int keyCode, int scanCode) {
         String keystr = GLFW.glfwGetKeyName(keyCode, scanCode);
         if(keystr == null){
             keystr = "\0";
         }
         if(keyCode == GLFW.GLFW_KEY_ENTER){
-            keystr = "\n";
+            return 13;
+        }
+        if (keyCode == GLFW.GLFW_KEY_SPACE) {
+            return 32;
         }
         if(keystr.length() == 0){
-            return (char) -1;
+            return -1;
         }
-        return keystr.charAt(keystr.length() - 1);
+        if(hasShiftDown()) {
+            keystr = keystr.toUpperCase(Locale.ROOT);
+            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1));
+        } else {
+            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1));
+        }
     }
 
     @Override

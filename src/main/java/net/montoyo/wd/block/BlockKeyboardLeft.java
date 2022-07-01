@@ -186,10 +186,11 @@ public class BlockKeyboardLeft extends BlockPeripheral {
             if(!world.isEmptyBlock(pos.below()) && BlockKeyboardRight.checkNeighborhood(world, pos, null)) {
                 if(world.isEmptyBlock(right) && !world.isEmptyBlock(right.below()) && BlockKeyboardRight.checkNeighborhood(world, right, pos)) {
                     world.setBlock(right, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
+                    world.setBlock(pos.offset(f.getNormal()), BlockInit.blockKeyBoard.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
                     return;
                 } else if(world.isEmptyBlock(left) && !world.isEmptyBlock(left.below()) && BlockKeyboardRight.checkNeighborhood(world, left, pos)) {
                     world.setBlock(left, state, 3);
-                    world.setBlock(pos, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
+                    world.setBlock(pos.offset(f.getNormal()), BlockInit.blockKeyBoard.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
                     return;
                 }
             }

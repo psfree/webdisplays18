@@ -72,7 +72,7 @@ public class BlockScreen extends BaseEntityBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return RenderShape.INVISIBLE;
+        return RenderShape.MODEL;
     }
 
     public static boolean isntScreenBlock(Level world, Vector3i pos) {
@@ -179,7 +179,7 @@ public class BlockScreen extends BaseEntityBlock {
                 }
 
                 Vector2i tmp = new Vector2i();
-                if(hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getBlockPos().getX(), (float) hit.getBlockPos().getY(), (float) hit.getBlockPos().getZ(), tmp))
+                if(hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getLocation().x, (float) hit.getLocation().y, (float) hit.getLocation().z, tmp))
                     te.click(side, tmp);
 
                 return InteractionResult.SUCCESS;
@@ -244,19 +244,18 @@ public class BlockScreen extends BaseEntityBlock {
         if(side.right.z < 0 || side == BlockSide.TOP || side == BlockSide.BOTTOM)
             hitZ -= 1.f;
 
-        Vector3f rel = new Vector3f(bpos.getX(), bpos.getY(), bpos.getZ());
-        rel.sub((float) pos.x, (float) pos.y, (float) pos.z);
-        rel.add(hitX, hitY, hitZ);
+        Vector3f rel = new Vector3f(pos.toBlock().getX(), pos.toBlock().getY(), pos.toBlock().getZ());
+        rel.sub(hitX, hitY, hitZ);
 
-        float cx = rel.dot(side.right.toFloat()) - 2.f / 16.f;
-        float cy = rel.dot(side.up.toFloat()) - 2.f / 16.f;
+        float cx = Math.abs(rel.dot(side.right.toFloat()) - 2.f / 16.f);
+        float cy = Math.abs(rel.dot(side.up.toFloat()) - 2.f / 16.f);
         float sw = ((float) scr.size.x) - 4.f / 16.f;
         float sh = ((float) scr.size.y) - 4.f / 16.f;
 
         cx /= sw;
         cy /= sh;
 
-        if(cx >= 0.f && cx <= 1.0 && cy >= 0.f && cy <= 1.f) {
+        if(cx >= -0.1f && cx <= 1.1f && cy >= -0.1f && cy <= 1.1f) {
             if(side != BlockSide.BOTTOM)
                 cy = 1.f - cy;
 

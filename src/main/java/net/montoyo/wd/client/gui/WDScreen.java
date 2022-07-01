@@ -126,11 +126,6 @@ public abstract class WDScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if(quitOnEscape && codePoint == GLFW.GLFW_KEY_ESCAPE) {
-            minecraft.setScreen(null);
-            return false;
-        }
-
         boolean typed = false;
 
         for(Control ctrl: controls)
@@ -213,10 +208,14 @@ public abstract class WDScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         boolean down = false;
 
-        for(Control ctrl : controls)
+        for (Control ctrl : controls)
             down = down || ctrl.keyDown(keyCode);
 
-        return new GuiServer(new Vector3i(), new NameUUIDPair()).keyPressed(keyCode, scanCode, modifiers);
+        if (Minecraft.getInstance().screen instanceof GuiKeyboard) {
+            return down;
+        } else {
+            return new GuiServer(new Vector3i(), new NameUUIDPair()).keyPressed(keyCode, scanCode, modifiers);
+        }
     }
 
     @Override

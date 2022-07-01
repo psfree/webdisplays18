@@ -215,7 +215,7 @@ public class GuiServer extends WDScreen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         getChar(keyCode, scanCode).ifPresent(c -> {
             try {
-                keyTyped(c, keyCode);
+                keyTyped(c, keyCode, modifiers);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -309,10 +309,11 @@ public class GuiServer extends WDScreen {
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         return super.charTyped(codePoint, modifiers);
+
     }
 
-    protected void keyTyped(char typedChar, int keyCode) throws IOException {
-//        super.keyTyped(typedChar, keyCode);
+    protected void keyTyped(char typedChar, int keyCode, int modifier) throws IOException {
+        //this.charTyped(typedChar, modifier);
 
         if(uploadWizard) {
             boolean found = false;

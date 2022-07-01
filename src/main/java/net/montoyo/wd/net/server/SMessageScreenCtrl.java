@@ -296,7 +296,7 @@ public class SMessageScreenCtrl implements Runnable {
                     bs.getBlock() != BlockInit.blockKeyBoard.get() && bs.getBlock() != BlockInit.blockRedControl.get()
                     && bs.getValue(BlockPeripheral.type) != DefaultPeripheral.REMOTE_CONTROLLER)
                 return; //I call it hax...
-        } else if(player.shouldRenderAtSqrDistance(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ())))
+        } else if(player.distanceToSqr(bp.getX(), bp.getY(), bp.getZ()) > (128 * 128))
             return; //Out of range (range problem)
 
         BlockEntity te = world.getBlockEntity(bp);
