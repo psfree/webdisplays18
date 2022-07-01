@@ -255,7 +255,10 @@ public class BlockScreen extends BaseEntityBlock {
         cx /= sw;
         cy /= sh;
 
-        if(cx >= -0.1f && cx <= 1.1f && cy >= -0.1f && cy <= 1.1f) {
+        cx = cx - 0.05f;
+        cy = cy - 0.05f;
+
+        if(cx >= 0 && cx <= 1 && cy >= 0 && cy <= 1) {
             if(side != BlockSide.BOTTOM)
                 cy = 1.f - cy;
 
