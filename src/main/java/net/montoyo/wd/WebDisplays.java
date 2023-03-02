@@ -36,6 +36,7 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -48,6 +49,7 @@ import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.miniserv.server.Server;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageServerInfo;
+import net.montoyo.wd.utilities.DistSafety;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
 
@@ -65,7 +67,7 @@ public class WebDisplays {
 
     public static WebDisplays INSTANCE;
 
-    public static SharedProxy PROXY = DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> SharedProxy::new);
+    public static SharedProxy PROXY = null;
 
     public static WDCreativeTab CREATIVE_TAB;
     public static final ResourceLocation ADV_PAD_BREAK = new ResourceLocation("webdisplays", "webdisplays/pad_break");
@@ -113,6 +115,11 @@ public class WebDisplays {
 
     public WebDisplays() {
         INSTANCE = this;
+        if(FMLEnvironment.dist.isClient()) {
+            PROXY = DistSafety.createProxy();
+        } else {
+            PROXY = new SharedProxy();
+        }
         AutoConfig.register(ModConfig.class, Toml4jConfigSerializer::new);
         ConfigHolder<ModConfig> configHolder = AutoConfig.getConfigHolder(ModConfig.class);
         ModConfig config = configHolder.getConfig();
