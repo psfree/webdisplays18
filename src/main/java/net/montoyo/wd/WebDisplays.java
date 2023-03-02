@@ -65,7 +65,7 @@ public class WebDisplays {
 
     public static WebDisplays INSTANCE;
 
-    public static SharedProxy PROXY = DistExecutor.<SharedProxy>runForDist(() -> ClientProxy::new, () -> SharedProxy::new);
+    public static SharedProxy PROXY = DistExecutor.unsafeRunForDist(() -> ClientProxy::new, () -> SharedProxy::new);
 
     public static WDCreativeTab CREATIVE_TAB;
     public static final ResourceLocation ADV_PAD_BREAK = new ResourceLocation("webdisplays", "webdisplays/pad_break");

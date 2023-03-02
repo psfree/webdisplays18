@@ -37,6 +37,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -515,6 +516,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     } */
 
     @SubscribeEvent
+    @OnlyIn(Dist.CLIENT)
     public void onTick(TickEvent.ClientTickEvent ev) {
         if(ev.phase == TickEvent.Phase.END) {
             //Help

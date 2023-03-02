@@ -11,9 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraftforge.server.ServerLifecycleHooks;
-import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.data.GuiData;
@@ -21,8 +19,6 @@ import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
-
-import static net.minecraftforge.api.distmarker.Dist.CLIENT;
 
 public class SharedProxy {
     public void preInit() {

@@ -9,13 +9,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.client.gui.controls.Button;
-import net.montoyo.wd.client.gui.controls.Event;
 import net.montoyo.wd.client.gui.controls.TextField;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -27,7 +24,6 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
 
-import java.io.IOException;
 import java.util.Map;
 
 @Mod.EventBusSubscriber
