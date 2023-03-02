@@ -4,14 +4,11 @@
 
 package net.montoyo.wd.entity;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -22,7 +19,6 @@ import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.mcef.api.IBrowser;
@@ -43,11 +39,9 @@ import net.montoyo.wd.net.client.CMessageJSResponse;
 import net.montoyo.wd.net.client.CMessageScreenUpdate;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
 import net.montoyo.wd.utilities.*;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
@@ -839,8 +833,7 @@ public class TileEntityScreen extends BlockEntity{
     }
 
     private static String safeName(ItemStack is) {
-        ResourceLocation rl = is.getItem().getRegistryName();
-        return (rl == null) ? "[NO NAME, WTF?!]" : rl.toString();
+        return is.getItem().getName(is).getString();
     }
 
     //If equal is null, no duplicate check is preformed

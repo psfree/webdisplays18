@@ -8,15 +8,9 @@ import com.google.common.collect.Lists;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraftforge.event.world.ChunkDataEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
-
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CheckBox extends BasicControl {
 

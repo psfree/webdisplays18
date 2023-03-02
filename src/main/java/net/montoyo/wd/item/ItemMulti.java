@@ -18,7 +18,6 @@ public class ItemMulti extends Item {
         values = cls.getEnumConstants();
         creativeTabItems = new BitSet(values.length);
         creativeTabItems.set(0, values.length);
-        setDamage(this.getDefaultInstance(),0);
     }
 
     public Enum[] getEnumValues() {

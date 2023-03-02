@@ -6,7 +6,6 @@ package net.montoyo.wd.client;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.client.Minecraft;
@@ -15,19 +14,13 @@ import net.minecraft.client.gui.screens.inventory.ContainerScreen;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
-import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderers;
-import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.client.resources.model.ModelBakery;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.packs.resources.PreparableReloadListener;
 import net.minecraft.server.packs.resources.ReloadableResourceManager;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
@@ -44,26 +37,19 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.ModelEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
-import net.minecraftforge.client.model.IModelLoader;
-import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.world.WorldEvent;
-import net.minecraftforge.eventbus.api.IEventBus;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.montoyo.mcef.api.*;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.gui.*;
-import net.montoyo.wd.client.gui.controls.*;
-import net.montoyo.wd.client.gui.controls.List;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.renderers.*;
 import net.montoyo.wd.core.DefaultUpgrade;
@@ -109,7 +95,6 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     private Minecraft mc;
-    private final ArrayList<ResourceModelPair> modelBakers = new ArrayList<>();
     private net.montoyo.mcef.api.API mcef;
     private MinePadRenderer minePadRenderer;
     private JSQueryDispatcher jsDispatcher;
@@ -147,8 +132,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @SubscribeEvent
-    public static void onModelRegistryEvent(ModelRegistryEvent event) {
-        ModelLoaderRegistry.registerLoader(ScreenModelLoader.SCREEN_LOADER, new ScreenModelLoader());
+    public static void onModelRegistryEvent(ModelEvent.RegisterGeometryLoaders event) {
+        event.register(ScreenModelLoader.SCREEN_LOADER.getPath(), new ScreenModelLoader());
         registerBlockRenderLayers(RenderType.cutout(), BlockInit.blockKeyBoard.get(), BlockInit.blockKbRight.get());
     }
 
@@ -506,28 +491,28 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 //            ev.getModelRegistry().put(pair.getResourceLocation(), pair.getModel());
 //    }
 
-    @SubscribeEvent
+ /*   @SubscribeEvent
     public void onRegisterModels(ModelRegistryEvent ev) {
         final WebDisplays wd = WebDisplays.INSTANCE;
 
         //I hope I'm doing this right because it doesn't seem like it...
-//        registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
-//        ModelLoaderRegistry.setCustomModelResourceLocation(wd.blockPeripheral.getItem(), 0, new ModelResourceLocation("webdisplays:kb_inv", "normal"));
-//        registerItemModel(wd.blockPeripheral.getItem(), 1, "facing=2,type=ccinterface");
-//        registerItemModel(wd.blockPeripheral.getItem(), 2, "facing=2,type=cointerface");
-//        registerItemModel(wd.blockPeripheral.getItem(), 3, "facing=0,type=remotectrl");
-//        registerItemModel(wd.blockPeripheral.getItem(), 7, "facing=0,type=redstonectrl");
-//        registerItemModel(wd.blockPeripheral.getItem(), 11, "facing=0,type=server");
-//        registerItemModel(wd.itemScreenCfg, 0, "normal");
-//        registerItemModel(wd.itemOwnerThief, 0, "normal");
-//        registerItemModel(wd.itemLinker, 0, "normal");
-//        registerItemModel(wd.itemMinePad, 0, "normal");
-//        registerItemModel(wd.itemMinePad, 1, "normal");
-//        registerItemModel(wd.itemLaserPointer, 0, "normal");
-//        registerItemMultiModels(wd.itemUpgrade);
-//        registerItemMultiModels(wd.itemCraftComp);
-//        registerItemMultiModels(wd.itemAdvIcon);
-    }
+       registerItemModel(wd.blockScreen.getItem(), 0, "inventory");
+       ModelLoaderRegistry.setCustomModelResourceLocation(wd.blockPeripheral.getItem(), 0, new ModelResourceLocation("webdisplays:kb_inv", "normal"));
+       registerItemModel(wd.blockPeripheral.getItem(), 1, "facing=2,type=ccinterface");
+       registerItemModel(wd.blockPeripheral.getItem(), 2, "facing=2,type=cointerface");
+       registerItemModel(wd.blockPeripheral.getItem(), 3, "facing=0,type=remotectrl");
+       registerItemModel(wd.blockPeripheral.getItem(), 7, "facing=0,type=redstonectrl");
+       registerItemModel(wd.blockPeripheral.getItem(), 11, "facing=0,type=server");
+       registerItemModel(wd.itemScreenCfg, 0, "normal");
+       registerItemModel(wd.itemOwnerThief, 0, "normal");
+       registerItemModel(wd.itemLinker, 0, "normal");
+       registerItemModel(wd.itemMinePad, 0, "normal");
+       registerItemModel(wd.itemMinePad, 1, "normal");
+       registerItemModel(wd.itemLaserPointer, 0, "normal");
+       registerItemMultiModels(wd.itemUpgrade);
+       registerItemMultiModels(wd.itemCraftComp);
+       registerItemMultiModels(wd.itemAdvIcon);
+    } */
 
     @SubscribeEvent
     public void onTick(TickEvent.ClientTickEvent ev) {
@@ -677,9 +662,9 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @SubscribeEvent
-    public void onWorldUnload(WorldEvent.Unload ev) {
+    public void onWorldUnload(LevelEvent.Unload ev) {
         Log.info("World unloaded; killing screens...");
-        if(ev.getWorld() instanceof Level level) {
+        if(ev.getLevel() instanceof Level level) {
             ResourceLocation dim = level.dimension().location();
             for(int i = screenTracking.size() - 1; i >= 0; i--) {
                 if(screenTracking.get(i).getLevel().dimension().location().equals(dim)) //Could be world == ev.getWorld()

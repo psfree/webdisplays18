@@ -264,7 +264,9 @@ public abstract class WDScreen extends Screen {
     }
 
     public void loadFrom(ResourceLocation resLoc) {
-        JsonObject root = GuiLoader.getJson(resLoc);
+        try {
+            JsonObject root = GuiLoader.getJson(resLoc);
+
         if(root == null)
             throw new RuntimeException("Could not load GUI file " + resLoc.toString());
 
@@ -312,6 +314,10 @@ public abstract class WDScreen extends Screen {
 
         if(root.has("center") && root.get("center").getAsBoolean())
             centerControls();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

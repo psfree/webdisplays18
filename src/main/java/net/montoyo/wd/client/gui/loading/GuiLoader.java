@@ -62,24 +62,15 @@ public class GuiLoader {
         return ret;
     }
 
-    public static JsonObject getJson(ResourceLocation resLoc) {
+    public static JsonObject getJson(ResourceLocation resLoc) throws IOException {
         JsonObject ret = RESOURCES.get(resLoc);
         if(ret == null) {
             Resource resource;
 
-            try {
-                resource = Minecraft.getInstance().getResourceManager().getResource(resLoc);
-            } catch(IOException e) {
-                Log.errorEx("Couldn't load JSON UI from file", e);
-                throw new RuntimeException(e);
-            }
+            resource = Minecraft.getInstance().getResourceManager().getResource(resLoc).get();
 
             JsonParser parser = new JsonParser();
-            ret = parser.parse(new InputStreamReader(resource.getInputStream())).getAsJsonObject();
-
-            try {
-                resource.close();
-            } catch(IOException e) {}
+            ret = parser.parse(new InputStreamReader(resource.open())).getAsJsonObject();
 
             RESOURCES.put(resLoc, ret);
         }

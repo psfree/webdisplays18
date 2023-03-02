@@ -20,31 +20,26 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.client.event.ClientChatEvent;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
-import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.network.PacketDistributor;
-import net.montoyo.wd.block.WDBlockContainer;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 import net.montoyo.wd.client.ClientProxy;
-import net.montoyo.wd.client.gui.controls.*;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.init.BlockInit;
@@ -155,6 +150,8 @@ public class WebDisplays {
 
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
         bus.addListener(Messages::registryNetworkPackets);
+        SOUNDS.register(bus);
+        onRegisterSounds();
         BlockInit.init(bus);
         ItemInit.init(bus);
         ItemInit.registerUpgrade();
@@ -191,23 +188,22 @@ public class WebDisplays {
         }
     }
 
-    @SubscribeEvent
-    public void onRegisterSounds(RegistryEvent.Register<SoundEvent> ev) {
-        soundTyping = registerSound(ev, "keyboardType");
-        soundUpgradeAdd = registerSound(ev, "upgradeAdd");
-        soundUpgradeDel = registerSound(ev, "upgradeDel");
-        soundScreenCfg = registerSound(ev, "screencfgOpen");
-        soundServer = registerSound(ev, "server");
-        soundIronic = registerSound(ev, "ironic");
+    public void onRegisterSounds() {
+        registerSound("keyboard_type");
+        registerSound( "upgrade_add");
+        registerSound( "upgrade_del");
+        registerSound("screencfg_open");
+        registerSound("server");
+        registerSound("ironic");
     }
 
     @SubscribeEvent
-    public void onWorldLoad(WorldEvent.Load ev) {
-        if (ev.getWorld() instanceof Level level) {
-            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldLoad(LevelEvent.Load ev) {
+        if (ev.getLevel() instanceof Level level) {
+            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
 
-            File worldDir = Objects.requireNonNull(ev.getWorld().getServer()).getServerDirectory();
+            File worldDir = Objects.requireNonNull(ev.getLevel().getServer()).getServerDirectory();
             File f = new File(worldDir, "wd_next.txt");
 
             if (f.exists()) {
@@ -239,9 +235,9 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public void onWorldLeave(WorldEvent.Unload ev) throws IOException {
-        if(ev.getWorld() instanceof Level level) {
-            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldLeave(LevelEvent.Unload ev) throws IOException {
+        if(ev.getLevel() instanceof Level level) {
+            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
             Server sw = Server.getInstance();
             sw.stopServer();
@@ -249,11 +245,11 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public void onWorldSave(WorldEvent.Save ev) {
-        if(ev.getWorld() instanceof Level level) {
-            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldSave(LevelEvent.Save ev) {
+        if(ev.getLevel() instanceof Level level) {
+            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
-            File f = new File(Objects.requireNonNull(ev.getWorld().getServer()).getServerDirectory(), "wd_next.txt");
+            File f = new File(Objects.requireNonNull(ev.getLevel().getServer()).getServerDirectory(), "wd_next.txt");
 
             try {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(f));
@@ -267,8 +263,8 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onToss(ItemTossEvent ev) {
-        if(!ev.getEntityItem().getLevel().isClientSide) {
-            ItemStack is = ev.getEntityItem().getItem();
+        if(!ev.getEntity().getLevel().isClientSide) {
+            ItemStack is = ev.getEntity().getItem();
 
             if(is.getItem() == ItemInit.itemMinePad.get()) {
                 CompoundTag tag = is.getTag();
@@ -289,11 +285,11 @@ public class WebDisplays {
     @SubscribeEvent
     public void onPlayerCraft(PlayerEvent.ItemCraftedEvent ev) {
         if(doHardRecipe && ev.getCrafting().getItem() == ItemInit.itemCraftComp.get() && (CraftComponent.EXTENSION_CARD.makeItemStack().is(ev.getCrafting().getItem()))) {
-            if((ev.getPlayer() instanceof ServerPlayer && !hasPlayerAdvancement((ServerPlayer) ev.getPlayer(), ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
+            if((ev.getEntity() instanceof ServerPlayer && !hasPlayerAdvancement((ServerPlayer) ev.getEntity(), ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
                 ev.getCrafting().setDamageValue(CraftComponent.BAD_EXTENSION_CARD.ordinal());
 
-                if(!ev.getPlayer().getLevel().isClientSide)
-                    ev.getPlayer().getLevel().playSound(null, ev.getPlayer().getX(), ev.getPlayer().getY(), ev.getPlayer().getZ(), SoundEvents.ITEM_BREAK, SoundSource.MASTER, 1.0f, 1.0f);
+                if(!ev.getEntity().getLevel().isClientSide)
+                    ev.getEntity().getLevel().playSound(null, ev.getEntity().getX(), ev.getEntity().getY(), ev.getEntity().getZ(), SoundEvents.ITEM_BREAK, SoundSource.MASTER, 1.0f, 1.0f);
             }
         }
     }
@@ -305,16 +301,14 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
-        if(!ev.getPlayer().getLevel().isClientSide && ev.getPlayer() instanceof ServerPlayer) {
+        if(!ev.getEntity().getLevel().isClientSide && ev.getEntity() instanceof ServerPlayer) {
             IWDDCapability cap =
-                    ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
+                    ev.getEntity().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
-            if(cap == null)
-                Log.warning("Player %s (%s) has null IWDDCapability!", ev.getPlayer().getName(), ev.getPlayer().getGameProfile().getId().toString());
-            else if(cap.isFirstRun()) {
-                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome1");
-                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome2");
-                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome3");
+            if(cap.isFirstRun()) {
+                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome1");
+                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome2");
+                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome3");
 
                 cap.clearFirstRun();
             }
@@ -322,7 +316,7 @@ public class WebDisplays {
             PacketDistributor.PacketTarget packetDistrutor = PacketDistributor.PLAYER
                     .with(
                     () ->
-                                    (ServerPlayer) ev.getPlayer());
+                                    (ServerPlayer) ev.getEntity());
 
             CMessageServerInfo message = new CMessageServerInfo(miniservPort);
 
@@ -332,8 +326,8 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onLogOut(PlayerEvent.PlayerLoggedOutEvent ev) {
-        if(!ev.getPlayer().getLevel().isClientSide)
-            Server.getInstance().getClientManager().revokeClientKey(ev.getPlayer().getGameProfile().getId());
+        if(!ev.getEntity().getLevel().isClientSide)
+            Server.getInstance().getClientManager().revokeClientKey(ev.getEntity().getGameProfile().getId());
     }
 
     @SubscribeEvent
@@ -345,7 +339,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onPlayerClone(PlayerEvent.Clone ev) {
         IWDDCapability src =  ev.getOriginal().getCapability(WDDCapability.Provider.cap, null).orElse(new WDDCapability.Factory().call());
-        IWDDCapability dst =  ev.getPlayer().getCapability(WDDCapability.Provider.cap, null).orElse(new WDDCapability.Factory().call());
+        IWDDCapability dst =  ev.getEntity().getCapability(WDDCapability.Provider.cap, null).orElse(new WDDCapability.Factory().call());
 
         if(src == null) {
             Log.error("src is null");
@@ -362,7 +356,7 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onServerChat(ServerChatEvent ev) {
-        String msg = ev.getMessage().trim().replaceAll("\\s+", " ").toLowerCase();
+        String msg = ev.getMessage().getString().replaceAll("\\s+", " ").toLowerCase();
         StringBuilder sb = new StringBuilder(msg.length());
         for(int i = 0; i < msg.length(); i++) {
             char chr = msg.charAt(i);
@@ -396,13 +390,13 @@ public class WebDisplays {
         return new WebDisplays().lastPadId++;
     }
 
-    private static SoundEvent registerSound(RegistryEvent.Register<SoundEvent> ev, String resName) {
+    public static DeferredRegister<SoundEvent> SOUNDS = DeferredRegister.create(ForgeRegistries.SOUND_EVENTS, "webdisplays");
+
+    private static void registerSound(String resName) {
         ResourceLocation resLoc = new ResourceLocation("webdisplays", resName);
         SoundEvent ret = new SoundEvent(resLoc);
-        ret.setRegistryName(resLoc);
 
-        ev.getRegistry().register(ret);
-        return ret;
+        SOUNDS.register(resName, () -> ret);
     }
 
     private static void registerTrigger(Criterion ... criteria) {

@@ -4,7 +4,7 @@
   "version": "${version}",
 
   "name": "Web Displays",
-  "description": "Web Displays for 1.18.2 fabric",
+  "description": "Web Displays for 1.19.2 fabric",
   "authors": [
     "Montoyo, Waterpicker, Mysticpasta1"
   ],
@@ -28,10 +28,7 @@
   "depends": {
     "fabricloader": ">=0.14.8",
     "fabric": "*",
-    "minecraft": "~1.18.2",
+    "minecraft": "~1.19.2",
     "java": ">=17"
-  },
-  "suggests": {
-    "another-mod": "*"
   }
 }

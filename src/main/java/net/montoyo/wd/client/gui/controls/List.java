@@ -9,7 +9,6 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.TextComponent;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
 
 import java.util.ArrayList;

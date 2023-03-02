@@ -16,16 +16,11 @@ public abstract class WDBlock extends Block {
         super(properties);
     }
 
-    protected void setName(String name) {
-        setRegistryName(name);
-    }
-
     public void makeItemBlock() {
         if(itemBlock != null)
             throw new RuntimeException("WDBlock.makeItemBlock() called twice!");
 
         itemBlock = new BlockItem(this, new Item.Properties());
-        itemBlock.setRegistryName(getRegistryName());
     }
 
     public BlockItem getItem() {

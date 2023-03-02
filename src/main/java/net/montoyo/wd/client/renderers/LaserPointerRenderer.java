@@ -24,7 +24,6 @@ public final class LaserPointerRenderer implements IItemRenderer {
     private static final float PI = (float) Math.PI;
     private final Tesselator t = Tesselator.getInstance();
     private final BufferBuilder bb = t.getBuilder();
-    private final VertexBuffer vb = new VertexBuffer();
     private final FloatBuffer matrix1 = BufferUtils.createFloatBuffer(16);
     private final FloatBuffer renderBuffer = BufferUtils.createFloatBuffer(8);
 

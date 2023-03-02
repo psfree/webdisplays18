@@ -9,8 +9,6 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.network.chat.TextComponent;
-import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
 
 import java.lang.reflect.Field;
@@ -136,11 +134,10 @@ public abstract class Util {
     }
 
     public static void toast(Player player, ChatFormatting color, String key, Object... data) {
-        TextComponent root = new TextComponent("[WebDisplays] ");
-        root.setStyle(Style.EMPTY.withColor(color));
-        root.append(new TranslatableComponent("webdisplays.message." + key, data));
-
-        player.sendMessage(root, player.getUUID());
+        Component root = Component.translatable("[WebDisplays] ").
+                setStyle(Style.EMPTY.withColor(color)).
+                append(Component.translatable("webdisplays.message." + key, data));
+        player.sendSystemMessage(root);
     }
 
     public static void silentClose(Object obj) {

@@ -8,30 +8,24 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
 import net.minecraft.client.renderer.block.model.ItemTransforms;
-import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.ModelState;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.minecraft.world.level.material.Material;
-import net.minecraftforge.client.model.data.IDynamicBakedModel;
-import net.minecraftforge.client.model.data.IModelData;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
 import java.util.function.Function;
 
-public class ScreenBaker implements IModelBaker {
+public class ScreenBaker implements BakedModel {
 
     private static final List<BakedQuad> noQuads = ImmutableList.of();
     private final TextureAtlasSprite[] texs = new TextureAtlasSprite[16];
@@ -47,12 +41,6 @@ public class ScreenBaker implements IModelBaker {
         this.spriteGetter = spriteGetter;
         this.overrides = overrides;
         this.itemTransforms = itemTransforms;
-    }
-
-    @Override
-    public void loadTextures(TextureAtlas texMap) {
-        for(int i = 0; i < texs.length; i++)
-            texs[i] = texMap.getSprite(new ResourceLocation("webdisplays", "blocks/screen" + i));
     }
 
     private void putVertex(int[] buf, int pos, Vector3f vpos, TextureAtlasSprite tex, Vector3f uv, Vector3i normal) {
@@ -106,9 +94,8 @@ public class ScreenBaker implements IModelBaker {
         return new BakedQuad(data, 0xFFFFFFFF, blockFacings[side.ordinal()], tex, true);
     }
 
-    @NotNull
     @Override
-    public List<BakedQuad> getQuads(@org.jetbrains.annotations.Nullable BlockState state, @org.jetbrains.annotations.Nullable Direction side, @NotNull Random random, @NotNull IModelData iModelData) {
+    public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, RandomSource random) {
         if(side == null)
             return noQuads;
         BlockState bs = state;

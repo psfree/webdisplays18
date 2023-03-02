@@ -27,6 +27,7 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Mod.EventBusSubscriber

@@ -208,7 +208,7 @@ public class Button extends Control {
         btn.y = json.getInt("y", 0);
         btn.setWidth(json.getInt("width", 200));
         btn.setHeight(json.getInt("height", 20));
-        btn.setMessage(Component.nullToEmpty(tr(json.getString("label", btn.getMessage().getContents()))));
+        btn.setMessage(Component.nullToEmpty(tr(json.getString("label", btn.getMessage().getContents().toString()))));
         btn.active =  json.getBool("active", btn.active);
         btn.visible = json.getBool("visible", btn.visible);
 
