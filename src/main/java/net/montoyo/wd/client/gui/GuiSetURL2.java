@@ -9,6 +9,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.common.Mod;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
@@ -26,7 +27,7 @@ import net.montoyo.wd.utilities.Vector3i;
 
 import java.util.Map;
 
-@Mod.EventBusSubscriber
+@Mod.EventBusSubscriber(Dist.CLIENT)
 public class GuiSetURL2 extends WDScreen {
 
     //Screen data
