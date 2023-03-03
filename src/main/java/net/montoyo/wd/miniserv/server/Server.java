@@ -41,6 +41,7 @@ public class Server implements Runnable {
     private volatile boolean running;
     private volatile Thread thread;
 
+    public int getPort() {return port;}
     public void setPort(int p) {
         port = p;
     }

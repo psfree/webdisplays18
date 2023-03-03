@@ -6,8 +6,10 @@ package net.montoyo.wd.net.client;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.miniserv.client.Client;
 import net.montoyo.wd.utilities.Log;
 
@@ -36,7 +38,9 @@ public class CMessageMiniservKey {
         contextSupplier.get().enqueueWork(() -> {
             if (Client.getInstance().decryptKey(encryptedKey)) {
                 Log.info("Successfully received and decrypted key, starting miniserv client...");
-                WebDisplays.PROXY.startMiniservClient();
+                if(WebDisplays.PROXY instanceof ClientProxy proxy) {
+                    proxy.startMiniservClient();
+                }
             }
         });
         contextSupplier.get().setPacketHandled(true);

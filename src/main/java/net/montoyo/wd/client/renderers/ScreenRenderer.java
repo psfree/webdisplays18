@@ -12,6 +12,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.phys.AABB;
+import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.entity.TileEntityScreen;
@@ -48,15 +49,17 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
         for(int i = 0; i < te.screenCount(); i++) {
             TileEntityScreen.Screen scr = te.getScreen(i);
             if(scr.browser == null) {
-                scr.browser = ((ClientProxy) WebDisplays.PROXY).getMCEF().createBrowser(WebDisplays.applyBlacklist(scr.url));
+                if(WebDisplays.PROXY instanceof ClientProxy clientProxy) {
+                    scr.browser = clientProxy.getMCEF().createBrowser(WebDisplays.applyBlacklist(scr.url));
 
-                if(scr.rotation.isVertical)
-                    scr.browser.resize(scr.resolution.y, scr.resolution.x);
-                else
-                    scr.browser.resize(scr.resolution.x, scr.resolution.y);
+                    if (scr.rotation.isVertical)
+                        scr.browser.resize(scr.resolution.y, scr.resolution.x);
+                    else
+                        scr.browser.resize(scr.resolution.x, scr.resolution.y);
 
-                scr.doTurnOnAnim = true;
-                scr.turnOnTime = System.currentTimeMillis();
+                    scr.doTurnOnAnim = true;
+                    scr.turnOnTime = System.currentTimeMillis();
+                }
             }
 
             tmpi.set(scr.side.right);

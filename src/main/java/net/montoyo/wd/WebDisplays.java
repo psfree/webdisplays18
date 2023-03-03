@@ -12,6 +12,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.CriteriaTriggers;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -56,6 +57,7 @@ import net.montoyo.wd.utilities.Util;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -204,6 +206,8 @@ public class WebDisplays {
         registerSound("ironic");
     }
 
+    ArrayList<ResourceKey<Level>> serverStartedDimensions = new ArrayList<>();
+
     @SubscribeEvent
     public void onWorldLoad(LevelEvent.Load ev) {
         if (ev.getLevel() instanceof Level level) {
@@ -234,9 +238,13 @@ public class WebDisplays {
 
             if (miniservPort != 0) {
                 Server sv = Server.getInstance();
-                sv.setPort(miniservPort);
-                sv.setDirectory(new File(worldDir, "wd_filehost"));
-                sv.start();
+
+                if(!serverStartedDimensions.contains(level.dimension())) {
+                    sv.setPort(miniservPort);
+                    sv.setDirectory(new File(worldDir, "wd_filehost"));
+                    sv.start();
+                    serverStartedDimensions.add(level.dimension());
+                }
             }
         }
     }
@@ -248,6 +256,7 @@ public class WebDisplays {
                 return;
             Server sw = Server.getInstance();
             sw.stopServer();
+            serverStartedDimensions.remove(level.dimension());
         }
     }
 

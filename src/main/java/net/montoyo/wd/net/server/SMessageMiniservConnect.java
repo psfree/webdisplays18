@@ -4,13 +4,19 @@
 
 package net.montoyo.wd.net.server;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.Direction;
+import net.minecraft.network.Connection;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.protocol.PacketFlow;
+import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.miniserv.server.ClientManager;
 import net.montoyo.wd.miniserv.server.Server;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.CMessageMiniservKey;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class SMessageMiniservConnect {
@@ -47,10 +53,10 @@ public class SMessageMiniservConnect {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         ClientManager cliMgr = Server.getInstance().getClientManager();
-        byte[] encKey = cliMgr.encryptClientKey(contextSupplier.get().getSender().getGameProfile().getId(), modulus, exponent);
+        byte[] encKey = cliMgr.encryptClientKey(Objects.requireNonNull(contextSupplier.get().getSender()).getGameProfile().getId(), modulus, exponent);
 
         if (encKey != null) {
-            Messages.INSTANCE.sendToServer(new CMessageMiniservKey(encKey));
+            Messages.INSTANCE.sendTo(new CMessageMiniservKey(encKey), new Connection(PacketFlow.SERVERBOUND), NetworkDirection.LOGIN_TO_SERVER);
         }
 
         contextSupplier.get().setPacketHandled(true);
