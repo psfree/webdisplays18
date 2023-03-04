@@ -4,11 +4,9 @@
 
 package net.montoyo.wd.block;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -17,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -25,44 +22,66 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
-import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Material;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.entity.TileEntityKeyboard;
-import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
-import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.item.ItemLinker;
+import net.montoyo.wd.net.Messages;
+import net.montoyo.wd.net.client.CMessageCloseGui;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3i;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.system.CallbackI;
 
-import java.util.List;
-import java.util.Objects;
-
+// TODO: merge into KeyboardLeft
 public class BlockKeyboardRight extends Block implements IPeripheral {
 
-    public static final DirectionProperty facing = BlockStateProperties.HORIZONTAL_FACING;
+    public static final DirectionProperty FACING = BlockStateProperties.HORIZONTAL_FACING;
     public static final VoxelShape KEYBOARD_AABB = Shapes.box(0.0, 0.0, 0.0, 1.0, 1.0 / 16.0, 1.0);
 
     public BlockKeyboardRight() {
         super(Properties.of(Material.STONE)
                 .strength(1.5f, 10.f));
     }
-
+    
+    private static void removeLeftPiece(BlockState state, Level world, BlockPos pos) {
+        BlockPos relative = pos.relative(BlockKeyboardLeft.mapDirection(state.getValue(FACING).getOpposite()));
+        
+        BlockState ns = world.getBlockState(relative);
+        if(ns.getBlock() instanceof BlockKeyboardLeft) {
+            world.setBlock(relative, Blocks.AIR.defaultBlockState(), 3);
+        }
+    }
+    
+    public static void remove(BlockState state, Level world, BlockPos pos, boolean setState, boolean drop) {
+        removeLeftPiece(state, world, pos);
+        if (setState) {
+            if (drop) {
+                // TODO: force drop item
+            }
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        }
+        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> BlockKeyboardLeft.point(world, pos)), new CMessageCloseGui(pos));
+    }
+    
+    @Override
+    public void onRemove(BlockState arg, Level arg2, BlockPos arg3, BlockState arg4, boolean bl) {
+        if(!arg2.isClientSide) {
+            remove(arg, arg2, arg3, false, false);
+        }
+        super.onRemove(arg, arg2, arg3, arg4, bl);
+    }
+    
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(facing);
+        builder.add(FACING);
     }
 
     @Override
@@ -75,88 +94,17 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
         return KEYBOARD_AABB;
     }
 
-    private TileEntityKeyboard getTileEntity(Level world, BlockPos pos) {
-        for (Direction nf : Direction.Plane.HORIZONTAL) {
-            BlockPos np = pos.offset(nf.getNormal());
-            BlockState ns = world.getBlockState(np);
-
-            if(ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
-                BlockEntity te = world.getBlockEntity(pos);
-                if (te instanceof TileEntityKeyboard)
-                    return (TileEntityKeyboard) te;
-
-                break;
-            }
-        }
-
-        return null;
-    }
-
     @Override
     public boolean connect(Level world, BlockPos pos, BlockState state, Vector3i scrPos, BlockSide scrSide) {
-        TileEntityKeyboard keyboard = getTileEntity(world, pos);
+        TileEntityKeyboard keyboard = BlockKeyboardLeft.getTileEntity(state, world, pos);
         return keyboard != null && keyboard.connect(world, pos, state, scrPos, scrSide);
     }
-
-    public static boolean checkNeighborhood(Level world, BlockPos bp, BlockPos ignore) {
-        for (Direction neighbor : Direction.Plane.HORIZONTAL) {
-            BlockPos np = bp.offset(neighbor.getNormal());
-
-            if (ignore == null || !np.equals(ignore)) {
-                BlockState state = world.getBlockState(np);
-
-                if (state.getBlock() instanceof BlockPeripheral) {
-                    if (state.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD)
-                        return false;
-                } else if (state.getBlock() instanceof BlockKeyboardRight)
-                    return false;
-            }
-        }
-
-        return true;
-    }
-
-    public void removeLeftPiece(Level world, BlockPos pos, boolean dropItem) {
-        for (Direction nf : Direction.Plane.HORIZONTAL) {
-            BlockPos np = pos.offset(nf.getNormal());
-            BlockState ns = world.getBlockState(np);
-
-            if (ns.getBlock() instanceof BlockPeripheral && ns.getValue(BlockPeripheral.type) == DefaultPeripheral.KEYBOARD) {
-               /* if(dropItem)
-                    if(world instanceof ServerLevel serverWorld) {
-                       // ns.getBlock().getDrops(ns, serverWorld, np,0);
-                    } */
-                world.setBlock(np, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-                break;
-            }
-        }
-    }
-
-    @Override
-    public void neighborChanged(BlockState state, Level world, BlockPos pos, Block block, BlockPos neighbor, boolean isMoving) {
-        if (world.isClientSide())
-            return;
-
-        if (neighbor.getX() == pos.getX() && neighbor.getY() == pos.getY() - 1 && neighbor.getZ() == pos.getZ()) {
-            removeLeftPiece(world, pos, true);
-            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL_IMMEDIATE);
-        }
-    }
-
-    @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level world, BlockPos pos, Player ply, boolean willHarvest, FluidState fluid) {
-        if (!world.isClientSide)
-            removeLeftPiece(world, pos, !ply.isCreative());
-
-        return super.onDestroyedByPlayer(state, world, pos, ply, willHarvest, fluid);
-    }
-
-
+    
     @Override
     public void entityInside(BlockState state, Level world, BlockPos pos, Entity entity) {
         double rpos = (entity.getY() - ((double) pos.getY())) * 16.0;
         if (!world.isClientSide && rpos >= 1.0 && rpos <= 2.0 && Math.random() < 0.25) {
-            TileEntityKeyboard tek = getTileEntity(world, pos);
+            TileEntityKeyboard tek = BlockKeyboardLeft.getTileEntity(state, world, pos);
 
             if (tek != null)
                 tek.simulateCat(entity);
@@ -164,45 +112,19 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
     }
 
     @Override
-    public boolean canBeReplaced(BlockState state, BlockPlaceContext context) {
-        if (!context.getItemInHand().isEmpty()) //Keyboard
-            return false;
-
-        //Special checks for the keyboard
-        BlockPos pos = context.getClickedPos().offset(context.getHorizontalDirection().getNormal());
-        if (context.getLevel().getBlockState(pos.below()) == Blocks.AIR.defaultBlockState() || !BlockKeyboardRight.checkNeighborhood(context.getLevel(), pos, null))
-            return true;
-
-        int f = (int) Math.floor(((double) (context.getPlayer().getYRot() * 4.0f / 360.0f)) + 2.5) & 3;
-        Vec3i dir = Direction.from2DDataValue(f).getNormal();
-        BlockPos left = pos.offset(dir);
-        BlockPos right = pos.subtract(dir);
-
-        if (context.getLevel().getBlockState(right) == Blocks.AIR.defaultBlockState() && !(context.getLevel().getBlockState(right.below()) == Blocks.AIR.defaultBlockState()) && BlockKeyboardRight.checkNeighborhood(context.getLevel(), right, null))
-            return false;
-        else
-            return !(context.getLevel().getBlockState(left) == Blocks.AIR.defaultBlockState() && !(context.getLevel().getBlockState(left.below()) == Blocks.AIR.defaultBlockState()) && BlockKeyboardRight.checkNeighborhood(context.getLevel(), left, null));
-    }
-
-    @Override
     public @NotNull InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
-        if (player.isShiftKeyDown()) {
-            ItemStack itemStack = player.getItemInHand(hand);
-            if (canBeReplaced(state, new BlockPlaceContext(player, hand, itemStack, hit))) {
-                int f = (int) Math.floor(((double) (player.getYRot() * 4.0f / 360.0f)) + 2.5) & 3;
-                Vec3i dir = Direction.from2DDataValue(f).getNormal();
-                level.setBlock(pos.offset(dir), BlockInit.blockKeyBoard.get().defaultBlockState(), UPDATE_ALL_IMMEDIATE);
-                return InteractionResult.SUCCESS;
-            }
-        }
-
         if(player.getItemInHand(hand).getItem() instanceof ItemLinker)
             return InteractionResult.PASS;
 
-        TileEntityKeyboard tek = getTileEntity(level, pos);
+        TileEntityKeyboard tek = BlockKeyboardLeft.getTileEntity(state, level, pos);
         if(tek != null)
             return tek.onRightClick(player, hand);
 
         return InteractionResult.PASS;
+    }
+    
+    @Override
+    public VoxelShape getOcclusionShape(BlockState arg, BlockGetter arg2, BlockPos arg3) {
+        return Shapes.empty();
     }
 }
