@@ -21,12 +21,11 @@ public class BlockInit {
     public static final RegistryObject<Block> blockScreen = BLOCKS.register("screen", () -> new BlockScreen(BlockBehaviour.Properties.of(Material.STONE)));
 
     public static final RegistryObject<Block> blockKeyBoard = BlockInit.BLOCKS.register("kb_left", BlockKeyboardLeft::new);
+    public static final RegistryObject<Block> blockKbRight = BLOCKS.register("kb_right", BlockKeyboardRight::new);
 
     public static final RegistryObject<Block> blockRedControl = BlockInit.BLOCKS.register("redctrl", BlockRedCTRL::new);
 
     public static final RegistryObject<Block> blockRControl = BlockInit.BLOCKS.register("rctrl", BlockRCTRL::new);
 
     public static final RegistryObject<Block> blockServer = BlockInit.BLOCKS.register("server", BlockServer::new);
-
-    public static final RegistryObject<Block> blockKbRight = BLOCKS.register("kb_right", BlockKeyboardRight::new);
 }

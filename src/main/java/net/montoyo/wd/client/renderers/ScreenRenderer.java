@@ -144,10 +144,10 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
 
         //Bounding box debugging
-        /*poseStack.pushPose();
-        poseStack.translate(-te.getBlockPos().getX(), -te.getBlockPos().getY(), -te.getBlockPos().getZ());
-        renderAABB(te.getRenderBoundingBox());
-        poseStack.popPose();*/
+//        poseStack.pushPose();
+//        poseStack.translate(-te.getBlockPos().getX(), -te.getBlockPos().getY(), -te.getBlockPos().getZ());
+//        renderAABB(te.getRenderBoundingBox());
+//        poseStack.popPose();
 
         //Re-enable lighting
         RenderSystem.enableCull();

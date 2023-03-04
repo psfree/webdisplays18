@@ -8,6 +8,7 @@ import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.WDBlockContainer;
+import net.montoyo.wd.block.item.KeyboardItem;
 import net.montoyo.wd.core.CraftComponent;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.item.*;
@@ -45,7 +46,7 @@ public class ItemInit{
 
     public static final RegistryObject<Item> screen = ITEMS.register("screen", () -> new BlockItem(BlockInit.blockScreen.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));
 
-    public static final RegistryObject<Item> keyboard = ITEMS.register("keyboard", () -> new BlockItem(BlockInit.blockKbRight.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));
+    public static final RegistryObject<Item> keyboard = ITEMS.register("keyboard", () -> new KeyboardItem(BlockInit.blockKeyBoard.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));
     public static final RegistryObject<Item> redctrl = ITEMS.register("redctrl", () -> new BlockItem(BlockInit.blockRedControl.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));
     public static final RegistryObject<Item> rctrl = ITEMS.register("rctrl", () -> new BlockItem(BlockInit.blockRControl.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));
     public static final RegistryObject<Item> server = ITEMS.register("server", () -> new BlockItem(BlockInit.blockServer.get(), new Item.Properties().tab(WebDisplays.CREATIVE_TAB)));

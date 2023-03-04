@@ -159,44 +159,48 @@ public class Server implements Runnable {
                     clientList.add(toAdd);
                 }
             }
-
-            if(key.isReadable()) {
-                ServerClient cli = clientMap.get(key.channel());
-
-                if(cli == null)
-                    Log.warning("Received read info from unknown client");
-                else {
-                    try {
-                        readBuffer.clear();
-                        int read = cli.getChannel().read(readBuffer);
-
-                        if(read < 0)
-                            cli.setShouldRemove(); //End of stream
-                        else if(read > 0) {
-                            readBuffer.position(0);
-                            readBuffer.limit(read);
-                            cli.readyRead(readBuffer);
+    
+            try {
+                if (key.isReadable()) {
+                    ServerClient cli = clientMap.get(key.channel());
+        
+                    if (cli == null)
+                        Log.warning("Received read info from unknown client");
+                    else {
+                        try {
+                            readBuffer.clear();
+                            int read = cli.getChannel().read(readBuffer);
+    
+                            if (read < 0)
+                                cli.setShouldRemove(); //End of stream
+                            else if (read > 0) {
+                                readBuffer.position(0);
+                                readBuffer.limit(read);
+                                cli.readyRead(readBuffer);
+                            }
+                        } catch (Throwable t) {
+                            Log.warningEx("Could not read data from client", t);
+                            cli.setShouldRemove();
                         }
-                    } catch(Throwable t) {
-                        Log.warningEx("Could not read data from client", t);
-                        cli.setShouldRemove();
                     }
                 }
-            }
-
-            if(key.isWritable()) {
-                ServerClient cli = clientMap.get(key.channel());
-
-                if(cli == null)
-                    Log.warning("Received write info from unknown client");
-                else {
-                    try {
-                        cli.readyWrite();
-                    } catch(Throwable t) {
-                        Log.warningEx("Could not write data to client", t);
-                        cli.setShouldRemove();
+                
+                if (key.isWritable()) {
+                    ServerClient cli = clientMap.get(key.channel());
+        
+                    if (cli == null)
+                        Log.warning("Received write info from unknown client");
+                    else {
+                        try {
+                            cli.readyWrite();
+                        } catch (Throwable t) {
+                            Log.warningEx("Could not write data to client", t);
+                            cli.setShouldRemove();
+                        }
                     }
                 }
+            } catch (Throwable err) {
+                continue;
             }
         }
 

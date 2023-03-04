@@ -181,30 +181,7 @@ public class BlockPeripheral extends WDBlockContainer {
         if(world.isClientSide)
             return;
 
-        if(state.getValue(type) == DefaultPeripheral.KEYBOARD) {
-            //Keyboard special treatment
-            Direction f = state.getValue(facing);
-            Vec3i dir = f.getClockWise().getNormal();
-            BlockPos left = pos.offset(dir);
-            BlockPos right = pos.subtract(dir);
-
-            if(!world.isEmptyBlock(pos.below()) && BlockKeyboardRight.checkNeighborhood(world, pos, null)) {
-                if(world.isEmptyBlock(right) && !world.isEmptyBlock(right.below()) && BlockKeyboardRight.checkNeighborhood(world, right, pos)) {
-                    world.setBlock(right, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
-                    return;
-                } else if(world.isEmptyBlock(left) && !world.isEmptyBlock(left.below()) && BlockKeyboardRight.checkNeighborhood(world, left, pos)) {
-                    world.setBlock(left, state, 3);
-                    world.setBlock(pos, BlockInit.blockKbRight.get().defaultBlockState().setValue(BlockKeyboardRight.facing, f), 3);
-                    return;
-                }
-            }
-
-            //Not good; remove this shit...
-            world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
-            if(!(placer instanceof Player) || !((Player) placer).isCreative()) {
-//                dropBlockAsItem(world, pos, state, 0); TODO: Loottable?
-            }
-        } else if(placer instanceof Player) {
+        if(placer instanceof Player) {
             BlockEntity te = world.getBlockEntity(pos);
 
             if(te instanceof TileEntityServer)

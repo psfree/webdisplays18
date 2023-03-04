@@ -40,6 +40,7 @@ dependencies {
     modImplementation "com.github.Mysticpasta1:mcef-forge:a9bf168a92"
     modImplementation "curse.maven:cloth_config_forge-348521:3972423"
     modImplementation "curse.maven:SU-370704:4410614"
+    modImplementation "curse.maven:spark-361579:4381167"
     // Uncomment the following line to enable the deprecated Fabric API modules.
     // These are included in the Fabric API production distribution and allow you to update your mod to the latest modules at a later more convenient time.
 
