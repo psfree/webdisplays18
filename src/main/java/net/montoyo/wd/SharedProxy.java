@@ -27,6 +27,9 @@ public class SharedProxy {
     public void init() {
     }
 
+    public void postInit() {
+    }
+
     public Level getWorld(ResourceKey<Level> dim) {
         return getServer().getLevel(dim);
     }

@@ -95,8 +95,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     }
 
-    private Minecraft mc = Minecraft.getInstance();
-
+    private Minecraft mc;
     private net.montoyo.mcef.api.API mcef;
     private MinePadRenderer minePadRenderer;
     private JSQueryDispatcher jsDispatcher;
@@ -129,9 +128,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     /**************************************** INHERITED METHODS ****************************************/
     @SubscribeEvent
-    public void onClientSetup(FMLClientSetupEvent event) {
+    public static void onClientSetup(FMLClientSetupEvent event) {
         BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
-        ((ReloadableResourceManager) Minecraft.getInstance().getResourceManager()).registerReloadListener(this);
     }
 
     @SubscribeEvent
@@ -146,6 +144,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void preInit() {
+        mc = Minecraft.getInstance();
         MinecraftForge.EVENT_BUS.register(this);
         mcef = MCEFApi.getAPI();
         if(mcef != null)
@@ -164,6 +163,11 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         mcef.registerDisplayHandler(this);
         //mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();
+    }
+
+    @Override
+    public void postInit() {
+        ((ReloadableResourceManager) mc.getResourceManager()).registerReloadListener(this);
     }
 
     @Override
