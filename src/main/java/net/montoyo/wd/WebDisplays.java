@@ -171,11 +171,9 @@ public class WebDisplays {
 
         MinecraftForge.EVENT_BUS.register(this);
 
-
         //Other things
         PROXY.init();
 
-        PROXY.postInit();
         hasOC = ModList.get().isLoaded("opencomputers");
         hasCC = ModList.get().isLoaded("computercraft");
 
