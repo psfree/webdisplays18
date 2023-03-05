@@ -75,9 +75,9 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.19.2-43.2.6'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 
-    implementation "com.github.Mysticpasta1:mcef-forge:76b4b8bfcb"
+    implementation "com.github.Mysticpasta1:mcef-forge:a475ddee09"
     implementation "curse.maven:cloth_config_forge-348521:3972423"
-    implementation "curse.maven:SU-370704:4410614"
+    //implementation "curse.maven:SU-370704:4410614" //TODO This is borked Luigi!
     implementation "curse.maven:spark-361579:4381167"
 }
 
