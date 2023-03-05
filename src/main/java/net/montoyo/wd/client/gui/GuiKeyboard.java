@@ -4,19 +4,12 @@
 
 package net.montoyo.wd.client.gui;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import com.sun.jna.platform.unix.X11;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.Mth;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.InputEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Button;
@@ -30,19 +23,13 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
-import org.apache.commons.lang3.CharUtils;
-import org.cef.browser.CefBrowserOsr;
-import org.jline.utils.Display;
 import org.lwjgl.glfw.GLFW;
+import org.cef.browser.CefBrowserOsr;
 
-import java.awt.event.KeyEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
-
-import static com.mojang.blaze3d.platform.InputConstants.*;
-import static java.awt.event.KeyEvent.*;
 
 @OnlyIn(Dist.CLIENT)
 public class GuiKeyboard extends WDScreen {
@@ -142,7 +129,7 @@ public class GuiKeyboard extends WDScreen {
                 Minecraft.getInstance().setScreen(null);
             }
 
-            int chr = getChar(keyCode, scanCode);
+            int chr = CefBrowserOsr.remapKeycode(keyCode, (char) keyCode, mod);
             evStack.add(new TypeData(TypeData.Action.PRESS, chr, mod));
             evStack.add(new TypeData(TypeData.Action.RELEASE, chr, mod));
 
