@@ -272,14 +272,6 @@ public class TextField extends Control {
         field.setFocus(true);
     }
 
-    public void setMaxLength(int len) {
-        field.setMaxLength(len);
-    }
-
-    public int getMaxLength() {
-        return field.getMaxLength(); //TODO: access transformer
-    }
-
     public void setTextColor(int color) {
         field.setTextColor(color);
         textColor = color;

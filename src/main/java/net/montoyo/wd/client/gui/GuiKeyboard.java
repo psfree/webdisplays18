@@ -157,9 +157,9 @@ public class GuiKeyboard extends WDScreen {
         }
         if(hasShiftDown()) {
             keystr = keystr.toUpperCase(Locale.ROOT);
-            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1));
+            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1), 0);
         } else {
-            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1));
+            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1), 0);
         }
     }
 
