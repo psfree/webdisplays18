@@ -10,15 +10,15 @@ import net.montoyo.wd.init.ItemInit;
 
 public enum CraftComponent {
 
-    STONE_KEY("stonekey", "Stone_Key"),
-    BLANK_UPGRADE("upgrade", "Blank_Upgrade"),
-    PERIPHERAL_BASE("peripheral", "Peripheral_Base"),
-    BATTERY_CELL("batcell", "Battery_Cell"),
-    BATTERY_PACK("batpack", "Battery_Pack"),
-    LASER_DIODE("laserdiode", "Laser_Diode"),
+    STONEKEY("stonekey", "StoneKey"),
+    UPGRADE("upgrade", "Upgrade"),
+    PERIPHERAL("peripheral", "Peripheral"),
+    BATCELL("batcell", "BatCell"),
+    BATPACK("batpack", "BatPack"),
+    LASERDIODE("laserdiode", "LaserDiode"),
     BACKLIGHT("backlight", "Backlight"),
-    EXTENSION_CARD("extcard", "Blank_Upgrade"),
-    BAD_EXTENSION_CARD("badextcard", "Bad_Extension_Card");
+    EXTCARD("extcard", "ExtCard"),
+    BADEXTCARD("badextcard", "BadExtCard");
 
     private final String name;
     private final String wikiName;

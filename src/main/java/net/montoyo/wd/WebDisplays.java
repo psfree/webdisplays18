@@ -301,9 +301,9 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onPlayerCraft(PlayerEvent.ItemCraftedEvent ev) {
-        if(doHardRecipe && ev.getCrafting().getItem() == ItemInit.itemCraftComp.get() && (CraftComponent.EXTENSION_CARD.makeItemStack().is(ev.getCrafting().getItem()))) {
+        if(doHardRecipe && ev.getCrafting().getItem() == ItemInit.itemCraftComp.get() && (CraftComponent.EXTCARD.makeItemStack().is(ev.getCrafting().getItem()))) {
             if((ev.getEntity() instanceof ServerPlayer && !hasPlayerAdvancement((ServerPlayer) ev.getEntity(), ADV_PAD_BREAK)) || PROXY.hasClientPlayerAdvancement(ADV_PAD_BREAK) != HasAdvancement.YES) {
-                ev.getCrafting().setDamageValue(CraftComponent.BAD_EXTENSION_CARD.ordinal());
+                ev.getCrafting().setDamageValue(CraftComponent.BADEXTCARD.ordinal());
 
                 if(!ev.getEntity().getLevel().isClientSide)
                     ev.getEntity().getLevel().playSound(null, ev.getEntity().getX(), ev.getEntity().getY(), ev.getEntity().getZ(), SoundEvents.ITEM_BREAK, SoundSource.MASTER, 1.0f, 1.0f);

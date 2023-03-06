@@ -11,10 +11,10 @@ import net.montoyo.wd.init.ItemInit;
 
 public enum DefaultUpgrade {
 
-    LASER_MOUSE("lasermouse", "Laser_Sensor"),
-    REDSTONE_INPUT("redinput", "Redstone_Input_Port"),
-    REDSTONE_OUTPUT("redoutput", "Redstone_Output_Port"),
-    GPS("gps", "GPS_Module");
+    LASERMOUSE("lasermouse", "LaserMouse"),
+    REDINPUT("redinput", "RedInput"),
+    REDOUTPUT("redoutput", "RedOutput"),
+    GPS("gps", "GPS");
 
     private final String name;
     private final String wikiName;

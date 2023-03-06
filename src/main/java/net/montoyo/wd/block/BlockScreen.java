@@ -228,7 +228,7 @@ public class BlockScreen extends BaseEntityBlock {
                 Multiblock.findOrigin(world, vec, side, null);
 
                 TileEntityScreen tes = (TileEntityScreen) world.getBlockEntity(vec.toBlock());
-                if(tes != null && tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_INPUT)) {
+                if(tes != null && tes.hasUpgrade(side, DefaultUpgrade.REDINPUT)) {
                     Direction facing = Direction.from2DDataValue(side.reverse().ordinal()); //Opposite face
                     vec.sub(pos.getX(), pos.getY(), pos.getZ()).neg();
                     tes.updateJSRedstone(side, new Vector2i(vec.dot(side.right), vec.dot(side.up)), world.getSignal(pos, facing));

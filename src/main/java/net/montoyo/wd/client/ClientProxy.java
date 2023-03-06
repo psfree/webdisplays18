@@ -610,7 +610,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                     Multiblock.findOrigin(mc.level, pos, side, null);
                     TileEntityScreen te = (TileEntityScreen) mc.level.getBlockEntity(pos.toBlock());
 
-                    if(te != null && te.hasUpgrade(side, DefaultUpgrade.LASER_MOUSE)) { //hasUpgrade returns false is there's no screen on side 'side'
+                    if(te != null && te.hasUpgrade(side, DefaultUpgrade.LASERMOUSE)) { //hasUpgrade returns false is there's no screen on side 'side'
                         //Since rights aren't synchronized, let the server check them for us...
                         TileEntityScreen.Screen scr = te.getScreen(side);
 

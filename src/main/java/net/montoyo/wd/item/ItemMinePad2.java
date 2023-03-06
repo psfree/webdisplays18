@@ -87,7 +87,7 @@ public class ItemMinePad2 extends Item implements WDItem {
 
                 if(thrower != null && height - ent.getBlockY() >= 20.0) {
                     ent.getLevel().playSound(null, ent.getBlockX(), ent.getBlockY(), ent.getBlockZ(), SoundEvents.GLASS_BREAK, SoundSource.BLOCKS, 4.0f, 1.0f);
-                    ent.getLevel().addFreshEntity(new ItemEntity(ent.getLevel(), ent.getBlockX(), ent.getBlockY(), ent.getBlockZ(), CraftComponent.EXTENSION_CARD.makeItemStack()));
+                    ent.getLevel().addFreshEntity(new ItemEntity(ent.getLevel(), ent.getBlockX(), ent.getBlockY(), ent.getBlockZ(), CraftComponent.EXTCARD.makeItemStack()));
                     ent.setRemoved(Entity.RemovalReason.CHANGED_DIMENSION);
 
                     Player ply = ent.getLevel().getPlayerByUUID(thrower);

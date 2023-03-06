@@ -564,7 +564,7 @@ public class TileEntityScreen extends BlockEntity{
             return;
         }
 
-        if(scr.upgrades.stream().noneMatch(DefaultUpgrade.REDSTONE_OUTPUT::matches)) {
+        if(scr.upgrades.stream().noneMatch(DefaultUpgrade.REDOUTPUT::matches)) {
             Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Missing upgrade"));
             return;
         }
@@ -957,7 +957,7 @@ public class TileEntityScreen extends BlockEntity{
         if((scr.rightsFor(ply) & ScreenRights.CLICK) == 0)
             return null; //Don't output an error, it can 'legally' happen
 
-        if(scr.upgrades.stream().noneMatch(DefaultUpgrade.LASER_MOUSE::matches)) {
+        if(scr.upgrades.stream().noneMatch(DefaultUpgrade.LASERMOUSE::matches)) {
             Log.error("Called laser operation on side %s, but it's missing the laser sensor upgrade", side.toString());
             return null;
         }

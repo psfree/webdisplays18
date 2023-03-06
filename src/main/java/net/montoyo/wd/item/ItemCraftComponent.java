@@ -17,7 +17,7 @@ public class ItemCraftComponent extends ItemMulti implements WDItem {
                 .tab(WebDisplays.CREATIVE_TAB));
 
         //Hide the bad extension card from the creative tab
-        creativeTabItems.clear(CraftComponent.BAD_EXTENSION_CARD.ordinal());
+        creativeTabItems.clear(CraftComponent.BADEXTCARD.ordinal());
     }
 
     @Override

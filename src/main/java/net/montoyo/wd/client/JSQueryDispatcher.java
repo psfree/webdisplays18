@@ -225,7 +225,7 @@ public final class JSQueryDispatcher {
         });
 
         register("GetRedstoneAt", (cb, tes, side, args) -> {
-            if(!tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_INPUT)) {
+            if(!tes.hasUpgrade(side, DefaultUpgrade.REDINPUT)) {
                 cb.failure(403, "Missing upgrade");
                 return;
             }
@@ -247,7 +247,7 @@ public final class JSQueryDispatcher {
         });
 
         register("GetRedstoneArray", (cb, tes, side, args) -> {
-            if(tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_INPUT)) {
+            if(tes.hasUpgrade(side, DefaultUpgrade.REDINPUT)) {
                 final Direction facing = Direction.values()[side.reverse().ordinal()];
                 final StringJoiner resp = new StringJoiner(",", "{\"levels\":[", "]}");
 
@@ -264,7 +264,7 @@ public final class JSQueryDispatcher {
         });
 
         register("ClearRedstone", (cb, tes, side, args) -> {
-            if(tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_OUTPUT)) {
+            if(tes.hasUpgrade(side, DefaultUpgrade.REDOUTPUT)) {
                 if(tes.getScreen(side).owner.uuid.equals(mc.player.getGameProfile().getId()))
                     makeServerQuery(tes, side, cb, JSServerRequest.CLEAR_REDSTONE);
                 else
@@ -279,7 +279,7 @@ public final class JSQueryDispatcher {
                 return;
             }
 
-            if(!tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_OUTPUT)) {
+            if(!tes.hasUpgrade(side, DefaultUpgrade.REDOUTPUT)) {
                 cb.failure(403, "Missing upgrade");
                 return;
             }
@@ -303,7 +303,7 @@ public final class JSQueryDispatcher {
         });
 
         register("IsEmitting", (cb, tes, side, args) -> {
-            if(!tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_OUTPUT)) {
+            if(!tes.hasUpgrade(side, DefaultUpgrade.REDOUTPUT)) {
                 cb.failure(403, "Missing upgrade");
                 return;
             }
@@ -325,7 +325,7 @@ public final class JSQueryDispatcher {
         });
 
         register("GetEmissionArray", (cb, tes, side, args) -> {
-            if(tes.hasUpgrade(side, DefaultUpgrade.REDSTONE_OUTPUT)) {
+            if(tes.hasUpgrade(side, DefaultUpgrade.REDOUTPUT)) {
                 final StringJoiner resp = new StringJoiner(",", "{\"emission\":[", "]}");
                 tes.forEachScreenBlocks(side, bp -> resp.add(tes.getLevel().getBlockState(bp).getValue(BlockScreen.emitting) ? "1" : "0"));
                 cb.success(resp.toString());
