@@ -170,14 +170,8 @@ public class WebDisplays {
         TileInit.init(bus);
 
         PROXY.preInit();
-    
-        if (FMLEnvironment.dist.isClient()) {
-            ClientProxy proxy = (ClientProxy) PROXY;
-            FMLJavaModLoadingContext.get().getModEventBus().addListener(proxy::onClientSetup);
-        }
         
         MinecraftForge.EVENT_BUS.register(this);
-
 
         //Other things
         PROXY.init();

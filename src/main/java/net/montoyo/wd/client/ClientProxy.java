@@ -129,6 +129,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     private int minePadTickCounter = 0;
 
     /**************************************** INHERITED METHODS ****************************************/
+    @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
     }
