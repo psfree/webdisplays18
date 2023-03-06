@@ -10,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.gui.controls.Button;
@@ -25,8 +26,11 @@ import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
 import org.lwjgl.glfw.GLFW;
 import org.cef.browser.CefBrowserOsr;
+import org.vivecraft.gameplay.VRPlayer;
+import org.vivecraft.gameplay.screenhandlers.KeyboardHandler;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Map;
@@ -64,6 +68,30 @@ public class GuiKeyboard extends WDScreen {
         vars.put("showWarning", showWarning ? 1.0 : 0.0);
     }
 
+    private static final boolean vivecraftPresent;
+    
+    static {
+        boolean vivePres = false;
+        if (ModList.get().isLoaded("vivecraft")) vivePres = true;
+        // I believe the non-mixin version of vivecraft is not a proper mod, so
+        // detect the mod reflectively if the mod is not found
+        else {
+            try {
+                Class<?> clazz = Class.forName("org.vivecraft.gameplay.screenhandlers.KeyboardHandler");
+                //noinspection ConstantConditions
+                if (clazz == null) vivePres = false;
+                else {
+                    Method m = clazz.getMethod("setOverlayShowing", boolean.class);
+                    //noinspection ConstantConditions
+                    vivePres = m != null;
+                }
+            } catch (Throwable ignored) {
+                vivePres = false;
+            }
+        }
+        vivecraftPresent = vivePres;
+    }
+    
     @Override
     public void init() {
         super.init();
@@ -109,58 +137,45 @@ public class GuiKeyboard extends WDScreen {
 
         defaultBackground = showWarning;
         syncTicks = 5;
+    
+        if (vivecraftPresent)
+            if (VRPlayer.get() != null)
+                KeyboardHandler.setOverlayShowing(true);
     }
-
+    
+    @Override
+    public void onClose() {
+        if (vivecraftPresent)
+            if (VRPlayer.get() != null)
+                KeyboardHandler.setOverlayShowing(false);
+        super.onClose();
+    }
+    
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        key(keyCode, scanCode, true, modifiers);
+        if(quitOnEscape && keyCode == GLFW.GLFW_KEY_ESCAPE) {
+            Minecraft.getInstance().setScreen(null);
+        }
+        evStack.add(new TypeData(TypeData.Action.PRESS, keyCode, modifiers));
+        if (!evStack.isEmpty() && !syncRequested())
+            requestSync();
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
-
+    
+    @Override
+    public boolean charTyped(char codePoint, int modifiers) {
+        evStack.add(new TypeData(TypeData.Action.TYPE, codePoint, modifiers));
+        if (!evStack.isEmpty() && !syncRequested())
+            requestSync();
+        return super.charTyped(codePoint, modifiers);
+    }
+    
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        key(keyCode, scanCode, false, modifiers);
+        evStack.add(new TypeData(TypeData.Action.RELEASE, keyCode, modifiers));
+        if (!evStack.isEmpty() && !syncRequested())
+            requestSync();
         return super.keyPressed(keyCode, scanCode, modifiers);
-    }
-
-    public void key(int keyCode, int scanCode, boolean pressed, int mod) {
-        if (pressed) {
-            if(quitOnEscape && keyCode == GLFW.GLFW_KEY_ESCAPE) {
-                Minecraft.getInstance().setScreen(null);
-            }
-
-            int chr = CefBrowserOsr.remapKeycode(keyCode, (char) keyCode, mod);
-            evStack.add(new TypeData(TypeData.Action.PRESS, chr, mod));
-            evStack.add(new TypeData(TypeData.Action.RELEASE, chr, mod));
-
-            if (keyCode != 0)
-                evStack.add(new TypeData(TypeData.Action.TYPE, chr, mod));
-
-            if (!evStack.isEmpty() && !syncRequested())
-                requestSync();
-        }
-    }
-
-    public int getChar(int keyCode, int scanCode) {
-        String keystr = GLFW.glfwGetKeyName(keyCode, scanCode);
-        if(keystr == null){
-            keystr = "\0";
-        }
-        if(keyCode == GLFW.GLFW_KEY_ENTER){
-            return 13;
-        }
-        if (keyCode == GLFW.GLFW_KEY_SPACE) {
-            return 32;
-        }
-        if(keystr.length() == 0){
-            return -1;
-        }
-        if(hasShiftDown()) {
-            keystr = keystr.toUpperCase(Locale.ROOT);
-            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1), 0);
-        } else {
-            return CefBrowserOsr.remapKeycode(keyCode, keystr.charAt(keystr.length() - 1), 0);
-        }
     }
 
     @Override

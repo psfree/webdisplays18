@@ -184,10 +184,11 @@ public class BlockScreen extends BaseEntityBlock {
 
                 return InteractionResult.SUCCESS;
             }
-        } else if(sneaking) {
-            Util.toast(player, "turnOn");
-            return InteractionResult.SUCCESS;
         }
+//        else if(sneaking) {
+//            Util.toast(player, "turnOn");
+//            return InteractionResult.SUCCESS;
+//        }
 
         Vector2i size = Multiblock.measure(world, pos, side);
         if(size.x < 2 || size.y < 2) {

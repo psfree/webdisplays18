@@ -786,9 +786,9 @@ public class TileEntityScreen extends BlockEntity{
 
                         for(TypeData ev : data) {
                             switch (ev.getAction()) {
-                                case PRESS -> scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), 0);
-                                case RELEASE -> scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), 0);
-                                case TYPE -> scr.browser.injectKeyTyped(ev.getKeyCode(), 0);
+                                case PRESS -> scr.browser.injectKeyPressedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), ev.getModifier());
+                                case RELEASE -> scr.browser.injectKeyReleasedByKeyCode(ev.getKeyCode(), (char) ev.getKeyCode(), ev.getModifier());
+                                case TYPE -> scr.browser.injectKeyTyped(ev.getKeyCode(), ev.getModifier());
                                 default -> throw new RuntimeException("Invalid type action '" + ev.getAction() + '\'');
                             }
                         }
