@@ -79,6 +79,8 @@ dependencies {
     implementation fg.deobf("curse.maven:cloth_config_forge-348521:3972423")
     implementation fg.deobf("curse.maven:SU-370704:4410614")
     implementation fg.deobf("curse.maven:spark-361579:4381167")
+
+    implementation fg.deobf("curse.maven:vivecraft-667903:4409427")
 }
 
 sourceSets {

@@ -126,7 +126,26 @@ public class BlockScreen extends BaseEntityBlock {
 
         return ret;
     }
-
+    
+    @Override
+    public void onRemove(BlockState p_60515_, Level p_60516_, BlockPos p_60517_, BlockState p_60518_, boolean p_60519_) {
+        // TODO: make this also get called on client?
+        for (BlockSide value : BlockSide.values()) {
+            Vector3i vec = new Vector3i(p_60517_.getX(), p_60517_.getY(), p_60517_.getZ());
+            Multiblock.findOrigin(p_60516_, vec, value, null);
+            BlockPos bp = new BlockPos(vec.x, vec.y, vec.z);
+            if (!bp.equals(p_60517_)) {
+                p_60516_.removeBlockEntity(bp);
+                p_60516_.setBlock(
+                        bp, p_60516_.getBlockState(bp).setValue(hasTE, false),
+                        11
+                );
+            }
+        }
+    
+        super.onRemove(p_60515_, p_60516_, p_60517_, p_60518_, p_60519_);
+    }
+    
     @Override
     public InteractionResult use(BlockState state, Level world, BlockPos position, Player player, InteractionHand hand, BlockHitResult hit) {
         ItemStack heldItem = player.getItemInHand(hand);
@@ -184,10 +203,11 @@ public class BlockScreen extends BaseEntityBlock {
 
                 return InteractionResult.SUCCESS;
             }
-        } else if(sneaking) {
-            Util.toast(player, "turnOn");
-            return InteractionResult.SUCCESS;
         }
+//        else if(sneaking) {
+//            Util.toast(player, "turnOn");
+//            return InteractionResult.SUCCESS;
+//        }
 
         Vector2i size = Multiblock.measure(world, pos, side);
         if(size.x < 2 || size.y < 2) {
