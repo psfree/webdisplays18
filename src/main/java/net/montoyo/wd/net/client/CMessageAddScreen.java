@@ -89,7 +89,7 @@ public class CMessageAddScreen {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
-            BlockEntity te = WebDisplays.PROXY.getWorld(Level.OVERWORLD).getBlockEntity(pos.toBlock());
+            BlockEntity te = WebDisplays.PROXY.getWorld(contextSupplier.get()).getBlockEntity(pos.toBlock());
             if (!(te instanceof TileEntityScreen)) {
                 if (clear)
                     Log.error("CMessageAddScreen: Can't add screen to invalid tile entity at %s", pos.toString());
