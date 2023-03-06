@@ -35,7 +35,9 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
@@ -168,9 +170,8 @@ public class WebDisplays {
         TileInit.init(bus);
 
         PROXY.preInit();
-
+        
         MinecraftForge.EVENT_BUS.register(this);
-
 
         //Other things
         PROXY.init();

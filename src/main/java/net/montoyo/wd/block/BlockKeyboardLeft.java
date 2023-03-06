@@ -149,13 +149,6 @@ public class BlockKeyboardLeft extends BlockPeripheral {
         Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
     }
     
-//    @Override
-//    public void playerDestroy(Level world, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
-//        if(!world.isClientSide) {
-//            remove(state, world, pos, false, false);
-//        }
-//    }
-    
     @Override
     public void onRemove(BlockState arg, Level arg2, BlockPos arg3, BlockState arg4, boolean bl) {
         if(!arg2.isClientSide) {

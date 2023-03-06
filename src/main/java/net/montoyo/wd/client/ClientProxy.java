@@ -30,6 +30,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -46,6 +47,7 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
+import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.mcef.api.*;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
@@ -788,5 +790,9 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         Log.warning("ClientAdvancementManager.advancementToProgress field could not be found");
         return null;
     }
-
+    
+    @Override
+    public BlockGetter getWorld(NetworkEvent.Context context) {
+        return Minecraft.getInstance().level;
+    }
 }

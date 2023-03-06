@@ -10,7 +10,9 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
@@ -30,8 +32,14 @@ public class SharedProxy {
     public void postInit() {
     }
 
+    @Deprecated(forRemoval = true)
     public Level getWorld(ResourceKey<Level> dim) {
         return getServer().getLevel(dim);
+    }
+    
+    public BlockGetter getWorld(NetworkEvent.Context context) {
+        if (context.getSender() != null) return context.getSender().level;
+        return null;
     }
 
     public void enqueue(Runnable r) {
@@ -105,5 +113,4 @@ public class SharedProxy {
     public boolean isShiftDown() {
         return false;
     }
-
 }
