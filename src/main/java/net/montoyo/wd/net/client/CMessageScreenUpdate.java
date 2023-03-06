@@ -6,11 +6,14 @@ package net.montoyo.wd.net.client;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nullable;
@@ -233,32 +236,39 @@ public class CMessageScreenUpdate {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
-        BlockEntity te = WebDisplays.PROXY.getWorld(Level.OVERWORLD).getBlockEntity(pos.toBlock());
-        if(!(te instanceof TileEntityScreen)) {
-            Log.error("CMessageScreenUpdate: TileEntity at %s is not a screen!", pos.toString());
-            return;
-        }
-
-        TileEntityScreen tes = (TileEntityScreen) te;
-
-            switch (action) {
-                case UPDATE_URL -> tes.setScreenURL(side, string);
-                case UPDATE_MOUSE -> tes.handleMouseEvent(side, mouseEvent, vec2i);
-                case UPDATE_DELETE -> tes.removeScreen(side);
-                case UPDATE_RESOLUTION -> tes.setResolution(side, vec2i);
-                case UPDATE_TYPE -> tes.type(side, string, null);
-                case UPDATE_RUN_JS -> tes.evalJS(side, string);
-                case UPDATE_UPGRADES -> tes.updateUpgrades(side, upgrades);
-                case UPDATE_JS_REDSTONE -> tes.updateJSRedstone(side, vec2i, redstoneLevel);
-                case UPDATE_OWNER -> {
-                    TileEntityScreen.Screen scr = tes.getScreen(side);
-                    if (scr != null)
-                        scr.owner = owner;
-                }
-                case UPDATE_ROTATION -> tes.setRotation(side, rotation);
-                case UPDATE_AUTO_VOL -> tes.setAutoVolume(side, autoVolume);
-                default -> Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
+            BlockGetter level = WebDisplays.PROXY.getWorld(contextSupplier.get());
+            if (level instanceof Level level1)
+                // ensure that the TE exists
+                level1.setBlock(
+                        pos.toBlock(),
+                        level.getBlockState(pos.toBlock()).setValue(BlockScreen.hasTE, true),11
+                );
+            BlockEntity te = level.getBlockEntity(pos.toBlock());
+            if(!(te instanceof TileEntityScreen)) {
+                Log.error("CMessageScreenUpdate: TileEntity at %s is not a screen!", pos.toString());
+                return;
             }
+    
+            TileEntityScreen tes = (TileEntityScreen) te;
+    
+                switch (action) {
+                    case UPDATE_URL -> tes.setScreenURL(side, string);
+                    case UPDATE_MOUSE -> tes.handleMouseEvent(side, mouseEvent, vec2i);
+                    case UPDATE_DELETE -> tes.removeScreen(side);
+                    case UPDATE_RESOLUTION -> tes.setResolution(side, vec2i);
+                    case UPDATE_TYPE -> tes.type(side, string, null);
+                    case UPDATE_RUN_JS -> tes.evalJS(side, string);
+                    case UPDATE_UPGRADES -> tes.updateUpgrades(side, upgrades);
+                    case UPDATE_JS_REDSTONE -> tes.updateJSRedstone(side, vec2i, redstoneLevel);
+                    case UPDATE_OWNER -> {
+                        TileEntityScreen.Screen scr = tes.getScreen(side);
+                        if (scr != null)
+                            scr.owner = owner;
+                    }
+                    case UPDATE_ROTATION -> tes.setRotation(side, rotation);
+                    case UPDATE_AUTO_VOL -> tes.setAutoVolume(side, autoVolume);
+                    default -> Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
+                }
         });
 
         contextSupplier.get().setPacketHandled(true);
