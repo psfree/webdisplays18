@@ -25,6 +25,7 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Mod.EventBusSubscriber(Dist.CLIENT)
@@ -101,6 +102,13 @@ public class GuiSetURL2 extends WDScreen {
 
     private void validate(String url) {
         if(!url.isEmpty()) {
+
+            try {
+                TileEntityScreen.url(url);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
             url = Util.addProtocol(url);
             url = ((ClientProxy) WebDisplays.PROXY).getMCEF().punycode(url);
 

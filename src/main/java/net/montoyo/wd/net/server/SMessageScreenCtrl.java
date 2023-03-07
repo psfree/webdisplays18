@@ -24,6 +24,7 @@ import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.utilities.*;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 public class SMessageScreenCtrl implements Runnable {
@@ -309,7 +310,11 @@ public class SMessageScreenCtrl implements Runnable {
 
         if(ctrl == CTRL_SET_URL || ctrl == CTRL_SET_URL_REMOTE) {
             checkPermission(tes, ScreenRights.CHANGE_URL);
-            tes.setScreenURL(side, url);
+            try {
+                tes.setScreenURL(side, url);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         } else if(ctrl == CTRL_SHUT_DOWN) {
             //TODO
             //checkPermission(tes, ScreenRights.CHANGE_URL);

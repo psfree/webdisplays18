@@ -17,6 +17,7 @@ import net.montoyo.wd.net.client.CMessageScreenUpdate;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -336,7 +337,11 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
         else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.CHANGE_URL) == 0)
             return err("restrictions");
         else {
-            scr.setScreenURL(screenSide, url);
+            try {
+                scr.setScreenURL(screenSide, url);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             return TRUE;
         }
     }

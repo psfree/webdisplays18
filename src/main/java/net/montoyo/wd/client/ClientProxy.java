@@ -132,12 +132,12 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     @SubscribeEvent
     public static void onClientSetup(FMLClientSetupEvent event) {
         BlockEntityRenderers.register(TileInit.SCREEN_BLOCK_ENTITY.get(), new ScreenRenderer.ScreenRendererProvider());
+        registerBlockRenderLayers(RenderType.cutout(), BlockInit.blockKeyBoard.get(), BlockInit.blockKbRight.get());
     }
 
     @SubscribeEvent
     public static void onModelRegistryEvent(ModelEvent.RegisterGeometryLoaders event) {
         event.register(ScreenModelLoader.SCREEN_LOADER.getPath(), new ScreenModelLoader());
-        registerBlockRenderLayers(RenderType.cutout(), BlockInit.blockKeyBoard.get(), BlockInit.blockKbRight.get());
     }
 
     private static void registerBlockRenderLayers(RenderType layer, Block... blocks) {

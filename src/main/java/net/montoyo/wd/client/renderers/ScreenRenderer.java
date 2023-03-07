@@ -20,6 +20,8 @@ import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
+
 import static com.mojang.math.Vector3f.*;
 import static org.lwjgl.opengl.GL11.*;
 

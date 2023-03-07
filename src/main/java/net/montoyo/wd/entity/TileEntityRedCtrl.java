@@ -22,6 +22,7 @@ import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 public class TileEntityRedCtrl extends TileEntityPeripheralBase {
 
@@ -115,8 +116,12 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
         if(isScreenChunkLoaded()) {
             TileEntityScreen tes = getConnectedScreen();
 
-            if(tes != null)
-                tes.setScreenURL(screenSide, url);
+            if (tes != null)
+                try {
+                    tes.setScreenURL(screenSide, url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
         }
     }
 }

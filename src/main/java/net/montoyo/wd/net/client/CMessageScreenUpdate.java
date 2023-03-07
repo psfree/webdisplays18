@@ -17,6 +17,7 @@ import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.function.Supplier;
 
@@ -252,7 +253,13 @@ public class CMessageScreenUpdate {
             TileEntityScreen tes = (TileEntityScreen) te;
     
                 switch (action) {
-                    case UPDATE_URL -> tes.setScreenURL(side, string);
+                    case UPDATE_URL -> {
+                        try {
+                            tes.setScreenURL(side, string);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                     case UPDATE_MOUSE -> tes.handleMouseEvent(side, mouseEvent, vec2i);
                     case UPDATE_DELETE -> tes.removeScreen(side);
                     case UPDATE_RESOLUTION -> tes.setResolution(side, vec2i);
