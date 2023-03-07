@@ -16,6 +16,8 @@ import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.TextField;
 import net.montoyo.wd.client.gui.loading.FillControl;
+import net.montoyo.wd.client.renderers.ScreenRenderer;
+import net.montoyo.wd.entity.ServerEventHandler;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.net.Messages;
@@ -119,8 +121,9 @@ public class GuiSetURL2 extends WDScreen {
                 if(held.getItem().equals(ItemInit.itemMinePad.get()) && held.getTag() != null && held.getTag().contains("PadID")) {
                     ClientProxy.PadData pd = ((ClientProxy) WebDisplays.PROXY).getPadByID(held.getTag().getInt("PadID"));
 
-                    if(pd != null && pd.view != null)
+                    if(pd != null && pd.view != null) {
                         pd.view.loadURL(WebDisplays.applyBlacklist(url));
+                    }
                 }
             } else
                 Messages.INSTANCE.sendToServer(SMessageScreenCtrl.setURL(tileEntity, screenSide, url, remoteLocation));

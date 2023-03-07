@@ -12,8 +12,10 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
+import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.ItemInit;
 
+import java.io.IOException;
 import java.util.function.Supplier;
 
 public class SMessagePadCtrl implements Runnable {
@@ -54,7 +56,13 @@ public class SMessagePadCtrl implements Runnable {
                     if(!is.getTag().contains("PadID"))
                         is.getTag().putInt("PadID", WebDisplays.getNextAvailablePadID());
 
-                    is.getTag().putString("PadURL", WebDisplays.applyBlacklist(url));
+                    String webUrl;
+                    try {
+                        webUrl = TileEntityScreen.url(url);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    is.getTag().putString("PadURL", WebDisplays.applyBlacklist(webUrl));
                 }
             }
         } else {
@@ -71,8 +79,15 @@ public class SMessagePadCtrl implements Runnable {
             if(target == null && matchesMinePadID(player.getInventory().offhand.get(0)))
                 target = player.getInventory().offhand.get(0);
 
-            if(target != null)
-                target.getTag().putString("PadURL", WebDisplays.applyBlacklist(url));
+            if(target != null) {
+                String webUrl;
+                try {
+                    webUrl = TileEntityScreen.url(url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                target.getTag().putString("PadURL", WebDisplays.applyBlacklist(webUrl));
+            }
         }
     }
 

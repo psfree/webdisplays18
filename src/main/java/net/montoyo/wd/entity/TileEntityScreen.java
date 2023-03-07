@@ -4,10 +4,18 @@
 
 package net.montoyo.wd.entity;
 
+import com.mojang.authlib.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.Connection;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -23,8 +31,10 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.mcef.api.IBrowser;
+import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
+import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.JSServerRequest;
@@ -33,21 +43,21 @@ import net.montoyo.wd.data.ScreenConfigData;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.init.TileInit;
+import net.montoyo.wd.miniserv.SyncPlugin;
 import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageAddScreen;
-import net.montoyo.wd.net.client.CMessageCloseGui;
-import net.montoyo.wd.net.client.CMessageJSResponse;
-import net.montoyo.wd.net.client.CMessageScreenUpdate;
+import net.montoyo.wd.net.client.*;
+import net.montoyo.wd.net.server.SMessageGetUrl;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
+import net.montoyo.wd.net.server.URLMessage;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static net.montoyo.wd.block.BlockPeripheral.point;
@@ -370,17 +380,17 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     public static String url(String url) throws IOException {
-
-        MinecraftServer server = WebDisplays.PROXY.getServer();
-        System.setProperty("http.proxyHost", server.getLocalIp());
-        System.setProperty("http.proxyPort", String.valueOf(server.getPort()));
-        Proxy webProxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(InetAddress.getByName(server.getLocalIp()), server.getPort()));
-
-        URL weburl1 = new URL(url);
-
-        HttpURLConnection webProxyConnection = (HttpURLConnection) weburl1.openConnection(webProxy);
-
-        return webProxyConnection.getURL().toString();
+        System.out.println("URL received: " + url);
+        if (!(WebDisplays.PROXY instanceof ClientProxy)) {
+            List<ServerPlayer> serverPlayers = WebDisplays.PROXY.getServer().getPlayerList().getPlayers();
+            SyncPlugin.syncPlayers(serverPlayers);
+            for (ServerPlayer serverPlayer : serverPlayers) {
+                SyncPlugin.setPlayerString(serverPlayer, url);
+            }
+            return url;
+        } else {
+            return null;
+        }
     }
 
     public void setScreenURL(BlockSide side, String url) throws IOException {
@@ -403,9 +413,6 @@ public class TileEntityScreen extends BlockEntity {
             Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.setURL(this, side, weburl));
             setChanged();
         }
-
-        System.setProperty("http.proxyHost", null);
-        System.setProperty("http.proxyPort", null);
     }
 
     public void removeScreen(BlockSide side) {
@@ -714,6 +721,12 @@ public class TileEntityScreen extends BlockEntity {
     public void updateClientSideURL(IBrowser target, String url) {
         for (Screen scr : screens) {
             if (scr.browser == target) {
+                String webUrl;
+                try {
+                    webUrl = TileEntityScreen.url(url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 boolean blacklisted = WebDisplays.isSiteBlacklisted(url);
                 scr.url = blacklisted ? WebDisplays.BLACKLIST_URL : url; //FIXME: This is an invalid fix for something that CANNOT be fixed
                 scr.videoType = VideoType.getTypeFromURL(scr.url);

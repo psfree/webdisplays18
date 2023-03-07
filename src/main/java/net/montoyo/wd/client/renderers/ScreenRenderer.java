@@ -7,6 +7,7 @@ package net.montoyo.wd.client.renderers;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -15,7 +16,9 @@ import net.minecraft.world.phys.AABB;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
+import net.montoyo.wd.entity.ServerEventHandler;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.miniserv.SyncPlugin;
 import net.montoyo.wd.utilities.Vector3f;
 import net.montoyo.wd.utilities.Vector3i;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +29,14 @@ import static com.mojang.math.Vector3f.*;
 import static org.lwjgl.opengl.GL11.*;
 
 public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
+
+    private String url;
+
+    public ScreenRenderer(String url) {
+        this.url = url;
+    }
+
+    public ScreenRenderer() {}
 
     public static class ScreenRendererProvider implements BlockEntityRendererProvider<TileEntityScreen> {
         @Override
@@ -52,7 +63,7 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
             TileEntityScreen.Screen scr = te.getScreen(i);
             if(scr.browser == null) {
                 if(WebDisplays.PROXY instanceof ClientProxy clientProxy) {
-                    scr.browser = clientProxy.getMCEF().createBrowser(WebDisplays.applyBlacklist(scr.url));
+                    scr.browser = clientProxy.getMCEF().createBrowser(WebDisplays.applyBlacklist(this.url != null ? this.url : "https://www.google.com"));
 
                     if (scr.rotation.isVertical)
                         scr.browser.resize(scr.resolution.y, scr.resolution.x);

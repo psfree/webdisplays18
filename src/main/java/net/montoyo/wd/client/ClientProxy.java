@@ -72,6 +72,7 @@ import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -89,7 +90,13 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         private long lastURLSent;
 
         private PadData(String url, int id) {
-            view = mcef.createBrowser(WebDisplays.applyBlacklist(url));
+            String webUrl;
+            try {
+                webUrl = TileEntityScreen.url(url);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            view = mcef.createBrowser(WebDisplays.applyBlacklist(webUrl));
             view.resize((int)  WebDisplays.INSTANCE.padResX, (int)  WebDisplays.INSTANCE.padResY);
             isInHotbar = true;
             this.id = id;
@@ -165,6 +172,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         mcef.registerDisplayHandler(this);
         //mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();
+        String url = "https://www.google.com";
+        new ScreenRenderer(url);
     }
 
     @Override
