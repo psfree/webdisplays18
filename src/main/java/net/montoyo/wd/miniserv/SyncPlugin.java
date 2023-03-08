@@ -1,17 +1,9 @@
 package net.montoyo.wd.miniserv;
 
-import com.mojang.math.Vector3d;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.network.Connection;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.PacketDistributor;
-import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.server.SMessageGetUrl;
+import net.montoyo.wd.net.server.URLMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +24,7 @@ public class SyncPlugin {
 
     public static String getPlayerString(ServerPlayer player) {
         if(URL.get(player) == null) {
-            return "https://www.google.com";
+            setPlayerString(player, new URLMessage().getURL());
         }
         return URL.get(player);
     }

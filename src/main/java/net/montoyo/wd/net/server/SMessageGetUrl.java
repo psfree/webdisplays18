@@ -30,8 +30,7 @@ public class SMessageGetUrl {
 
     public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
         contextSupplier.get().enqueueWork(() -> {
-            int connectTime = Objects.requireNonNull(Objects.requireNonNull(contextSupplier.get().getSender()).getServer()).getTickCount() - Objects.requireNonNull(contextSupplier.get().getSender()).connection.player.tickCount;
-            if(Objects.requireNonNull(contextSupplier.get().getSender()).connection.getConnection().isConnected() && connectTime > 20) {
+            if(Objects.requireNonNull(contextSupplier.get().getSender()).connection.getConnection().isConnected()) {
                 Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> contextSupplier.get().getSender()), new URLMessage(url));
             }
             Messages.INSTANCE.send(PacketDistributor.ALL.noArg(), new URLMessage(url));
