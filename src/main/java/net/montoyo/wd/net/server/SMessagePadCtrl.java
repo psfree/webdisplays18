@@ -14,6 +14,8 @@ import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.ItemInit;
+import net.montoyo.wd.net.Messages;
+import net.montoyo.wd.utilities.SyncedUrl;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -56,12 +58,8 @@ public class SMessagePadCtrl implements Runnable {
                     if(!is.getTag().contains("PadID"))
                         is.getTag().putInt("PadID", WebDisplays.getNextAvailablePadID());
 
-                    String webUrl;
-                    try {
-                        webUrl = TileEntityScreen.url(url);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    Messages.sendUrlUpdate(url);
+                    String webUrl = SyncedUrl.getUrl();
                     is.getTag().putString("PadURL", WebDisplays.applyBlacklist(webUrl));
                 }
             }
@@ -80,12 +78,8 @@ public class SMessagePadCtrl implements Runnable {
                 target = player.getInventory().offhand.get(0);
 
             if(target != null) {
-                String webUrl;
-                try {
-                    webUrl = TileEntityScreen.url(url);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                Messages.sendUrlUpdate(url);
+                String webUrl = SyncedUrl.getUrl();
                 target.getTag().putString("PadURL", WebDisplays.applyBlacklist(webUrl));
             }
         }

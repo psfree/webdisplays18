@@ -90,12 +90,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         private long lastURLSent;
 
         private PadData(String url, int id) {
-            String webUrl;
-            try {
-                webUrl = TileEntityScreen.url(url);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            Messages.sendUrlUpdate(url);
+            String webUrl = SyncedUrl.getUrl();
             view = mcef.createBrowser(WebDisplays.applyBlacklist(webUrl));
             view.resize((int)  WebDisplays.INSTANCE.padResX, (int)  WebDisplays.INSTANCE.padResY);
             isInHotbar = true;

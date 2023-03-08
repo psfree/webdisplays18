@@ -7,27 +7,35 @@ package net.montoyo.wd.net;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.util.AttributeKey;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
+import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.montoyo.wd.net.client.*;
 import net.montoyo.wd.net.server.*;
+import net.montoyo.wd.utilities.SyncedUrl;
+import org.jline.utils.Log;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber
 public class Messages {
+
+    private static final String CHANNEL_NAME = "webdisplays:packetsystem";
 
     private static final String PROTOCOL_VERSION = "1";
     private static int index = 0;
@@ -54,7 +62,29 @@ public class Messages {
         INSTANCE.registerMessage(index++, SMessageScreenCtrl.class, SMessageScreenCtrl::encode, SMessageScreenCtrl::decode, SMessageScreenCtrl::handle);
         INSTANCE.registerMessage(index++, SMessagePadCtrl.class, SMessagePadCtrl::encode, SMessagePadCtrl::decode, SMessagePadCtrl::handle);
         INSTANCE.registerMessage(index++, CMessageOpenGui.class, CMessageOpenGui::encode, CMessageOpenGui::decode, CMessageOpenGui::handle);
-        INSTANCE.registerMessage(index++, SMessageGetUrl.class, SMessageGetUrl::encode, SMessageGetUrl::decode, SMessageGetUrl::handle);
-        INSTANCE.registerMessage(index++, URLMessage.class, URLMessage::encode, URLMessage::decode, URLMessage::handle);
+        INSTANCE.registerMessage(index++, SyncedUrlPacket.class, SyncedUrlPacket::encode, SyncedUrlPacket::decode, SyncedUrlPacket::handle);
+    }
+
+    public static void sendUrlUpdate(String newUrl) {
+        if (newUrl != null && Minecraft.getInstance().getConnection() != null) {
+            Messages.INSTANCE.sendToServer(new SyncedUrlPacket(newUrl));
+        }
+    }
+
+    public static void sendUrlToPlayer(ServerPlayer player, String url) {
+        if(url == null) {
+            url = "https://www.google.com";
+        }
+        SyncedUrl.setUrl(url);
+        Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new SyncedUrlPacket(url));
+    }
+
+    @SubscribeEvent
+    public static void onPacketReceived(NetworkEvent.ServerCustomPayloadEvent event) {
+        if (event.getSource().get().getDirection().getReceptionSide() == LogicalSide.SERVER && CHANNEL_NAME.equals(event.getPayload().readUtf())) {
+            String newUrl = event.getPayload().readUtf();
+            SyncedUrl.updateUrl(newUrl);
+            Log.debug("Received URL update from client: {}", newUrl);
+        }
     }
 }
