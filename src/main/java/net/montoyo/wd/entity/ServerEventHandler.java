@@ -14,11 +14,7 @@ public class ServerEventHandler {
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         // Send current URL to player
         String url = SyncedUrl.getUrl();
-
-        if(event.getEntity() instanceof ServerPlayer serverPlayer) {
-            new ScreenRenderer(url);
-            Messages.sendUrlToPlayer(serverPlayer, url);
-        }
+        new ScreenRenderer(Messages.sendUrlToPlayer(url));
     }
 
     @SubscribeEvent
@@ -32,9 +28,6 @@ public class ServerEventHandler {
     public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         // Send current URL to player
         String url = SyncedUrl.getUrl();
-        if(event.getEntity() instanceof ServerPlayer serverPlayer) {
-            new ScreenRenderer(url);
-            Messages.sendUrlToPlayer(serverPlayer, url);
-        }
+        new ScreenRenderer(Messages.sendUrlToPlayer(url));
     }
 }

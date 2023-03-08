@@ -4,33 +4,19 @@
 
 package net.montoyo.wd.net;
 
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
-import io.netty.util.AttributeKey;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 import net.montoyo.wd.net.client.*;
 import net.montoyo.wd.net.server.*;
 import net.montoyo.wd.utilities.SyncedUrl;
 import org.jline.utils.Log;
-
-import java.lang.reflect.InvocationTargetException;
-import java.util.function.Supplier;
 
 @Mod.EventBusSubscriber
 public class Messages {
@@ -67,16 +53,20 @@ public class Messages {
 
     public static void sendUrlUpdate(String newUrl) {
         if (newUrl != null && Minecraft.getInstance().getConnection() != null) {
-            Messages.INSTANCE.sendToServer(new SyncedUrlPacket(newUrl));
+            if(newUrl.equals("https://www.google.com") || newUrl.equals("https://www.google.com/")) {
+                Messages.INSTANCE.sendToServer(new SyncedUrlPacket(newUrl, true));
+            } else {
+                Messages.INSTANCE.sendToServer(new SyncedUrlPacket(newUrl, false));
+            }
         }
     }
 
-    public static void sendUrlToPlayer(ServerPlayer player, String url) {
+    public static String sendUrlToPlayer(String url) {
         if(url == null) {
             url = "https://www.google.com";
         }
         SyncedUrl.setUrl(url);
-        Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), new SyncedUrlPacket(url));
+        return SyncedUrl.getUrl();
     }
 
     @SubscribeEvent

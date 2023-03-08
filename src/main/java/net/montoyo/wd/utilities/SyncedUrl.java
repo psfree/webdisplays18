@@ -1,7 +1,5 @@
 package net.montoyo.wd.utilities;
 
-import net.montoyo.wd.net.Messages;
-
 public class SyncedUrl {
     private static String url;
     
@@ -11,7 +9,6 @@ public class SyncedUrl {
     
     public static void setUrl(String newUrl) {
         url = newUrl;
-        Messages.sendUrlUpdate(newUrl);
     }
     
     public static void updateUrl(String newUrl) {
