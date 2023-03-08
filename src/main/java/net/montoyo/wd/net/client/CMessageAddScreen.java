@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.utilities.*;
 
 import java.io.IOException;
@@ -106,13 +105,20 @@ public class CMessageAddScreen {
             for (TileEntityScreen.Screen entry : screens) {
                 TileEntityScreen.Screen scr = tes.addScreen(entry.side, entry.size, entry.resolution, null, false);
                 scr.rotation = entry.rotation;
-                Messages.sendUrlUpdate(entry.url);
-                scr.url = SyncedUrl.getUrl();
+                String webUrl;
+
+                try {
+                    webUrl = TileEntityScreen.url(entry.url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+                scr.url = webUrl;
                 scr.owner = entry.owner;
                 scr.upgrades = entry.upgrades;
 
                 if (scr.browser != null)
-                    scr.browser.loadURL(scr.url);
+                    scr.browser.loadURL(webUrl);
             }
 
         });

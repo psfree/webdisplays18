@@ -4,10 +4,19 @@
 
 package net.montoyo.wd.entity;
 
+import com.mojang.authlib.minecraft.client.MinecraftClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.multiplayer.resolver.ServerAddress;
+import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.network.Connection;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -22,6 +31,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.mcef.api.IBrowser;
+import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.ClientProxy;
@@ -33,15 +43,21 @@ import net.montoyo.wd.data.ScreenConfigData;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.init.TileInit;
+import net.montoyo.wd.miniserv.SyncPlugin;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.*;
+import net.montoyo.wd.net.server.SMessageGetUrl;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
+import net.montoyo.wd.net.server.URLMessage;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.net.*;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static net.montoyo.wd.block.BlockPeripheral.point;
@@ -363,6 +379,20 @@ public class TileEntityScreen extends BlockEntity {
             Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> ep), new CMessageAddScreen(this));
     }
 
+    public static String url(String url) throws IOException {
+        System.out.println("URL received: " + url);
+        if (!(WebDisplays.PROXY instanceof ClientProxy)) {
+            List<ServerPlayer> serverPlayers = WebDisplays.PROXY.getServer().getPlayerList().getPlayers();
+            SyncPlugin.syncPlayers(serverPlayers);
+            for (ServerPlayer serverPlayer : serverPlayers) {
+                SyncPlugin.setPlayerString(serverPlayer, url);
+            }
+            return url;
+        } else {
+            return null;
+        }
+    }
+
     public void setScreenURL(BlockSide side, String url) throws IOException {
         Screen scr = getScreen(side);
         if (scr == null) {
@@ -370,8 +400,7 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        Messages.sendUrlUpdate(url);
-        String weburl = SyncedUrl.getUrl();
+        String weburl = url(url);
 
         weburl = WebDisplays.applyBlacklist(weburl);
         scr.url = weburl;
@@ -692,10 +721,14 @@ public class TileEntityScreen extends BlockEntity {
     public void updateClientSideURL(IBrowser target, String url) {
         for (Screen scr : screens) {
             if (scr.browser == target) {
-                Messages.sendUrlUpdate(url);
-                String weburl = SyncedUrl.getUrl();
-                boolean blacklisted = WebDisplays.isSiteBlacklisted(weburl);
-                scr.url = blacklisted ? WebDisplays.BLACKLIST_URL : weburl; //FIXME: This is an invalid fix for something that CANNOT be fixed
+                String webUrl;
+                try {
+                    webUrl = TileEntityScreen.url(url);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                boolean blacklisted = WebDisplays.isSiteBlacklisted(url);
+                scr.url = blacklisted ? WebDisplays.BLACKLIST_URL : url; //FIXME: This is an invalid fix for something that CANNOT be fixed
                 scr.videoType = VideoType.getTypeFromURL(scr.url);
                 ytVolume = Float.POSITIVE_INFINITY; //Force volume update
 

@@ -3,31 +3,30 @@ package net.montoyo.wd.entity;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
 import net.montoyo.wd.client.renderers.ScreenRenderer;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.utilities.SyncedUrl;
+import net.montoyo.wd.miniserv.SyncPlugin;
 
-@Mod.EventBusSubscriber(modid = "webdisplays", bus = Mod.EventBusSubscriber.Bus.FORGE)
-public class ServerEventHandler {
+import java.util.HashMap;
+import java.util.Map;
+
+public class ServerEventHandler extends ScreenRenderer{
+    public static final Map<ServerPlayer, ScreenRenderer> playerScreens = new HashMap<>();
+
     @SubscribeEvent
-    public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
-        // Send current URL to player
-        String url = SyncedUrl.getUrl();
-        new ScreenRenderer(Messages.sendUrlToPlayer(url));
+    public void onPlayerConnect(PlayerEvent.PlayerLoggedInEvent event) {
+        // create a new instance of the ScreenRenderer class for the player
+        ServerPlayer player = (ServerPlayer) event.getEntity();
+        String url = SyncPlugin.getPlayerString(player);
+        ScreenRenderer screen = new ScreenRenderer(url);
+
+        // store the ScreenRenderer instance in the playerScreens map
+        playerScreens.put(player, screen);
     }
 
     @SubscribeEvent
-    public static void onPlayerLoggedOut(PlayerEvent.PlayerLoggedOutEvent event) {
-        // Re-sync URL when player logs back in
-        String url = SyncedUrl.getUrl();
-        Messages.sendUrlUpdate(url);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
-        // Send current URL to player
-        String url = SyncedUrl.getUrl();
-        new ScreenRenderer(Messages.sendUrlToPlayer(url));
+    public void onPlayerDisconnect(PlayerEvent.PlayerLoggedOutEvent event) {
+        // remove the ScreenRenderer instance for the player
+        ServerPlayer player = (ServerPlayer) event.getEntity();
+        playerScreens.remove(player);
     }
 }
