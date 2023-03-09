@@ -530,9 +530,9 @@ public class TileEntityScreen extends BlockEntity {
             if (event == CMessageScreenUpdate.MOUSE_CLICK) {
                 if(InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)
                         || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL)) {
-                    scr.browser.injectMouseMove(vec.x, vec.y,0, false);                                            //Move to target
-                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 3, true, 1);                              //Press
-                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 3, false, 1);                            //Release
+                    scr.browser.injectMouseMove(vec.x, vec.y, InputEvent.BUTTON3_DOWN_MASK, false);                                            //Move to target
+                    scr.browser.injectMouseButton(vec.x, vec.y, InputEvent.BUTTON3_DOWN_MASK, 3, true, 1);                              //Press
+                    scr.browser.injectMouseButton(vec.x, vec.y, InputEvent.BUTTON3_DOWN_MASK, 3, false, 1);                            //Release
                 } else {
                     scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
                     scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
