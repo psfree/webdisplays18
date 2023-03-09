@@ -29,7 +29,19 @@ public enum DefaultUpgrade {
         return name;
     }
 
-    public boolean matches(ItemStack is) {
-        return is.getItem() == ItemInit.itemUpgrade.get();
+    public boolean matchesLaserMouse(ItemStack is) {
+        return is.getItem() == ItemInit.laserMouse.get();
+    }
+
+    public boolean matchesRedInput(ItemStack is) {
+        return is.getItem() == ItemInit.redInput.get();
+    }
+
+    public boolean matchesRedOutput(ItemStack is) {
+        return is.getItem() == ItemInit.redOutput.get();
+    }
+
+    public boolean matchesGps(ItemStack is) {
+        return is.getItem() == ItemInit.gps.get();
     }
 }

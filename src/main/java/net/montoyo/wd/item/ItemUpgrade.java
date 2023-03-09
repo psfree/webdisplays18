@@ -28,7 +28,7 @@ public class ItemUpgrade extends ItemMulti implements IUpgrade, WDItem {
 
     @Override
     public boolean onRemove(@Nonnull TileEntityScreen tes, @Nonnull BlockSide screenSide, @Nullable Player player, @Nonnull ItemStack is) {
-        if(DefaultUpgrade.LASERMOUSE.matches(is))
+        if(DefaultUpgrade.LASERMOUSE.matchesLaserMouse(is))
             tes.clearLaserUser(screenSide);
 
         return false;

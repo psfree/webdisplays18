@@ -5,6 +5,7 @@
 package net.montoyo.wd.entity;
 
 import com.mojang.authlib.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.multiplayer.PlayerInfo;
@@ -50,9 +51,11 @@ import net.montoyo.wd.net.server.SMessageGetUrl;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
 import net.montoyo.wd.net.server.URLMessage;
 import net.montoyo.wd.utilities.*;
+import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.awt.event.InputEvent;
 import java.io.IOException;
 import java.net.*;
 import java.util.*;
@@ -525,9 +528,16 @@ public class TileEntityScreen extends BlockEntity {
 
         if (scr.browser != null) {
             if (event == CMessageScreenUpdate.MOUSE_CLICK) {
-                scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
-                scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
-                scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, false, 1);                             //Release
+                if(InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_CONTROL)
+                        || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_CONTROL)) {
+                    scr.browser.injectMouseMove(vec.x, vec.y,0, false);                                            //Move to target
+                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 3, true, 1);                              //Press
+                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 3, false, 1);                            //Release
+                } else {
+                    scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
+                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
+                    scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, false, 1);                            //Release
+                }
             } else if (event == CMessageScreenUpdate.MOUSE_DOWN) {
                 scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
                 scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
@@ -535,7 +545,6 @@ public class TileEntityScreen extends BlockEntity {
                 scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move
             else if (event == CMessageScreenUpdate.MOUSE_UP)
                 scr.browser.injectMouseButton(scr.lastMousePos.x, scr.lastMousePos.y, 0, 1, false, 1);  //Release
-
             if (vec != null) {
                 scr.lastMousePos.x = vec.x;
                 scr.lastMousePos.y = vec.y;
@@ -592,7 +601,7 @@ public class TileEntityScreen extends BlockEntity {
             return;
         }
 
-        if (scr.upgrades.stream().noneMatch(DefaultUpgrade.REDOUTPUT::matches)) {
+        if (scr.upgrades.stream().noneMatch(DefaultUpgrade.REDOUTPUT::matchesRedInput)) {
             Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Missing upgrade"));
             return;
         }
@@ -922,7 +931,17 @@ public class TileEntityScreen extends BlockEntity {
 
     public boolean hasUpgrade(BlockSide side, DefaultUpgrade du) {
         Screen scr = getScreen(side);
-        return scr != null && scr.upgrades.stream().anyMatch(du::matches);
+        if (du == DefaultUpgrade.LASERMOUSE) {
+            return scr != null && scr.upgrades.stream().anyMatch(du::matchesLaserMouse);
+        } else if (du == DefaultUpgrade.REDINPUT) {
+            return scr != null && scr.upgrades.stream().anyMatch(du::matchesRedInput);
+        } else if (du == DefaultUpgrade.GPS) {
+            return scr != null && scr.upgrades.stream().anyMatch(du::matchesGps);
+        } else if (du == DefaultUpgrade.REDOUTPUT) {
+            return scr != null && scr.upgrades.stream().anyMatch(du::matchesRedOutput);
+        } else {
+            return false;
+        }
     }
 
     public void removeUpgrade(BlockSide side, ItemStack is, @Nullable Player player) {
@@ -993,7 +1012,7 @@ public class TileEntityScreen extends BlockEntity {
         if ((scr.rightsFor(ply) & ScreenRights.CLICK) == 0)
             return null; //Don't output an error, it can 'legally' happen
 
-        if (scr.upgrades.stream().noneMatch(DefaultUpgrade.LASERMOUSE::matches)) {
+        if (scr.upgrades.stream().noneMatch(DefaultUpgrade.LASERMOUSE::matchesLaserMouse)) {
             Log.error("Called laser operation on side %s, but it's missing the laser sensor upgrade", side.toString());
             return null;
         }

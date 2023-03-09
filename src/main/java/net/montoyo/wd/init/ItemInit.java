@@ -13,6 +13,8 @@ import net.montoyo.wd.core.CraftComponent;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.item.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class ItemInit{
@@ -22,9 +24,12 @@ public class ItemInit{
     }
 
     public static DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, "webdisplays");
-
-    public static RegistryObject<Item> itemUpgrade = null;
     public static RegistryObject<Item> itemCraftComp = null;
+
+    public static RegistryObject<Item> laserMouse = null;
+    public static RegistryObject<Item> redInput = null;
+    public static RegistryObject<Item> redOutput = null;
+    public static RegistryObject<Item> gps = null;
 
     public static final RegistryObject<Item> itemScreenCfg = ITEMS.register("screencfg", () -> new ItemScreenConfigurator(new Item.Properties()));
     public static final RegistryObject<Item> itemOwnerThief = ITEMS.register("ownerthief", () -> new ItemOwnershipThief(new Item.Properties()));
@@ -33,9 +38,10 @@ public class ItemInit{
     public static final RegistryObject<Item> itemLaserPointer = ITEMS.register("laserpointer", () -> new ItemLaserPointer(new Item.Properties()));
 
     public static void registerUpgrade() {
-        for (DefaultUpgrade du : DefaultUpgrade.values()) {
-            itemUpgrade = ITEMS.register("upgrade_" + du.name().toLowerCase(Locale.ROOT), ItemUpgrade::new);
-        }
+        laserMouse = ITEMS.register("upgrade_" + DefaultUpgrade.LASERMOUSE.name().toLowerCase(Locale.ROOT), ItemUpgrade::new);
+        redInput = ITEMS.register("upgrade_" + DefaultUpgrade.REDINPUT.name().toLowerCase(Locale.ROOT), ItemUpgrade::new);
+        redOutput = ITEMS.register("upgrade_" + DefaultUpgrade.REDOUTPUT.name().toLowerCase(Locale.ROOT), ItemUpgrade::new);
+        gps = ITEMS.register("upgrade_" + DefaultUpgrade.GPS.name().toLowerCase(Locale.ROOT), ItemUpgrade::new);
     }
 
     public static void registerComponents() {

@@ -568,8 +568,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                 if(tes.isLoaded()) {
                     if(dist2 >  WebDisplays.INSTANCE.unloadDistance2)
                         tes.unload();
-                    //else if(WebDisplays.INSTANCE.enableSoundDistance)
-                       // tes.updateTrackDistance(dist2, SoundSystemConfig.getMasterGain());
+                    else if(WebDisplays.INSTANCE.enableSoundDistance)
+                        tes.updateTrackDistance(dist2, 80); //ToDo find master volume
                 } else if(dist2 <=  WebDisplays.INSTANCE.loadDistance2)
                     tes.load();
             }
@@ -602,12 +602,9 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             }
 
             //Laser pointer raycast
-            boolean raycastHit = false;
-
             if(mc.player != null && mc.level != null && ItemInit.itemLaserPointer.isPresent() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get())
                                                      && mc.options.keyUse.isDown()
-                                                     && (mc.hitResult == null || mc.hitResult.getType() != HitResult.Type.BLOCK)) {
-                laserPointerRenderer.isOn = true;
+                                                     && (mc.hitResult == null || mc.hitResult.getType() == HitResult.Type.BLOCK)) {
                 BlockHitResult result = raycast(64.0); //TODO: Make that distance configurable
 
                 BlockPos bpos = result.getBlockPos();
@@ -631,24 +628,21 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
                             if(BlockScreen.hit2pixels(side, bpos, pos, scr, hitX, hitY, hitZ, tmp)) {
                                 laserClick(te, side, scr, tmp);
-                                raycastHit = true;
                             }
                         }
                     }
                 }
-            } else
-                laserPointerRenderer.isOn = false;
-
-            if(!raycastHit)
+            } else {
                 deselectScreen();
 
-            //Handle JS queries
-            jsDispatcher.handleQueries();
+                //Handle JS queries
+                jsDispatcher.handleQueries();
 
-            //Miniserv
-            if(msClientStarted && mc.player == null) {
-                msClientStarted = false;
-                Client.getInstance().stop();
+                //Miniserv
+                if (msClientStarted && mc.player == null) {
+                    msClientStarted = false;
+                    Client.getInstance().stop();
+                }
             }
         }
     }

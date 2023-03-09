@@ -7,16 +7,13 @@ package net.montoyo.wd.client.renderers;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
+import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import org.lwjgl.BufferUtils;
-
-import java.nio.FloatBuffer;
-
-import static org.lwjgl.opengl.GL11.*;
 
 @OnlyIn(Dist.CLIENT)
 public final class LaserPointerRenderer implements IItemRenderer {
@@ -24,17 +21,8 @@ public final class LaserPointerRenderer implements IItemRenderer {
     private static final float PI = (float) Math.PI;
     private final Tesselator t = Tesselator.getInstance();
     private final BufferBuilder bb = t.getBuilder();
-    private final FloatBuffer matrix1 = BufferUtils.createFloatBuffer(16);
-    private final FloatBuffer renderBuffer = BufferUtils.createFloatBuffer(8);
 
-    public boolean isOn = false;
-
-    public LaserPointerRenderer() {
-        for(int i = 0; i < 8; i++)
-            renderBuffer.put(0.0f);
-
-        renderBuffer.position(0);
-    }
+    public LaserPointerRenderer() {}
 
     @Override
     public void render(PoseStack poseStack, ItemStack is, float handSideSign, float swingProgress, float equipProgress, MultiBufferSource multiBufferSource, int packedLight) {
@@ -45,7 +33,6 @@ public final class LaserPointerRenderer implements IItemRenderer {
         RenderSystem.disableCull();
         RenderSystem.disableTexture();
 
-        poseStack.pushPose();
         //Laser pointer
         poseStack.pushPose();
         poseStack.translate(handSideSign * -0.4f * sinSqrtSwingProg1, (float) (0.2f * Math.sin(sqrtSwingProg * PI * 2.0f)), (float) (-0.2f * Math.sin(swingProgress * PI)));
@@ -60,55 +47,45 @@ public final class LaserPointerRenderer implements IItemRenderer {
 
         RenderSystem.setShaderColor(0.5f, 0.5f, 0.5f, 1.0f);
 
-        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-        bb.vertex(0.0, 0.0, 0.0).endVertex();
-        bb.vertex(1.0, 0.0, 0.0).endVertex();
-        bb.vertex(1.0, 0.0, 4.0).endVertex();
-        bb.vertex(0.0, 0.0, 4.0).endVertex();
+        var matrix = poseStack.last().pose();
+        bb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bb.vertex(matrix, 0.0f, 0.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 1.0f, 0.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 1.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 0.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
 
-        bb.vertex(0.0, 0.0, 0.0).endVertex();
-        bb.vertex(0.0, -1.0, 0.0).endVertex();
-        bb.vertex(0.0, -1.0, 4.0).endVertex();
-        bb.vertex(0.0, 0.0, 4.0).endVertex();
+        bb.vertex(matrix, 0.0f, 0.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 0.0f, -1.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 0.0f, -1.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 0.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
 
-        bb.vertex(1.0, 0.0, 0.0).endVertex();
-        bb.vertex(1.0, -1.0, 0.0).endVertex();
-        bb.vertex(1.0, -1.0, 4.0).endVertex();
-        bb.vertex(1.0, 0.0, 4.0).endVertex();
+        bb.vertex(matrix,1.0f, 0.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix,1.0f, -1.0f, 0.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix,1.0f, -1.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix,1.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
 
-        bb.vertex(0.0, -1.0, 4.0).endVertex();
-        bb.vertex(1.0, -1.0, 4.0).endVertex();
-        bb.vertex(1.0, 0.0, 4.0).endVertex();
-        bb.vertex(0.0, 0.0, 4.0).endVertex();
+        bb.vertex(matrix, 0.0f, -1.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 1.0f, -1.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 1.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
+        bb.vertex(matrix, 0.0f, 0.0f, 4.0f).color(0.5f, 0.5f, 0.5f, 1.0f).endVertex();
         t.end();
-        if(isOn) {
-            poseStack.translate(0.5f, -0.5f, 0.0f);
-            matrix1.position(0);
-            RenderSystem.getModelViewMatrix(); //Hax to get that damn position
-        }
 
-        poseStack.popPose();
-
-        if(isOn) {
-            //Actual laser
-          poseStack.pushPose();
-          RenderSystem.enableBlend();
-          RenderSystem.blendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA, GlStateManager.SourceFactor.SRC_ALPHA, GlStateManager.DestFactor.DST_ALPHA);
-            RenderSystem.setShaderColor(1.0f, 0.0f, 0.0f, 0.5f);
-            RenderSystem.lineWidth(3.0f);
-
-            matrix1.position(12);
-            renderBuffer.put(matrix1.get());
-            renderBuffer.put(matrix1.get());
-            renderBuffer.put(matrix1.get() - 0.02f); //I know this is stupid, but it's the only thing that worked...
-            renderBuffer.put(matrix1.get());
-            renderBuffer.position(0);
-            RenderSystem.drawElements(GL_LINES, 0, GL_UNSIGNED_INT);
-            poseStack.popPose();
-        }
-
+        drawLine(bb, t, matrix);
         RenderSystem.enableTexture(); //Fix for shitty minecraft fire
         RenderSystem.enableCull();
+        poseStack.popPose();
     }
 
+    public static void drawLine(BufferBuilder bb, Tesselator t, Matrix4f matrix) {
+        GlStateManager._enableBlend();
+        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        RenderSystem.setShaderColor(255f, 0f,0f, 127.5f);
+        RenderSystem.enableDepthTest();
+        bb.begin(VertexFormat.Mode.LINES, DefaultVertexFormat.POSITION_COLOR);
+
+        bb.vertex(matrix, 0, 0, 0).color(255f, 0f,0f, 127.5f).endVertex();
+        bb.vertex(matrix, 20, 0, 20).color(255f, 0f,0f, 127.5f).endVertex();
+        t.end();
+        GlStateManager._disableBlend();
+    }
 }
