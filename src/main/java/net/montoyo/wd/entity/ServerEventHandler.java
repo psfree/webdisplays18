@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Mod.EventBusSubscriber
-public class ServerEventHandler extends ScreenRenderer{
+public class ServerEventHandler {
     public static final Map<ServerPlayer, ScreenRenderer> playerScreens = new HashMap<>();
 
     @SubscribeEvent
@@ -19,10 +19,11 @@ public class ServerEventHandler extends ScreenRenderer{
         // create a new instance of the ScreenRenderer class for the player
         ServerPlayer player = (ServerPlayer) event.getEntity();
         String url = SyncPlugin.getPlayerString(player);
-        ScreenRenderer screen = new ScreenRenderer(url);
-
-        // store the ScreenRenderer instance in the playerScreens map
-        playerScreens.put(player, screen);
+        if(event.getEntity().getLevel().isClientSide) {
+            ScreenRenderer screen = new ScreenRenderer(url);
+            // store the ScreenRenderer instance in the playerScreens map
+            playerScreens.put(player, screen);
+        }
     }
 
     @SubscribeEvent
