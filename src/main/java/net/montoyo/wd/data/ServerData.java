@@ -6,6 +6,7 @@ package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
@@ -17,10 +18,14 @@ public class ServerData extends GuiData {
 
     public Vector3i pos;
     public NameUUIDPair owner;
-
+    
     public ServerData() {
     }
-
+    
+//    public ServerData(FriendlyByteBuf buf) {
+//        super(buf);
+//    }
+    
     public ServerData(BlockPos bp, NameUUIDPair owner) {
         pos = new Vector3i(bp);
         this.owner = owner;

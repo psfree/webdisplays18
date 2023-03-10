@@ -12,8 +12,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.server.ServerLifecycleHooks;
+import net.montoyo.mcef.api.CefInitEvent;
 import net.montoyo.wd.core.HasAdvancement;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.data.GuiData;
@@ -27,9 +29,13 @@ public class SharedProxy {
     }
 
     public void init() {
+        MinecraftForge.EVENT_BUS.addListener(this::onCefInit);
     }
 
     public void postInit() {
+    }
+    
+    public void onCefInit(CefInitEvent event) {
     }
 
     @Deprecated(forRemoval = true)

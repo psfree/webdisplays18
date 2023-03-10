@@ -225,7 +225,7 @@ public class BlockScreen extends BaseEntityBlock {
 //        }
 
             Vector2i size = Multiblock.measure(world, pos, side);
-            if (size.x < 2 || size.y < 2) {
+            if (size.x < 2 && size.y < 2) {
                 Util.toast(player, "tooSmall");
                 return InteractionResult.SUCCESS;
             }

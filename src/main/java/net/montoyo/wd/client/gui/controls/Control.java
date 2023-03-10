@@ -62,11 +62,11 @@ public abstract class Control {
         return false;
     }
 
-    public boolean keyUp(int key) {
+    public boolean keyUp(int key, int scanCode, int modifiers) {
         return false;
     }
 
-    public boolean keyDown(int key) {
+    public boolean keyDown(int key, int scanCode, int modifiers) {
         return false;
     }
 

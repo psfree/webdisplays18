@@ -1,8 +1,10 @@
 package net.montoyo.wd.block.item;
 
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.block.BlockKeyboardLeft;
@@ -20,7 +22,7 @@ public class KeyboardItem extends BlockItem {
 		
 		Direction d = BlockKeyboardLeft.mapDirection(facing);
 		
-		if (isValid(arg, arg2, d)) {
+		if (isValid(arg.getClickedPos(), arg.getLevel(), arg2, d)) {
 			Block kbRight = BlockInit.blockKbRight.get();
 			BlockState rightState = kbRight.defaultBlockState();
 			
@@ -31,11 +33,22 @@ public class KeyboardItem extends BlockItem {
 					11
 			)) return false;
 			return arg.getLevel().setBlock(arg.getClickedPos(), arg2, 11);// 161
+		} else if (isValid(arg.getClickedPos().relative(d.getOpposite(), 2), arg.getLevel(), arg2, d)) {
+			Block kbRight = BlockInit.blockKbRight.get();
+			BlockState rightState = kbRight.defaultBlockState();
+			
+			rightState = rightState.setValue(BlockKeyboardLeft.FACING, facing);
+			if (!arg.getLevel().setBlock(
+					arg.getClickedPos(),
+					rightState,
+					11
+			)) return false;
+			return arg.getLevel().setBlock(arg.getClickedPos().relative(d.getOpposite()), arg2, 11);// 161
 		}
 		return false;
 	}
 	
-	private boolean isValid(BlockPlaceContext context, BlockState state, Direction d) {
-		return context.getLevel().getBlockState(context.getClickedPos().relative(d)).isAir();
+	private boolean isValid(BlockPos pos, Level level, BlockState state, Direction d) {
+		return level.getBlockState(pos.relative(d)).isAir();
 	}
 }

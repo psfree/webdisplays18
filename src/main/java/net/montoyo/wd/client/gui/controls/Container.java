@@ -36,24 +36,24 @@ public abstract class Container extends BasicControl {
     }
 
     @Override
-    public boolean keyUp(int key) {
+    public boolean keyUp(int key, int scanCode, int modifiers) {
         boolean up = false;
 
         if(!disabled) {
             for(Control ctrl : childs)
-                up = up || ctrl.keyUp(key);
+                up = up || ctrl.keyUp(key, scanCode, modifiers);
         }
 
         return up;
     }
 
     @Override
-    public boolean keyDown(int key) {
+    public boolean keyDown(int key, int scanCode, int modifiers) {
         boolean down = false;
 
         if(!disabled) {
             for(Control ctrl : childs)
-                down = down || ctrl.keyDown(key);
+                down = down || ctrl.keyDown(key, scanCode, modifiers);
         }
 
         return down;

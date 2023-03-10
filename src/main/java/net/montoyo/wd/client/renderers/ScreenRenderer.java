@@ -9,10 +9,13 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.world.phys.AABB;
+import net.montoyo.mcef.api.IStringVisitor;
 import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.client.ClientProxy;
@@ -157,68 +160,15 @@ public class ScreenRenderer implements BlockEntityRenderer<TileEntityScreen> {
 
 
         //Bounding box debugging
-//        poseStack.pushPose();
-//        poseStack.translate(-te.getBlockPos().getX(), -te.getBlockPos().getY(), -te.getBlockPos().getZ());
-//        renderAABB(te.getRenderBoundingBox());
-//        poseStack.popPose();
+        poseStack.pushPose();
+        poseStack.translate(-te.getBlockPos().getX(), -te.getBlockPos().getY(), -te.getBlockPos().getZ());
+        LevelRenderer.renderLineBox(
+                poseStack, bufferSource.getBuffer(RenderType.LINES),
+                te.getRenderBoundingBox(), 1, 1, 1, 1f
+        );
+        poseStack.popPose();
 
         //Re-enable lighting
         RenderSystem.enableCull();
-    }
-
-    public void renderAABB(AABB bb) {
-        RenderSystem.disableTexture();
-        RenderSystem.enableBlend();
-        RenderSystem.blendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        RenderSystem.disableCull();
-        RenderSystem.setShaderColor(0.f, 0.5f, 1.f, 0.75f);
-        RenderSystem.depthMask(false);
-
-        Tesselator t = new Tesselator();
-        BufferBuilder vb = t.getBuilder();
-        VertexBuffer tb = new VertexBuffer();
-        vb.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
-
-        //Bottom
-        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
-
-        //Top
-        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
-
-        //Left
-        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
-        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
-
-        //Right
-        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
-
-        //Front
-        vb.vertex(bb.minX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.minY, bb.minZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.minZ).endVertex();
-        vb.vertex(bb.minX, bb.maxY, bb.minZ).endVertex();
-
-        //Back
-        vb.vertex(bb.minX, bb.minY, bb.maxZ).endVertex();
-        vb.vertex(bb.maxX, bb.minY, bb.maxZ).endVertex();
-        vb.vertex(bb.maxX, bb.maxY, bb.maxZ).endVertex();
-        vb.vertex(bb.minX, bb.maxY, bb.maxZ).endVertex();
-        tb.draw();
-
-        RenderSystem.depthMask(true);
-        RenderSystem.enableCull();
-        RenderSystem.enableTexture();
-        RenderSystem.disableBlend();
     }
 }

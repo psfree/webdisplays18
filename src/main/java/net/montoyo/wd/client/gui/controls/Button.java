@@ -158,7 +158,7 @@ public class Button extends Control {
     }
 
     @Override
-    public boolean keyUp(int key) {
+    public boolean keyUp(int key, int scanCode, int modifiers) {
         if(key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             shiftDown = false;
             btn.setFGColor(originalColor);
@@ -170,7 +170,7 @@ public class Button extends Control {
     }
 
     @Override
-    public boolean keyDown(int key) {
+    public boolean keyDown(int key, int scanCode, int modifiers) {
         if(key == GLFW.GLFW_KEY_LEFT_SHIFT || key == GLFW.GLFW_KEY_RIGHT_SHIFT) {
             shiftDown = true;
             btn.setFGColor(shiftColor);
