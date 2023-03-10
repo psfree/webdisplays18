@@ -16,8 +16,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.network.Connection;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -30,9 +28,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.mcef.api.IBrowser;
-import net.montoyo.wd.SharedProxy;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.client.ClientProxy;
@@ -47,9 +45,7 @@ import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.miniserv.SyncPlugin;
 import net.montoyo.wd.net.Messages;
 import net.montoyo.wd.net.client.*;
-import net.montoyo.wd.net.server.SMessageGetUrl;
 import net.montoyo.wd.net.server.SMessageRequestTEData;
-import net.montoyo.wd.net.server.URLMessage;
 import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -57,10 +53,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.awt.event.InputEvent;
 import java.io.IOException;
-import java.net.*;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import static net.montoyo.wd.block.BlockPeripheral.point;
@@ -672,19 +665,47 @@ public class TileEntityScreen extends BlockEntity {
 
     private void updateAABB() {
         Vector3i origin = new Vector3i(getBlockPos());
-        Vector3i tmp = new Vector3i();
-        AABB aabb = new AABB(origin);
-
+        MutableAABB box = null;
+        
         for (Screen scr : screens) {
-            tmp.set(origin);
-            tmp.addMul(scr.side.right, scr.size.x);
-            tmp.addMul(scr.side.up, scr.size.y);
-            tmp.add(scr.side.forward);
+            Vector3i f = scr.side.forward;
+            
+            int fx = Math.max(f.x, 0);
+            int fy = Math.max(f.y, 0);
+            int fz = Math.max(f.z, 0);
+            int ox = 0;
+            if (scr.side.equals(BlockSide.NORTH)) ox = 1;
+            int oz = 0;
+            if (
+                    scr.side.equals(BlockSide.EAST) ||
+                    scr.side.equals(BlockSide.TOP) ||
+                    scr.side.equals(BlockSide.BOTTOM)
+            ) oz = 1;
 
-            aabb.expand(tmp);
+            if (box == null) {
+                box = new MutableAABB(
+                        origin.x + fx + ox,
+                        origin.y + fy,
+                        origin.z + fz + oz,
+        
+                        origin.x + ox + scr.side.right.x * scr.size.x + fx + scr.side.up.x * scr.size.y,
+                        origin.y + scr.side.right.y * scr.size.x + fy + scr.side.up.y * scr.size.y,
+                        origin.z + oz + scr.side.right.z * scr.size.x + fz + scr.side.up.z * scr.size.y
+                );
+            } else {
+                box.expand(
+                        origin.x + fx + ox,
+                        origin.y + fy,
+                        origin.z + fz + oz,
+            
+                        origin.x + ox + scr.side.right.x * scr.size.x + fx + scr.side.up.x * scr.size.y,
+                        origin.y + scr.side.right.y * scr.size.x + fy + scr.side.up.y * scr.size.y,
+                        origin.z + oz + scr.side.right.z * scr.size.x + fz + scr.side.up.z * scr.size.y
+                );
+            }
         }
 
-        renderBB = aabb.toMc().expandTowards(0.1, 0.1, 0.1);
+        renderBB = box.toMc();
     }
 
     @Override

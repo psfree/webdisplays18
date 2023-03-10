@@ -153,22 +153,29 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
     @Override
     public void preInit() {
+        super.preInit();
         mc = Minecraft.getInstance();
-        MinecraftForge.EVENT_BUS.register(this);
-        mcef = MCEFApi.getAPI();
-        if(mcef != null)
-            mcef.registerScheme("wd", WDScheme.class, true, false, false, true, true, false, false);
     }
 
     @Override
     public void init() {
+        super.init();
+    }
+    
+    @Override
+    public void onCefInit(CefInitEvent event) {
+        MinecraftForge.EVENT_BUS.register(this);
+        mcef = event.getApi();
+        if(mcef != null)
+            mcef.registerScheme("wd", WDScheme.class, true, false, false, true, true, false, false);
+        
         jsDispatcher = new JSQueryDispatcher(this);
         minePadRenderer = new MinePadRenderer();
         laserPointerRenderer = new LaserPointerRenderer();
-
+        
         if(mcef == null)
             throw new RuntimeException("MCEF is missing");
-
+        
         mcef.registerDisplayHandler(this);
         //mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();

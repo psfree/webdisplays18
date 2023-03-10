@@ -5,6 +5,7 @@
 package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -30,10 +31,14 @@ public class ScreenConfigData extends GuiData {
     public NameUUIDPair[] friends;
     public int friendRights;
     public int otherRights;
-
+    
     public ScreenConfigData() {
     }
-
+    
+//    public ScreenConfigData(FriendlyByteBuf buf) {
+//        super(buf);
+//    }
+    
     public ScreenConfigData(Vector3i pos, BlockSide side, TileEntityScreen.Screen scr) {
         this.pos = pos;
         this.side = side;
