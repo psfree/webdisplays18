@@ -8,9 +8,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.network.chat.Component;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
+import org.cef.browser.CefBrowserOsr;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
+
+import static java.awt.event.KeyEvent.VK_ENTER;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class TextField extends Control {
 
@@ -104,30 +108,35 @@ public class TextField extends Control {
         field = new EditBox(font, x + 1, y + 1, width - 2, height - 2, Component.nullToEmpty(""));
         field.setValue(text);
     }
-
-    @Override
-    public boolean keyDown(int key) {
-        if(key == GLFW.GLFW_KEY_BACKSPACE) {
-            String old;
-            if(enabled && field.isFocused())
-                old = field.getValue();
-            else
-                old = null;
-            
-            if(field.getValue().length() > 0)
-                field.setValue(field.getValue().substring(0, field.getValue().length() - 1));
-
-            if(enabled && field.isFocused() && !field.getValue().equals(old)) {
-                for(TextChangeListener tcl : listeners)
-                    tcl.onTextChange(this, old, field.getValue());
-
-                parent.actionPerformed(new TextChangedEvent(this, old));
-            }
-        }
-
-        return false;
+    
+    // TODO: make this public static in CefBrowserOSR
+    private long mapScanCode(int key, char c) {
+        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL) return 29;
+        return switch (key) {
+            case GLFW_KEY_DELETE -> 83;
+            case GLFW_KEY_LEFT -> 75;
+            case GLFW_KEY_DOWN -> 80;
+            case GLFW_KEY_UP -> 72;
+            case GLFW_KEY_RIGHT -> 77;
+            case GLFW_KEY_PAGE_DOWN -> 81;
+            case GLFW_KEY_PAGE_UP -> 73;
+            case GLFW_KEY_END -> 79;
+            case GLFW_KEY_HOME -> 71;
+            case VK_ENTER, GLFW_KEY_ENTER, GLFW_KEY_KP_ENTER -> 28;
+            default -> GLFW.glfwGetKeyScancode(key);
+        };
     }
-
+    
+    @Override
+    public boolean keyDown(int key, int scanCode, int modifiers) {
+        return field.keyPressed(key, scanCode, modifiers);
+    }
+    
+    @Override
+    public boolean keyUp(int key, int scanCode, int modifiers) {
+        return field.keyReleased(key, scanCode, modifiers);
+    }
+    
     @Override
     public boolean keyTyped(int keyCode, int modifier) {
         if(keyCode == GLFW.GLFW_KEY_ENTER || keyCode == GLFW.GLFW_KEY_KP_ENTER)
@@ -141,24 +150,45 @@ public class TextField extends Control {
             else
                 old = null;
 
-            field.charTyped((char) keyCode, modifier);
-
             if(enabled && field.isFocused() && !field.getValue().equals(old)) {
                 for(TextChangeListener tcl : listeners)
                     tcl.onTextChange(this, old, field.getValue());
 
                 parent.actionPerformed(new TextChangedEvent(this, old));
             }
+            
+            return field.charTyped((char) keyCode, modifier);
         }
 
         return false;
     }
-
+    
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int mouseButton) {
         return field.mouseClicked(mouseX, mouseY, mouseButton);
     }
-
+    
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int state) {
+        return field.mouseReleased(mouseX, mouseY, state);
+    }
+    
+    @Override
+    public boolean mouseClickMove(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        return field.mouseClicked(mouseX, mouseY, 0);
+    }
+    
+    @Override
+    public boolean mouseMove(double mouseX, double mouseY) {
+        field.mouseMoved(mouseX, mouseY);
+        return true;
+    }
+    
+    @Override
+    public boolean mouseScroll(double mouseX, double mouseY, double amount) {
+        return field.mouseScrolled(mouseX, mouseY, amount);
+    }
+    
     @Override
     public void draw(PoseStack poseStack, int mouseX, int mouseY, float ptt) {
         field.render(poseStack, mouseX, mouseY, ptt);

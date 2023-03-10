@@ -121,7 +121,7 @@ public abstract class WDScreen extends Screen {
         for(Control ctrl: postDrawList)
             ctrl.postDraw(poseStack, mouseX, mouseY, ptt);
     }
-
+    
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
         boolean typed = false;
@@ -207,7 +207,7 @@ public abstract class WDScreen extends Screen {
         boolean down = false;
 
         for (Control ctrl : controls)
-            down = down || ctrl.keyDown(keyCode);
+            down = down || ctrl.keyDown(keyCode, scanCode, modifiers);
 
         if (Minecraft.getInstance().screen instanceof GuiKeyboard) {
             return down;
@@ -221,7 +221,7 @@ public abstract class WDScreen extends Screen {
         boolean up = false;
 
         for(Control ctrl : controls)
-            up = up || ctrl.keyUp(keyCode);
+            up = up || ctrl.keyUp(keyCode, scanCode, modifiers);
 
         return up || super.keyReleased(keyCode, scanCode, modifiers);
     }

@@ -7,6 +7,7 @@ package net.montoyo.wd.data;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
@@ -21,10 +22,15 @@ public class RedstoneCtrlData extends GuiData {
     public Vector3i pos;
     public String risingEdgeURL;
     public String fallingEdgeURL;
-
+    
     public RedstoneCtrlData() {
+        super();
     }
-
+    
+//    public RedstoneCtrlData(FriendlyByteBuf buf) {
+//        super(buf);
+//    }
+    
     public RedstoneCtrlData(ResourceLocation d, BlockPos p, String r, String f) {
         dimension = d;
         pos = new Vector3i(p);

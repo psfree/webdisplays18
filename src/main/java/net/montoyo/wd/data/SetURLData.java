@@ -6,6 +6,7 @@ package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -23,10 +24,14 @@ public class SetURLData extends GuiData {
     public String url;
     public boolean isRemote;
     public Vector3i remoteLocation;
-
+    
     public SetURLData() {
     }
-
+    
+//    public SetURLData(FriendlyByteBuf buf) {
+//        super(buf);
+//    }
+    
     public SetURLData(Vector3i pos, BlockSide side, String url) {
         this.pos = pos;
         this.side = side;

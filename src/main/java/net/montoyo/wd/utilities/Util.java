@@ -19,7 +19,8 @@ import java.util.StringJoiner;
 import java.util.UUID;
 
 public abstract class Util {
-
+    
+    @Deprecated(forRemoval = true)
     public static void serialize(FriendlyByteBuf bb, Object f) {
         Class<?> cls = f.getClass();
 
@@ -60,7 +61,8 @@ public abstract class Util {
         } else
             throw new RuntimeException(String.format("Cannot transmit class %s over network!", cls.getName()));
     }
-
+    
+    @Deprecated(forRemoval = true)
     public static Object unserialize(FriendlyByteBuf bb, Class cls) {
         if(cls == Integer.class || cls == Integer.TYPE)
             return bb.readInt();

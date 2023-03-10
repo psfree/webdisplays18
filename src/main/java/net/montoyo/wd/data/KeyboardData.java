@@ -6,6 +6,7 @@ package net.montoyo.wd.data;
 
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.api.distmarker.Dist;
@@ -23,10 +24,14 @@ public class KeyboardData extends GuiData {
     public int kbX;
     public int kbY;
     public int kbZ;
-
+    
     public KeyboardData() {
     }
-
+    
+//    public KeyboardData(FriendlyByteBuf buf) {
+//        super(buf);
+//    }
+    
     public KeyboardData(TileEntityScreen tes, BlockSide side, BlockPos kbPos) {
         pos = new Vector3i(tes.getBlockPos());
         this.side = side;
@@ -51,5 +56,24 @@ public class KeyboardData extends GuiData {
     public String getName() {
         return "Keyboard";
     }
-
+    
+//    @Override
+//    public void serialize(FriendlyByteBuf buf) {
+//        buf.writeInt(pos.x);
+//        buf.writeInt(pos.y);
+//        buf.writeInt(pos.z);
+//        buf.writeByte(side.ordinal());
+//        buf.writeInt(kbX);
+//        buf.writeInt(kbY);
+//        buf.writeInt(kbZ);
+//    }
+//
+//    @Override
+//    public void deserialize(FriendlyByteBuf buf) {
+//        this.pos = new Vector3i(buf.readInt(), buf.readInt(), buf.readInt());
+//        this.side = BlockSide.values()[buf.readByte()];
+//        this.kbX = buf.readInt();
+//        this.kbY = buf.readInt();
+//        this.kbZ = buf.readInt();
+//    }
 }
