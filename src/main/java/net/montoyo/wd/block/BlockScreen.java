@@ -178,16 +178,12 @@ public class BlockScreen extends BaseEntityBlock {
             TileEntityScreen.Screen scr = te.getScreen(side);
 
             if (sneaking) { //Right Click
-                if ((scr.rightsFor(player) & ScreenRights.CLICK) == 0) {
+                if((scr.rightsFor(player) & ScreenRights.CHANGE_URL) == 0)
                     Util.toast(player, "restrictions");
-                    return InteractionResult.SUCCESS;
-                }
+                else
+                    (new SetURLData(pos, scr.side, scr.url)).sendTo((ServerPlayer) player);
 
-                Vector2i tmp = new Vector2i();
-                if (hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getLocation().x, (float) hit.getLocation().y, (float) hit.getLocation().z, tmp))
-                    te.click(side, tmp);
                 return InteractionResult.SUCCESS;
-
             } else if (heldItem != null) {
                 if (!te.hasUpgrade(side, heldItem)) {
                     if ((scr.rightsFor(player) & ScreenRights.MANAGE_UPGRADES) == 0) {

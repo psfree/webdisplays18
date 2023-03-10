@@ -605,6 +605,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
             if(mc.player != null && mc.level != null && ItemInit.itemLaserPointer.isPresent() && mc.player.getItemInHand(InteractionHand.MAIN_HAND).getItem().equals(ItemInit.itemLaserPointer.get())
                                                      && mc.options.keyUse.isDown()
                                                      && (mc.hitResult == null || mc.hitResult.getType() == HitResult.Type.BLOCK)) {
+                laserPointerRenderer.isOn = true;
                 BlockHitResult result = raycast(64.0); //TODO: Make that distance configurable
 
                 BlockPos bpos = result.getBlockPos();
@@ -633,6 +634,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                     }
                 }
             } else {
+                laserPointerRenderer.isOn = false;
                 deselectScreen();
 
                 //Handle JS queries
