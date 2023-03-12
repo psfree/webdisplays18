@@ -6,6 +6,7 @@ package net.montoyo.wd.core;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.capabilities.CapabilityToken;
@@ -42,11 +43,16 @@ public class WDDCapability implements IWDDCapability {
 
         @Override
         public CompoundTag serializeNBT() {
-            return new CompoundTag();
+            CompoundTag tag = new CompoundTag();
+            if (wddCap != null) tag.putBoolean("firstRun", wddCap.firstRun);
+            return tag;
         }
 
         @Override
-        public void deserializeNBT(CompoundTag tag) {}
+        public void deserializeNBT(CompoundTag tag) {
+            if (wddCap != null && tag.contains("firstRun", Tag.TAG_BYTE))
+                wddCap.firstRun = tag.getBoolean("firstRun");
+        }
 
         @Nonnull
         private IWDDCapability createWDDCapability() {

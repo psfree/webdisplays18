@@ -13,8 +13,8 @@ import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.client.gui.controls.Button;
 import net.montoyo.wd.client.gui.controls.TextField;
 import net.montoyo.wd.client.gui.loading.FillControl;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessageRedstoneCtrl;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.server_bound.C2SMessageRedstoneCtrl;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 import net.montoyo.wd.utilities.Vector3i;
@@ -60,7 +60,7 @@ public class GuiRedstoneCtrl extends WDScreen {
 
             String rising = mcef.punycode(Util.addProtocol(tfRisingEdge.getText()));
             String falling = mcef.punycode(Util.addProtocol(tfFallingEdge.getText()));
-            Messages.INSTANCE.sendToServer(new SMessageRedstoneCtrl(dimension, pos, rising, falling));
+            WDNetworkRegistry.INSTANCE.sendToServer(new C2SMessageRedstoneCtrl(pos, rising, falling));
         }
 
         minecraft.setScreen(null);

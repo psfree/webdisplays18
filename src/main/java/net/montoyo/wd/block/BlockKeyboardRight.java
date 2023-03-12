@@ -26,8 +26,8 @@ import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.entity.TileEntityKeyboard;
 import net.montoyo.wd.item.ItemLinker;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageCloseGui;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageCloseGui;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Vector3i;
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +60,7 @@ public class BlockKeyboardRight extends Block implements IPeripheral {
             }
             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
-        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> BlockKeyboardLeft.point(world, pos)), new CMessageCloseGui(pos));
+        WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> BlockKeyboardLeft.point(world, pos)), new S2CMessageCloseGui(pos));
     }
     
     @Override

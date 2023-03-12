@@ -4,16 +4,15 @@
 
 package net.montoyo.wd.data;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.client.gui.GuiRedstoneCtrl;
+import net.montoyo.wd.net.BufferUtils;
 import net.montoyo.wd.utilities.Vector3i;
 
 public class RedstoneCtrlData extends GuiData {
@@ -26,10 +25,6 @@ public class RedstoneCtrlData extends GuiData {
     public RedstoneCtrlData() {
         super();
     }
-    
-//    public RedstoneCtrlData(FriendlyByteBuf buf) {
-//        super(buf);
-//    }
     
     public RedstoneCtrlData(ResourceLocation d, BlockPos p, String r, String f) {
         dimension = d;
@@ -48,5 +43,20 @@ public class RedstoneCtrlData extends GuiData {
     public String getName() {
         return "RedstoneCtrl";
     }
-
+    
+    @Override
+    public void serialize(FriendlyByteBuf buf) {
+        buf.writeUtf(dimension.toString());
+        BufferUtils.writeVec3i(buf, pos);
+        buf.writeUtf(risingEdgeURL);
+        buf.writeUtf(fallingEdgeURL);
+    }
+    
+    @Override
+    public void deserialize(FriendlyByteBuf buf) {
+        dimension = new ResourceLocation(buf.readUtf());
+        pos = BufferUtils.readVec3i(buf);
+        risingEdgeURL = buf.readUtf();
+        fallingEdgeURL = buf.readUtf();
+    }
 }

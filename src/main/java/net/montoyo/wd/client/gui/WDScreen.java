@@ -22,8 +22,8 @@ import net.montoyo.wd.client.gui.controls.Event;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.client.gui.loading.GuiLoader;
 import net.montoyo.wd.client.gui.loading.JsonOWrapper;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessageACQuery;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.server_bound.C2SMessageACQuery;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nullable;
@@ -328,7 +328,7 @@ public abstract class WDScreen extends Screen {
     }
 
     protected void requestAutocomplete(String beginning, boolean matchExact) {
-        Messages.INSTANCE.sendToServer(new SMessageACQuery(beginning, matchExact));
+        WDNetworkRegistry.INSTANCE.sendToServer(new C2SMessageACQuery(beginning, matchExact));
     }
 
     public void onAutocompleteResult(NameUUIDPair pairs[]) {

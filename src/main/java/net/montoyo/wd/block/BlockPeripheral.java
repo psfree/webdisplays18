@@ -6,7 +6,6 @@ package net.montoyo.wd.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
@@ -40,10 +39,9 @@ import net.montoyo.wd.entity.TileEntityInterfaceBase;
 import net.montoyo.wd.entity.TileEntityKeyboard;
 import net.montoyo.wd.entity.TileEntityPeripheralBase;
 import net.montoyo.wd.entity.TileEntityServer;
-import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.ItemLinker;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageCloseGui;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
 public class BlockPeripheral extends WDBlockContainer {
@@ -220,7 +218,7 @@ public class BlockPeripheral extends WDBlockContainer {
             removeRightPiece(world, pos);
             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 //            dropBlockAsItem(world, pos, state, 0); //TODO Loottable
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new S2CMessageCloseGui(pos));
         }
     }
 
@@ -230,7 +228,7 @@ public class BlockPeripheral extends WDBlockContainer {
             if(state.getBlock() == this && state.getValue(type) == DefaultPeripheral.KEYBOARD)
                 removeRightPiece(world, pos);
 
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new S2CMessageCloseGui(pos));
         }
     }
 

@@ -33,25 +33,21 @@ import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.montoyo.wd.client.ClientProxy;
 import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.miniserv.server.Server;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageServerInfo;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageServerInfo;
 import net.montoyo.wd.utilities.DistSafety;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
@@ -160,7 +156,7 @@ public class WebDisplays {
         padResX = padResY * PAD_RATIO;
 
         IEventBus bus = FMLJavaModLoadingContext.get().getModEventBus();
-        bus.addListener(Messages::registryNetworkPackets);
+        WDNetworkRegistry.init();
         SOUNDS.register(bus);
         onRegisterSounds();
         BlockInit.init(bus);
@@ -319,8 +315,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onLogIn(PlayerEvent.PlayerLoggedInEvent ev) {
         if(!ev.getEntity().getLevel().isClientSide && ev.getEntity() instanceof ServerPlayer) {
-            IWDDCapability cap =
-                    ev.getEntity().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
+            IWDDCapability cap = ev.getEntity().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
             if(cap.isFirstRun()) {
                 Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome1");
@@ -330,14 +325,13 @@ public class WebDisplays {
                 cap.clearFirstRun();
             }
 
-            PacketDistributor.PacketTarget packetDistrutor = PacketDistributor.PLAYER
-                    .with(
-                    () ->
-                                    (ServerPlayer) ev.getEntity());
+            PacketDistributor.PacketTarget packetDistrutor = PacketDistributor.PLAYER.with(
+                    () -> (ServerPlayer) ev.getEntity()
+            );
 
-            CMessageServerInfo message = new CMessageServerInfo(miniservPort);
+            S2CMessageServerInfo message = new S2CMessageServerInfo(miniservPort);
 
-            Messages.INSTANCE.send(packetDistrutor, message);
+            WDNetworkRegistry.INSTANCE.send(packetDistrutor, message);
         }
     }
 

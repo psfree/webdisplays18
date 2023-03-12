@@ -11,17 +11,13 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.montoyo.wd.block.BlockPeripheral;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.RedstoneCtrlData;
 import net.montoyo.wd.init.TileInit;
-import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Util;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public class TileEntityRedCtrl extends TileEntityPeripheralBase {
@@ -41,28 +37,24 @@ public class TileEntityRedCtrl extends TileEntityPeripheralBase {
     public static Block getBlockFromTE() {
         return new BlockPeripheral().defaultBlockState().getBlock();
     }
-
+    
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        super.deserializeNBT(tag);
-
+    public void load(CompoundTag tag) {
+        super.load(tag);
+    
         risingEdgeURL = tag.getString("RisingEdgeURL");
         fallingEdgeURL = tag.getString("FallingEdgeURL");
         state = tag.getBoolean("Powered");
     }
-
+    
     @Override
-    @Nonnull
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
-        super.serializeNBT();
-
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
         tag.putString("RisingEdgeURL", risingEdgeURL);
         tag.putString("FallingEdgeURL", fallingEdgeURL);
         tag.putBoolean("Powered", state);
-        return tag;
     }
-
+    
     @Override
     public InteractionResult onRightClick(Player player, InteractionHand hand) {
         if(level.isClientSide)

@@ -6,18 +6,12 @@ package net.montoyo.wd.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
-import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
@@ -34,16 +28,11 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.PacketDistributor;
 import net.montoyo.wd.core.DefaultPeripheral;
-import net.montoyo.wd.entity.TileEntityInterfaceBase;
 import net.montoyo.wd.entity.TileEntityKeyboard;
-import net.montoyo.wd.entity.TileEntityPeripheralBase;
-import net.montoyo.wd.entity.TileEntityServer;
-import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.ItemLinker;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageCloseGui;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageCloseGui;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 public class BlockKeyboardLeft extends BlockPeripheral {
 
@@ -146,7 +135,7 @@ public class BlockKeyboardLeft extends BlockPeripheral {
             }
             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         }
-        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
+        WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new S2CMessageCloseGui(pos));
     }
     
     @Override

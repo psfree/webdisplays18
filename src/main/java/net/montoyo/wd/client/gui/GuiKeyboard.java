@@ -18,21 +18,19 @@ import net.montoyo.wd.client.gui.controls.Control;
 import net.montoyo.wd.client.gui.controls.Label;
 import net.montoyo.wd.client.gui.loading.FillControl;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessageScreenCtrl;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.server_bound.C2SMessageScreenCtrl;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.TypeData;
 import net.montoyo.wd.utilities.Util;
 import org.lwjgl.glfw.GLFW;
-import org.cef.browser.CefBrowserOsr;
 import org.vivecraft.gameplay.VRPlayer;
 import org.vivecraft.gameplay.screenhandlers.KeyboardHandler;
 
 import java.io.*;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.util.Map;
 
 @OnlyIn(Dist.CLIENT)
@@ -181,7 +179,7 @@ public class GuiKeyboard extends WDScreen {
     @Override
     protected void sync() {
         if(!evStack.isEmpty()) {
-            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.type(tes, side, WebDisplays.GSON.toJson(evStack), kbPos));
+            WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.type(tes, side, WebDisplays.GSON.toJson(evStack), kbPos));
             evStack.clear();
         }
     }

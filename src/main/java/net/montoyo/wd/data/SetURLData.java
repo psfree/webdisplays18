@@ -13,12 +13,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.client.gui.GuiSetURL2;
 import net.montoyo.wd.entity.TileEntityScreen;
+import net.montoyo.wd.net.BufferUtils;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Vector3i;
 
 public class SetURLData extends GuiData {
-
+    
     public Vector3i pos;
     public BlockSide side;
     public String url;
@@ -27,10 +28,6 @@ public class SetURLData extends GuiData {
     
     public SetURLData() {
     }
-    
-//    public SetURLData(FriendlyByteBuf buf) {
-//        super(buf);
-//    }
     
     public SetURLData(Vector3i pos, BlockSide side, String url) {
         this.pos = pos;
@@ -65,5 +62,23 @@ public class SetURLData extends GuiData {
     public String getName() {
         return "SetURL";
     }
-
+    
+    @Override
+    public void serialize(FriendlyByteBuf buf) {
+        BufferUtils.writeVec3i(buf, pos);
+        BufferUtils.writeEnum(buf, side, (byte) 1);
+        buf.writeUtf(url);
+        buf.writeBoolean(isRemote);
+        if (isRemote) BufferUtils.writeVec3i(buf, remoteLocation);
+    }
+    
+    @Override
+    public void deserialize(FriendlyByteBuf buf) {
+        pos = BufferUtils.readVec3i(buf);
+        side = (BlockSide) BufferUtils.readEnum(buf, (v) -> BlockSide.values()[v], (byte) 1);
+        url = buf.readUtf();
+        isRemote = buf.readBoolean();
+        if (isRemote) remoteLocation = BufferUtils.readVec3i(buf);
+        else remoteLocation = new Vector3i();
+    }
 }

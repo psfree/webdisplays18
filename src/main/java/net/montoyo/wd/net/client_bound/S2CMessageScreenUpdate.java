@@ -2,7 +2,7 @@
  * Copyright (C) 2018 BARBOTIN Nicolas
  */
 
-package net.montoyo.wd.net.client;
+package net.montoyo.wd.net.client_bound;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.item.ItemStack;
@@ -13,16 +13,15 @@ import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.init.BlockInit;
+import net.montoyo.wd.net.Packet;
 import net.montoyo.wd.utilities.*;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.function.Supplier;
 
-public class CMessageScreenUpdate {
-
+// TODO: use registry based approach
+public class S2CMessageScreenUpdate extends Packet  {
     public static final int UPDATE_URL = 0;
     public static final int UPDATE_RESOLUTION = 1;
     public static final int UPDATE_DELETE = 2;
@@ -51,12 +50,12 @@ public class CMessageScreenUpdate {
     private NameUUIDPair owner;
     private Rotation rotation;
     private boolean autoVolume;
-
-    public CMessageScreenUpdate() {
+    
+    public S2CMessageScreenUpdate() {
     }
 
-    public static CMessageScreenUpdate setURL(TileEntityScreen tes, BlockSide side, String url) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate setURL(TileEntityScreen tes, BlockSide side, String url) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_URL;
@@ -65,8 +64,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate setResolution(TileEntityScreen tes, BlockSide side, Vector2i res) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate setResolution(TileEntityScreen tes, BlockSide side, Vector2i res) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_RESOLUTION;
@@ -75,8 +74,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate click(TileEntityScreen tes, BlockSide side, int mouseEvent, @Nullable Vector2i pos) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate click(TileEntityScreen tes, BlockSide side, int mouseEvent, @Nullable Vector2i pos) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_MOUSE;
@@ -86,14 +85,14 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public CMessageScreenUpdate(TileEntityScreen tes, BlockSide side) {
+    public S2CMessageScreenUpdate(TileEntityScreen tes, BlockSide side) {
         pos = new Vector3i(tes.getBlockPos());
         this.side = side;
         action = UPDATE_DELETE;
     }
 
-    public static CMessageScreenUpdate type(TileEntityScreen tes, BlockSide side, String text) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate type(TileEntityScreen tes, BlockSide side, String text) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.string = text;
@@ -102,8 +101,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate js(TileEntityScreen tes, BlockSide side, String code) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate js(TileEntityScreen tes, BlockSide side, String code) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.string = code;
@@ -112,8 +111,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate upgrade(TileEntityScreen tes, BlockSide side) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate upgrade(TileEntityScreen tes, BlockSide side) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_UPGRADES;
@@ -127,8 +126,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate jsRedstone(TileEntityScreen tes, BlockSide side, Vector2i vec, int level) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate jsRedstone(TileEntityScreen tes, BlockSide side, Vector2i vec, int level) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_JS_REDSTONE;
@@ -138,8 +137,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate owner(TileEntityScreen tes, BlockSide side, NameUUIDPair owner) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate owner(TileEntityScreen tes, BlockSide side, NameUUIDPair owner) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_OWNER;
@@ -148,8 +147,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate rotation(TileEntityScreen tes, BlockSide side, Rotation rot) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate rotation(TileEntityScreen tes, BlockSide side, Rotation rot) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_ROTATION;
@@ -158,8 +157,8 @@ public class CMessageScreenUpdate {
         return ret;
     }
 
-    public static CMessageScreenUpdate autoVolume(TileEntityScreen tes, BlockSide side, boolean av) {
-        CMessageScreenUpdate ret = new CMessageScreenUpdate();
+    public static S2CMessageScreenUpdate autoVolume(TileEntityScreen tes, BlockSide side, boolean av) {
+        S2CMessageScreenUpdate ret = new S2CMessageScreenUpdate();
         ret.pos = new Vector3i(tes.getBlockPos());
         ret.side = side;
         ret.action = UPDATE_AUTO_VOL;
@@ -167,13 +166,15 @@ public class CMessageScreenUpdate {
 
         return ret;
     }
-
-    public static CMessageScreenUpdate decode(FriendlyByteBuf buf) {
+    
+    public S2CMessageScreenUpdate(FriendlyByteBuf buf) {
+        super(buf);
+        
         Vector3i pos = new Vector3i(buf);
         BlockSide side = BlockSide.values()[buf.readByte()];
         byte action = buf.readByte();
 
-        CMessageScreenUpdate message = new CMessageScreenUpdate();
+        S2CMessageScreenUpdate message = this;
         message.pos = pos;
         message.side = side;
         message.action = action;
@@ -199,12 +200,10 @@ public class CMessageScreenUpdate {
             case UPDATE_ROTATION -> message.rotation = Rotation.values()[buf.readByte() & 3];
             case UPDATE_AUTO_VOL -> message.autoVolume = buf.readBoolean();
         }
-
-        return message;
     }
-
-
-    public CMessageScreenUpdate encode(FriendlyByteBuf buf) {
+    
+    @Override
+    public void write(FriendlyByteBuf buf) {
         pos.writeTo(buf);
         buf.writeByte(side.ordinal());
         buf.writeByte(action);
@@ -232,12 +231,11 @@ public class CMessageScreenUpdate {
             buf.writeByte(rotation.ordinal());
         else if(action == UPDATE_AUTO_VOL)
             buf.writeBoolean(autoVolume);
-        return new CMessageScreenUpdate();
     }
 
-    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        contextSupplier.get().enqueueWork(() -> {
-            BlockGetter level = WebDisplays.PROXY.getWorld(contextSupplier.get());
+    public void handle(NetworkEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
+            BlockGetter level = WebDisplays.PROXY.getWorld(ctx);
             if (level instanceof Level level1)
                 // ensure that the TE exists
                 level1.setBlock(
@@ -278,6 +276,6 @@ public class CMessageScreenUpdate {
                 }
         });
 
-        contextSupplier.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

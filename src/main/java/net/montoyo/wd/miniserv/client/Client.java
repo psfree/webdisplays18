@@ -5,8 +5,9 @@
 package net.montoyo.wd.miniserv.client;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.player.Player;
 import net.montoyo.wd.miniserv.*;
-import net.montoyo.wd.net.server.SMessageMiniservConnect;
+import net.montoyo.wd.net.server_bound.C2SMessageMiniservConnect;
 import net.montoyo.wd.utilities.Log;
 import net.montoyo.wd.utilities.Util;
 
@@ -43,13 +44,13 @@ public class Client extends AbstractClient implements Runnable {
     private volatile boolean connected;
     private final ByteBuffer readBuffer = ByteBuffer.allocateDirect(8192);
     private volatile Thread thread;
-    private final UUID clientUUID = Minecraft.getInstance().player.getGameProfile().getId();
+    private UUID clientUUID;
     private final ArrayDeque<ClientTask> tasks = new ArrayDeque<>();
     private ClientTask currentTask;
     private volatile boolean authenticated;
     private long lastPingTime;
 
-    public SMessageMiniservConnect                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                beginConnection() {
+    public C2SMessageMiniservConnect beginConnection() {
         if(keyPair == null) {
             try {
                 KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
@@ -62,7 +63,7 @@ public class Client extends AbstractClient implements Runnable {
         }
 
         RSAPublicKey pubKey = (RSAPublicKey) keyPair.getPublic();
-        return new SMessageMiniservConnect(pubKey.getModulus().toByteArray(), pubKey.getPublicExponent().toByteArray());
+        return new C2SMessageMiniservConnect(pubKey.getModulus().toByteArray(), pubKey.getPublicExponent().toByteArray());
     }
 
     public boolean decryptKey(byte[] encKey) {
@@ -146,6 +147,13 @@ public class Client extends AbstractClient implements Runnable {
 
     @Override
     public void run() {
+        if (clientUUID == null) {
+            Player player = Minecraft.getInstance().player;
+            if (player != null)
+                clientUUID = player.getGameProfile().getId();
+            else return; // can't tick yet; player does not exist
+        }
+        
         try {
             selector = Selector.open();
             socket = SocketChannel.open();

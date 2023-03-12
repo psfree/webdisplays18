@@ -65,9 +65,8 @@ import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.miniserv.client.Client;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessagePadCtrl;
-import net.montoyo.wd.net.server.SMessageScreenCtrl;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.server_bound.C2SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -179,8 +178,6 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
         mcef.registerDisplayHandler(this);
         //mcef.registerJSQueryHandler(this); //TODO why crashing on this method!
         findAdvancementToProgressField();
-        String url = "https://www.google.com";
-        new ScreenRenderer(url);
     }
 
     @Override
@@ -428,7 +425,7 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                         pd.view.loadURL(WebDisplays.BLACKLIST_URL);
                     else {
                         pd.lastURLSent = t; //Avoid spamming the server with porn URLs
-                        Messages.INSTANCE.sendToServer(new SMessagePadCtrl(pd.id, url));
+//                        WDNetworkRegistry.INSTANCE.sendToServer(new SMessagePadCtrl(pd.id, url));
                     }
 
                     break;
@@ -697,19 +694,19 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
             if(t - lastPointPacket >= 100) {
                 lastPointPacket = t;
-                Messages.INSTANCE.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_MOVE, hit));
+                WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.vec2(tes, side, C2SMessageScreenCtrl.CTRL_LASER_MOVE, hit));
             }
         } else {
             deselectScreen();
             pointedScreen = tes;
             pointedScreenSide = side;
-            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.vec2(tes, side, SMessageScreenCtrl.CTRL_LASER_DOWN, hit));
+            WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.vec2(tes, side, C2SMessageScreenCtrl.CTRL_LASER_DOWN, hit));
         }
     }
 
     private void deselectScreen() {
         if(pointedScreen != null && pointedScreenSide != null) {
-            Messages.INSTANCE.sendToServer(SMessageScreenCtrl.laserUp(pointedScreen, pointedScreenSide));
+            WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.laserUp(pointedScreen, pointedScreenSide));
             pointedScreen = null;
             pointedScreenSide = null;
         }

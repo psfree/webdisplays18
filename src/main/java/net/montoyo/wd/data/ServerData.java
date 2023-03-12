@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.wd.client.gui.GuiServer;
+import net.montoyo.wd.net.BufferUtils;
 import net.montoyo.wd.utilities.NameUUIDPair;
 import net.montoyo.wd.utilities.Vector3i;
 
@@ -21,10 +22,6 @@ public class ServerData extends GuiData {
     
     public ServerData() {
     }
-    
-//    public ServerData(FriendlyByteBuf buf) {
-//        super(buf);
-//    }
     
     public ServerData(BlockPos bp, NameUUIDPair owner) {
         pos = new Vector3i(bp);
@@ -41,5 +38,16 @@ public class ServerData extends GuiData {
     public String getName() {
         return "Server";
     }
-
+    
+    @Override
+    public void serialize(FriendlyByteBuf buf) {
+        BufferUtils.writeVec3i(buf, pos);
+        owner.writeTo(buf);
+    }
+    
+    @Override
+    public void deserialize(FriendlyByteBuf buf) {
+        pos = BufferUtils.readVec3i(buf);
+        owner = new NameUUIDPair(buf);
+    }
 }

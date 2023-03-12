@@ -2,17 +2,16 @@
  * Copyright (C) 2018 BARBOTIN Nicolas
  */
 
-package net.montoyo.wd.net.client;
+package net.montoyo.wd.net.client_bound;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.JSServerRequest;
+import net.montoyo.wd.net.Packet;
 import net.montoyo.wd.utilities.Log;
 
-import java.util.function.Supplier;
-
-public class CMessageJSResponse {
+public class S2CMessageJSResponse extends Packet {
 
     private int id;
     private JSServerRequest type;
@@ -21,22 +20,24 @@ public class CMessageJSResponse {
     private int errCode;
     private String errString;
 
-    public CMessageJSResponse(int id, JSServerRequest t, byte[] d) {
+    public S2CMessageJSResponse(int id, JSServerRequest t, byte[] d) {
         this.id = id;
         type = t;
         success = true;
         data = d;
     }
 
-    public CMessageJSResponse(int id, JSServerRequest t, int code, String err) {
+    public S2CMessageJSResponse(int id, JSServerRequest t, int code, String err) {
         this.id = id;
         type = t;
         success = false;
         errCode = code;
         errString = err;
     }
-
-    public static CMessageJSResponse decode(FriendlyByteBuf buf) {
+    
+    public S2CMessageJSResponse(FriendlyByteBuf buf) {
+        super(buf);
+        
         int id = buf.readInt();
         JSServerRequest type = JSServerRequest.fromID(buf.readByte());
         boolean success = buf.readBoolean();
@@ -50,15 +51,21 @@ public class CMessageJSResponse {
             data = new byte[buf.readByte()];
             buf.readBytes(data);
 
-            return new CMessageJSResponse(id, type, data);
+            this.id = id;
+            this.type = type;
+            this.data = data;
         } else {
             errCode = buf.readInt();
             errString = buf.readUtf();
-            return new CMessageJSResponse(id, type, errCode, errString);
+            this.id = id;
+            this.type = type;
+            this.errCode = errCode;
+            this.errString = errString;
         }
     }
 
-    public void encode(FriendlyByteBuf buf) {
+    @Override
+    public void write(FriendlyByteBuf buf) {
         buf.writeInt(id);
         buf.writeByte(type.ordinal());
         buf.writeBoolean(success);
@@ -72,8 +79,8 @@ public class CMessageJSResponse {
         }
     }
 
-    public void handle(Supplier<NetworkEvent.Context> contextSupplier) {
-        contextSupplier.get().enqueueWork(() -> {
+    public void handle(NetworkEvent.Context ctx) {
+        ctx.enqueueWork(() -> {
             try {
                 if (success)
                     WebDisplays.PROXY.handleJSResponseSuccess(id, type, data);
@@ -83,6 +90,6 @@ public class CMessageJSResponse {
                 Log.warningEx("Could not handle JS response", t);
             }
         });
-        contextSupplier.get().setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

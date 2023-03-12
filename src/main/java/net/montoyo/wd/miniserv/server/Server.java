@@ -141,26 +141,30 @@ public class Server implements Runnable {
         selector.select(1000); //Allow the server to kick timed-out clients
 
         for(SelectionKey key: selector.selectedKeys()) {
-            if(key.isAcceptable()) {
-                SocketChannel chan;
-
-                try {
-                    chan = server.accept();
-                } catch(Throwable t) {
-                    Log.warningEx("Could not accept client", t);
-                    chan = null;
-                }
-
-                if(chan != null) {
-                    chan.configureBlocking(false);
-                    ServerClient toAdd = new ServerClient(chan, selector);
-
-                    clientMap.put(chan, toAdd);
-                    clientList.add(toAdd);
-                }
-            }
-    
+            if (key == null) continue;
+            
             try {
+                // this can throw an exception
+                // there is no getting around this fact other than try/catch
+                if(key.isAcceptable()) {
+                    SocketChannel chan;
+        
+                    try {
+                        chan = server.accept();
+                    } catch(Throwable t) {
+                        Log.warningEx("Could not accept client", t);
+                        chan = null;
+                    }
+        
+                    if(chan != null) {
+                        chan.configureBlocking(false);
+                        ServerClient toAdd = new ServerClient(chan, selector);
+            
+                        clientMap.put(chan, toAdd);
+                        clientList.add(toAdd);
+                    }
+                }
+                
                 if (key.isReadable()) {
                     ServerClient cli = clientMap.get(key.channel());
         

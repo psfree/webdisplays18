@@ -1,9 +1,6 @@
 package net.montoyo.wd.miniserv;
 
 import net.minecraft.server.level.ServerPlayer;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessageGetUrl;
-import net.montoyo.wd.net.server.URLMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,9 +20,8 @@ public class SyncPlugin {
     }
 
     public static String getPlayerString(ServerPlayer player) {
-        if(URL.get(player) == null) {
-            setPlayerString(player, new URLMessage().getURL());
-        }
+//        if(URL.get(player) == null)
+//            setPlayerString(player, new URLMessage().getURL());
         return URL.get(player);
     }
 
@@ -35,7 +31,7 @@ public class SyncPlugin {
         if (syncedPlayersList != null) {
             for (ServerPlayer syncedPlayer : syncedPlayersList) {
                 if(!syncedPlayer.hasDisconnected()) {
-                    Messages.INSTANCE.sendToServer(new SMessageGetUrl(URL.get(syncedPlayer)));
+//                    WDNetworkRegistry.INSTANCE.sendToServer(new SMessageGetUrl(URL.get(syncedPlayer)));
                 }
             }
         }

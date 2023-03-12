@@ -6,21 +6,18 @@ package net.montoyo.wd.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
@@ -30,20 +27,15 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.Material;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.shapes.CollisionContext;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraftforge.network.PacketDistributor;
-import net.montoyo.mcef.utilities.Log;
 import net.montoyo.wd.core.DefaultPeripheral;
 import net.montoyo.wd.entity.TileEntityInterfaceBase;
 import net.montoyo.wd.entity.TileEntityKeyboard;
 import net.montoyo.wd.entity.TileEntityPeripheralBase;
 import net.montoyo.wd.entity.TileEntityServer;
-import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.item.ItemLinker;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.CMessageCloseGui;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageCloseGui;
 import org.jetbrains.annotations.Nullable;
 
 public class BlockServer extends WDBlockContainer{
@@ -189,14 +181,14 @@ public class BlockServer extends WDBlockContainer{
         if(neighbor.getX() == pos.getX() && neighbor.getY() == pos.getY() - 1 && neighbor.getZ() == pos.getZ() && world.isEmptyBlock(neighbor)) {
             world.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
 //            dropBlockAsItem(world, pos, state, 0); //TODO Loottable
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new S2CMessageCloseGui(pos));
         }
     }
 
     @Override
     public void playerDestroy(Level world, Player player, BlockPos pos, BlockState state, @Nullable BlockEntity blockEntity, ItemStack tool) {
         if(!world.isClientSide) {
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new CMessageCloseGui(pos));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(world, pos)), new S2CMessageCloseGui(pos));
         }
     }
 

@@ -4,18 +4,13 @@
 
 package net.montoyo.wd.entity;
 
-import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.multiplayer.ClientPacketListener;
-import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.client.multiplayer.ServerData;
-import net.minecraft.client.multiplayer.resolver.ServerAddress;
-import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
@@ -43,17 +38,21 @@ import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.init.TileInit;
 import net.montoyo.wd.miniserv.SyncPlugin;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.client.*;
-import net.montoyo.wd.net.server.SMessageRequestTEData;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.client_bound.S2CMessageAddScreen;
+import net.montoyo.wd.net.client_bound.S2CMessageCloseGui;
+import net.montoyo.wd.net.client_bound.S2CMessageJSResponse;
+import net.montoyo.wd.net.client_bound.S2CMessageScreenUpdate;
 import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.awt.event.InputEvent;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import static net.montoyo.wd.block.BlockPeripheral.point;
@@ -220,7 +219,20 @@ public class TileEntityScreen extends BlockEntity {
                 resolution.y = WebDisplays.INSTANCE.maxResY;
             }
         }
-
+    
+        public void createBrowser(boolean doAnim) {
+            if (WebDisplays.PROXY instanceof ClientProxy clientProxy) {
+                browser = clientProxy.getMCEF().createBrowser(WebDisplays.applyBlacklist(url != null ? url : "https://www.google.com"));
+        
+                if (rotation.isVertical)
+                    browser.resize(resolution.y, resolution.x);
+                else
+                    browser.resize(resolution.x, resolution.y);
+        
+                doTurnOnAnim = doAnim;
+                turnOnTime = System.currentTimeMillis();
+            }
+        }
     }
 
     public void forEachScreenBlocks(BlockSide side, Consumer<BlockPos> func) {
@@ -259,32 +271,29 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        super.deserializeNBT(tag);
-
-        ListTag list = tag.getList("WDScreens", 10);
+    public void load(CompoundTag tag) {
+        super.load(tag);
+    
+        ListTag list = tag.getList("WDScreens", Tag.TAG_COMPOUND);
         if (list.isEmpty())
             return;
-
+    
         screens.clear();
         for (int i = 0; i < list.size(); i++)
             screens.add(Screen.deserialize(list.getCompound(i)));
     }
-
+    
     @Override
-    @Nonnull
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
-        super.serializeNBT();
-
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+    
         ListTag list = new ListTag();
         for (Screen scr : screens)
             list.add(scr.serialize());
-
+    
         tag.put("WDScreens", list);
-        return tag;
     }
-
+    
     public Screen addScreen(BlockSide side, Vector2i size, @Nullable Vector2i resolution, @Nullable Player owner, boolean sendUpdate) {
         for (Screen scr : screens) {
             if (scr.side == side)
@@ -333,7 +342,7 @@ public class TileEntityScreen extends BlockEntity {
             ret.setupRedstoneStatus(level, getBlockPos());
 
             if (sendUpdate)
-                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageAddScreen(this, ret));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new S2CMessageAddScreen(this, ret));
         }
 
         screens.add(ret);
@@ -343,6 +352,8 @@ public class TileEntityScreen extends BlockEntity {
         else
             setChanged();
 
+//        level.blockEntityChanged(worldPosition);
+        
         return ret;
     }
 
@@ -372,7 +383,7 @@ public class TileEntityScreen extends BlockEntity {
 
     public void requestData(ServerPlayer ep) {
         if (!level.isClientSide)
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> ep), new CMessageAddScreen(this));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> ep), new S2CMessageAddScreen(this));
     }
 
     public static String url(String url) throws IOException {
@@ -385,7 +396,7 @@ public class TileEntityScreen extends BlockEntity {
             }
             return url;
         } else {
-            return null;
+            return url; // TODO: ?
         }
     }
 
@@ -406,7 +417,7 @@ public class TileEntityScreen extends BlockEntity {
             if (scr.browser != null)
                 scr.browser.loadURL(weburl);
         } else {
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.setURL(this, side, weburl));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.setURL(this, side, weburl));
             setChanged();
         }
     }
@@ -430,8 +441,7 @@ public class TileEntityScreen extends BlockEntity {
                 screens.get(idx).browser.close();
                 screens.get(idx).browser = null;
             }
-        } else
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageScreenUpdate(this, side)); //Delete the screen
+        } else WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new S2CMessageScreenUpdate(this, side)); //Delete the screen
 
         screens.remove(idx);
 
@@ -466,7 +476,7 @@ public class TileEntityScreen extends BlockEntity {
                 scr.browser = null; //Will be re-created by renderer
             }
         } else {
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.setResolution(this, side, res));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.setResolution(this, side, res));
             setChanged();
         }
     }
@@ -502,13 +512,13 @@ public class TileEntityScreen extends BlockEntity {
         if (level.isClientSide)
             Log.warning("TileEntityScreen.click() from client side is useless...");
         else if (getLaserUser(scr) == null)
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_CLICK, vec));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.click(this, side, S2CMessageScreenUpdate.MOUSE_CLICK, vec));
     }
 
     void clickUnsafe(BlockSide side, int action, int x, int y) {
         if (level.isClientSide) {
-            Vector2i vec = (action == CMessageScreenUpdate.MOUSE_UP) ? null : new Vector2i(x, y);
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, action, vec));
+            Vector2i vec = (action == S2CMessageScreenUpdate.MOUSE_UP) ? null : new Vector2i(x, y);
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.click(this, side, action, vec));
         }
     }
 
@@ -520,7 +530,7 @@ public class TileEntityScreen extends BlockEntity {
         }
 
         if (scr.browser != null) {
-            if (event == CMessageScreenUpdate.MOUSE_CLICK) {
+            if (event == S2CMessageScreenUpdate.MOUSE_CLICK) {
                 if(InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_LEFT_ALT)
                         || InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), GLFW.GLFW_KEY_RIGHT_ALT)) {
                     scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
@@ -531,12 +541,12 @@ public class TileEntityScreen extends BlockEntity {
                     scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
                     scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, false, 1);                            //Release
                 }
-            } else if (event == CMessageScreenUpdate.MOUSE_DOWN) {
+            } else if (event == S2CMessageScreenUpdate.MOUSE_DOWN) {
                 scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move to target
                 scr.browser.injectMouseButton(vec.x, vec.y, 0, 1, true, 1);                              //Press
-            } else if (event == CMessageScreenUpdate.MOUSE_MOVE)
+            } else if (event == S2CMessageScreenUpdate.MOUSE_MOVE)
                 scr.browser.injectMouseMove(vec.x, vec.y, 0, false);                                            //Move
-            else if (event == CMessageScreenUpdate.MOUSE_UP)
+            else if (event == S2CMessageScreenUpdate.MOUSE_UP)
                 scr.browser.injectMouseButton(scr.lastMousePos.x, scr.lastMousePos.y, 0, 1, false, 1);  //Release
             if (vec != null) {
                 scr.lastMousePos.x = vec.x;
@@ -571,11 +581,12 @@ public class TileEntityScreen extends BlockEntity {
             }
 
             if (sendMsg)
-                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.jsRedstone(this, side, vec, redstoneLevel));
         }
     }
 
     public void handleJSRequest(ServerPlayer src, BlockSide side, int reqId, JSServerRequest req, Object[] data) {
+        // TODO:
         if (level.isClientSide) {
             Log.error("Called handleJSRequest client-side");
             return;
@@ -584,18 +595,18 @@ public class TileEntityScreen extends BlockEntity {
         Screen scr = getScreen(side);
         if (scr == null) {
             Log.error("Called handleJSRequest on non-existing side %s", side.toString());
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Invalid side"));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, 403, "Invalid side"));
             return;
         }
 
         if (!scr.owner.uuid.equals(src.getGameProfile().getId())) {
             Log.warning("Player %s (UUID %s) tries to use the redstone output API on a screen he doesn't own!", src.getName(), src.getGameProfile().getId().toString());
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Only the owner can do that"));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, 403, "Only the owner can do that"));
             return;
         }
 
         if (scr.upgrades.stream().noneMatch(DefaultUpgrade.REDOUTPUT::matchesRedInput)) {
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Missing upgrade"));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, 403, "Missing upgrade"));
             return;
         }
 
@@ -620,14 +631,14 @@ public class TileEntityScreen extends BlockEntity {
                 vec1.add(side.up.x, side.up.y, side.up.z);
             }
 
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, new byte[0]));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, new byte[0]));
         } else if (req == JSServerRequest.SET_REDSTONE_AT) {
             int x = (Integer) data[0];
             int y = (Integer) data[1];
             boolean state = (Boolean) data[2];
 
             if (x < 0 || x >= scr.size.x || y < 0 || y >= scr.size.y)
-                Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 403, "Out of range"));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, 403, "Out of range"));
             else {
                 BlockPos bp = (new Vector3i(getBlockPos())).addMul(side.right, x).addMul(side.up, y).toBlock();
                 BlockState bs = level.getBlockState(bp);
@@ -635,20 +646,36 @@ public class TileEntityScreen extends BlockEntity {
                 if (!bs.getValue(BlockScreen.emitting).equals(state))
                     level.setBlockAndUpdate(bp, bs.setValue(BlockScreen.emitting, state));
 
-                Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, new byte[0]));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, new byte[0]));
             }
         } else
-            Messages.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new CMessageJSResponse(reqId, req, 400, "Invalid request"));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.PLAYER.with(() -> src), new S2CMessageJSResponse(reqId, req, 400, "Invalid request"));
     }
 
     @Override
     public void onLoad() {
         if (level.isClientSide) {
-            Messages.INSTANCE.sendToServer(new SMessageRequestTEData(this));
             WebDisplays.PROXY.trackScreen(this, true);
         }
     }
-
+    
+    @Override
+    public CompoundTag getUpdateTag() {
+        CompoundTag tag = new CompoundTag();
+        saveAdditional(tag);
+        return tag;
+    }
+    
+    @Override
+    public void handleUpdateTag(CompoundTag tag) {
+        load(tag);
+        for (Screen screen : screens) {
+            if (screen.browser == null) screen.createBrowser(false);
+            if (screen.browser != null) screen.browser.loadURL(screen.url);
+        }
+        updateAABB();
+    }
+    
     @Override
     public void onChunkUnloaded() {
         if (level.isClientSide) {
@@ -705,7 +732,8 @@ public class TileEntityScreen extends BlockEntity {
             }
         }
 
-        renderBB = box.toMc();
+        if (box == null) renderBB = new AABB(worldPosition);
+        else renderBB = box.toMc();
     }
 
     @Override
@@ -864,7 +892,7 @@ public class TileEntityScreen extends BlockEntity {
                 }
             }
         } else {
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.type(this, side, text));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.type(this, side, text));
 
             if (soundPos != null)
                 playSoundAt(WebDisplays.INSTANCE.soundTyping, soundPos, 0.25f, 1.f);
@@ -931,7 +959,7 @@ public class TileEntityScreen extends BlockEntity {
         isCopy.setCount(1);
 
         scr.upgrades.add(isCopy);
-        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
+        WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.upgrade(this, side));
         itemAsUpgrade.onInstall(this, side, player, isCopy);
         playSoundAt(WebDisplays.INSTANCE.soundUpgradeAdd, getBlockPos(), 1.0f, 1.0f);
         setChanged();
@@ -993,7 +1021,7 @@ public class TileEntityScreen extends BlockEntity {
         if (idxToRemove >= 0) {
             dropUpgrade(scr.upgrades.get(idxToRemove), side, player);
             scr.upgrades.remove(idxToRemove);
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.upgrade(this, side));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.upgrade(this, side));
             playSoundAt(WebDisplays.INSTANCE.soundUpgradeDel, getBlockPos(), 1.0f, 1.0f);
             setChanged();
         } else
@@ -1049,10 +1077,10 @@ public class TileEntityScreen extends BlockEntity {
                 //Try to acquire laser lock
                 if (getLaserUser(scr) == null) {
                     scr.laserUser = ply;
-                    Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_DOWN, pos));
+                    WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.click(this, side, S2CMessageScreenUpdate.MOUSE_DOWN, pos));
                 }
             } else if (getLaserUser(scr) == ply)
-                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_MOVE, pos));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.click(this, side, S2CMessageScreenUpdate.MOUSE_MOVE, pos));
         }
     }
 
@@ -1062,7 +1090,7 @@ public class TileEntityScreen extends BlockEntity {
         if (scr != null) {
             if (getLaserUser(scr) == ply) {
                 scr.laserUser = null;
-                Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.click(this, side, CMessageScreenUpdate.MOUSE_UP, null));
+                WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.click(this, side, S2CMessageScreenUpdate.MOUSE_UP, null));
             }
         }
     }
@@ -1073,7 +1101,7 @@ public class TileEntityScreen extends BlockEntity {
             scr.upgrades.clear();
         }
 
-        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new CMessageCloseGui(getBlockPos()));
+        WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), new S2CMessageCloseGui(getBlockPos()));
     }
 
     public void setOwner(BlockSide side, Player newOwner) {
@@ -1094,7 +1122,7 @@ public class TileEntityScreen extends BlockEntity {
         }
 
         scr.owner = new NameUUIDPair(newOwner.getGameProfile());
-        Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.owner(this, side, scr.owner));
+        WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.owner(this, side, scr.owner));
         checkLaserUserRights(scr);
         setChanged();
     }
@@ -1118,7 +1146,7 @@ public class TileEntityScreen extends BlockEntity {
             }
         } else {
             scr.rotation = rot;
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.rotation(this, side, rot));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.rotation(this, side, rot));
             setChanged();
         }
     }
@@ -1133,8 +1161,8 @@ public class TileEntityScreen extends BlockEntity {
         if (level.isClientSide) {
             if (scr.browser != null)
                 scr.browser.runJS(code, "");
-        } else
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.js(this, side, code));
+        }
+        else WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.js(this, side, code));
     }
 
     public void setAutoVolume(BlockSide side, boolean av) {
@@ -1149,7 +1177,7 @@ public class TileEntityScreen extends BlockEntity {
         if (level.isClientSide)
             WebDisplays.PROXY.screenUpdateAutoVolumeInGui(new Vector3i(getBlockPos()), side, av);
         else {
-            Messages.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), CMessageScreenUpdate.autoVolume(this, side, av));
+            WDNetworkRegistry.INSTANCE.send(PacketDistributor.NEAR.with(() -> point(level, getBlockPos())), S2CMessageScreenUpdate.autoVolume(this, side, av));
             setChanged();
         }
     }

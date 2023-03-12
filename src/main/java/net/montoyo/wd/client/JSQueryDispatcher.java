@@ -12,15 +12,14 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
 import net.montoyo.mcef.api.IBrowser;
 import net.montoyo.mcef.api.IJSQueryCallback;
-import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.block.BlockScreen;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IScreenQueryHandler;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.JSServerRequest;
 import net.montoyo.wd.entity.TileEntityScreen;
-import net.montoyo.wd.net.Messages;
-import net.montoyo.wd.net.server.SMessageScreenCtrl;
+import net.montoyo.wd.net.WDNetworkRegistry;
+import net.montoyo.wd.net.server_bound.C2SMessageScreenCtrl;
 import net.montoyo.wd.utilities.*;
 
 import java.util.*;
@@ -215,7 +214,7 @@ public final class JSQueryDispatcher {
         ServerQuery ret = new ServerQuery(tes, side, cb);
         serverQueries.add(ret);
 
-        Messages.INSTANCE.sendToServer(SMessageScreenCtrl.jsRequest(tes, side, ret.id, type, data));
+        WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.jsRequest(tes, side, ret.id, type, data));
     }
 
     private void registerDefaults() {

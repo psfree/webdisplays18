@@ -5,20 +5,16 @@
 package net.montoyo.wd.entity;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.core.Vec3i;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
-import net.montoyo.wd.block.BlockKeyboardRight;
 import net.montoyo.wd.core.IPeripheral;
 import net.montoyo.wd.utilities.BlockSide;
 import net.montoyo.wd.utilities.Log;
@@ -36,11 +32,12 @@ public abstract class TileEntityPeripheralBase extends BlockEntity implements IP
     public TileEntityPeripheralBase(BlockEntityType<?> arg, BlockPos arg2, BlockState arg3) {
         super(arg, arg2, arg3);
     }
-
+    
+    // TODO
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        super.deserializeNBT(tag);
-
+    public void load(CompoundTag tag) {
+        super.load(tag);
+    
         if(tag.contains("WDScreen", 10)) {
             CompoundTag scr = tag.getCompound("WDScreen");
             screenPos = new Vector3i(scr.getInt("X"), scr.getInt("Y"), scr.getInt("Z"));
@@ -50,24 +47,33 @@ public abstract class TileEntityPeripheralBase extends BlockEntity implements IP
             screenSide = null;
         }
     }
-
+    
     @Override
-    @Nonnull
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
-        super.serializeNBT();
-
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+    
         if(screenPos != null && screenSide != null) {
             CompoundTag scr = new CompoundTag();
             scr.putInt("X", screenPos.x);
             scr.putInt("Y", screenPos.y);
             scr.putInt("Z", screenPos.z);
             scr.putByte("Side", (byte) screenSide.ordinal());
-
+        
             tag.put("WDScreen", scr);
         }
-
-        return tag;
+    }
+    
+    // this is not used for loading from disk, so I'm marking it final
+    @Override
+    public final void deserializeNBT(CompoundTag tag) {
+        super.deserializeNBT(tag);
+    }
+    
+    // this is not used for writing to disk, so I'm marking it final
+    @Override
+    @Nonnull
+    public final CompoundTag serializeNBT() {
+        return super.serializeNBT();
     }
 
     @Override

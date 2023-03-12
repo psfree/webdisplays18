@@ -4,11 +4,7 @@
 
 package net.montoyo.wd.block;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.player.Input;
-import net.minecraft.client.player.KeyboardInput;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerPlayer;
@@ -35,25 +31,19 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.montoyo.wd.WebDisplays;
-import net.montoyo.wd.client.renderers.ScreenRenderer;
-import net.montoyo.wd.config.ModConfig;
 import net.montoyo.wd.core.DefaultUpgrade;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.ScreenRights;
 import net.montoyo.wd.data.SetURLData;
 import net.montoyo.wd.entity.TileEntityScreen;
 import net.montoyo.wd.init.BlockInit;
-import net.montoyo.wd.init.ItemInit;
 import net.montoyo.wd.item.WDItem;
 import net.montoyo.wd.utilities.*;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.Map;
 
 public class BlockScreen extends BaseEntityBlock {
 
@@ -247,7 +237,7 @@ public class BlockScreen extends BaseEntityBlock {
                 created = true;
             }
 
-            te.addScreen(side, size, null, player, !created);
+            te.addScreen(side, size, null, player, true);
             return InteractionResult.SUCCESS;
         }
 

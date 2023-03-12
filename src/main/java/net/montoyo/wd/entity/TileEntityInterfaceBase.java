@@ -13,10 +13,8 @@ import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.core.IComputerArgs;
 import net.montoyo.wd.core.IUpgrade;
 import net.montoyo.wd.core.ScreenRights;
-import net.montoyo.wd.net.client.CMessageScreenUpdate;
 import net.montoyo.wd.utilities.*;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -38,21 +36,19 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
     private NameUUIDPair owner;
     private static final Object[] TRUE = new Object[] { true };
     private static final Object[] FALSE = new Object[] { false };
-
+    
     @Override
-    public void deserializeNBT(CompoundTag tag) {
-        super.deserializeNBT(tag);
+    public void load(CompoundTag tag) {
+        super.load(tag);
         owner = Util.readOwnerFromNBT(tag);
     }
-
+    
     @Override
-    @Nonnull
-    public CompoundTag serializeNBT() {
-        CompoundTag tag = new CompoundTag();
-        super.serializeNBT();
-        return Util.writeOwnerToNBT(tag, owner);
+    protected void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
+        Util.writeOwnerToNBT(tag, owner);
     }
-
+    
     public void setOwner(Player ep) {
         owner = new NameUUIDPair(ep.getGameProfile());
         setChanged();
@@ -186,29 +182,29 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
         if(args.count() > 2)
             action = args.checkString(2).toLowerCase();
 
-        int actionId;
-        switch(action) {
-            case "click":
-                actionId = CMessageScreenUpdate.MOUSE_CLICK;
-                break;
-
-            case "up":
-            case "release":
-                actionId = CMessageScreenUpdate.MOUSE_UP;
-                break;
-
-            case "down":
-            case "press":
-                actionId = CMessageScreenUpdate.MOUSE_DOWN;
-                break;
-
-            case "move":
-                actionId = CMessageScreenUpdate.MOUSE_MOVE;
-                break;
-
-            default:
-                throw new IllegalArgumentException("bad action name");
-        }
+//        int actionId;
+//        switch(action) {
+//            case "click":
+//                actionId = CMessageScreenUpdate.MOUSE_CLICK;
+//                break;
+//
+//            case "up":
+//            case "release":
+//                actionId = CMessageScreenUpdate.MOUSE_UP;
+//                break;
+//
+//            case "down":
+//            case "press":
+//                actionId = CMessageScreenUpdate.MOUSE_DOWN;
+//                break;
+//
+//            case "move":
+//                actionId = CMessageScreenUpdate.MOUSE_MOVE;
+//                break;
+//
+//            default:
+//                throw new IllegalArgumentException("bad action name");
+//        }
 
         TileEntityScreen scr = getConnectedScreenEx();
 
@@ -238,10 +234,10 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
                         break;
                 }
 
-                if(scrscr.rotation.isVertical)
-                    scr.clickUnsafe(screenSide, actionId, y, x);
-                else
-                    scr.clickUnsafe(screenSide, actionId, x, y);
+//                if(scrscr.rotation.isVertical)
+//                    scr.clickUnsafe(screenSide, actionId, y, x);
+//                else
+//                    scr.clickUnsafe(screenSide, actionId, x, y);
 
                 return TRUE;
             }

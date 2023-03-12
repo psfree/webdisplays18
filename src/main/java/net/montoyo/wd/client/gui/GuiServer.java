@@ -20,7 +20,7 @@ import net.minecraft.util.RandomSource;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.miniserv.Constants;
 import net.montoyo.wd.miniserv.client.*;
-import net.montoyo.wd.net.Messages;
+import net.montoyo.wd.net.WDNetworkRegistry;
 import net.montoyo.wd.utilities.*;
 import org.lwjgl.glfw.GLFW;
 
@@ -689,7 +689,7 @@ public class GuiServer extends WDScreen {
     @CommandHandler("reconnect")
     public void commandReconnect() {
         Client.getInstance().stop();
-        Messages.INSTANCE.sendToServer(Client.getInstance().beginConnection());
+        WDNetworkRegistry.INSTANCE.sendToServer(Client.getInstance().beginConnection());
     }
 
     private void startFileUpload(File f, boolean quit) {
