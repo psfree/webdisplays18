@@ -37,7 +37,9 @@ public class S2CMessageOpenGui extends Packet {
 	}
 	
 	public void handle(NetworkEvent.Context context) {
-		context.enqueueWork(() -> WebDisplays.PROXY.displayGui(data));
-		context.setPacketHandled(true);
+		if (checkClient(context)) {
+			context.enqueueWork(() -> WebDisplays.PROXY.displayGui(data));
+			context.setPacketHandled(true);
+		}
 	}
 }

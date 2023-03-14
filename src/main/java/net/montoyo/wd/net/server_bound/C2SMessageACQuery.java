@@ -18,7 +18,6 @@ import net.montoyo.wd.utilities.NameUUIDPair;
 import java.util.Arrays;
 
 public class C2SMessageACQuery extends Packet implements Runnable {
-	
 	private ServerPlayer player;
 	private String beginning;
 	private boolean matchExact;
@@ -27,13 +26,13 @@ public class C2SMessageACQuery extends Packet implements Runnable {
 		beginning = beg;
 		matchExact = exact;
 	}
-    
-    public C2SMessageACQuery(FriendlyByteBuf buf) {
-        super(buf);
-        beginning = buf.readUtf();
-        matchExact = buf.readBoolean();
-    }
-    
+	
+	public C2SMessageACQuery(FriendlyByteBuf buf) {
+		super(buf);
+		beginning = buf.readUtf();
+		matchExact = buf.readBoolean();
+	}
+	
 	@Override
 	public void write(FriendlyByteBuf buf) {
 		buf.writeUtf(beginning);
@@ -56,9 +55,10 @@ public class C2SMessageACQuery extends Packet implements Runnable {
 	}
 	
 	public void handle(NetworkEvent.Context ctx) {
-		player = ctx.getSender();
-		ctx.enqueueWork(this);
-        ctx.setPacketHandled(true);
+		if (checkServer(ctx)) {
+			player = ctx.getSender();
+			ctx.enqueueWork(this);
+			ctx.setPacketHandled(true);
+		}
 	}
-	
 }

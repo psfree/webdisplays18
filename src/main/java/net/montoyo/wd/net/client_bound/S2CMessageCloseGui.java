@@ -46,12 +46,14 @@ public class S2CMessageCloseGui extends Packet {
 	}
 	
 	public void handle(NetworkEvent.Context ctx) {
-		ctx.enqueueWork(() -> {
-			if (blockSide == null)
-				Arrays.stream(BlockSide.values()).forEach(s -> WebDisplays.PROXY.closeGui(blockPos, s));
-			else
-				WebDisplays.PROXY.closeGui(blockPos, blockSide);
-		});
-		ctx.setPacketHandled(true);
+		if (checkClient(ctx)) {
+			ctx.enqueueWork(() -> {
+				if (blockSide == null)
+					Arrays.stream(BlockSide.values()).forEach(s -> WebDisplays.PROXY.closeGui(blockPos, s));
+				else
+					WebDisplays.PROXY.closeGui(blockPos, blockSide);
+			});
+			ctx.setPacketHandled(true);
+		}
 	}
 }

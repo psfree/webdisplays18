@@ -91,45 +91,47 @@ public class S2CMessageAddScreen extends Packet {
 	}
 	
 	public void handle(NetworkEvent.Context ctx) {
-		ctx.enqueueWork(() -> {
-			Level lvl = (Level) WebDisplays.PROXY.getWorld(ctx);
-			BlockEntity te = lvl.getBlockEntity(pos.toBlock());
-			if (!(te instanceof TileEntityScreen)) {
-				lvl.setBlockAndUpdate(pos.toBlock(), lvl.getBlockState(pos.toBlock()).setValue(hasTE, true));
-				te = lvl.getBlockEntity(pos.toBlock());
-				
+		if (checkClient(ctx)) {
+			ctx.enqueueWork(() -> {
+				Level lvl = (Level) WebDisplays.PROXY.getWorld(ctx);
+				BlockEntity te = lvl.getBlockEntity(pos.toBlock());
 				if (!(te instanceof TileEntityScreen)) {
-					if (clear)
-						Log.error("CMessageAddScreen: Can't add screen to invalid tile entity at %s", pos.toString());
+					lvl.setBlockAndUpdate(pos.toBlock(), lvl.getBlockState(pos.toBlock()).setValue(hasTE, true));
+					te = lvl.getBlockEntity(pos.toBlock());
 					
-					return;
-				}
-			}
-			
-			TileEntityScreen tes = (TileEntityScreen) te;
-			if (clear)
-				tes.clear();
-			
-			for (TileEntityScreen.Screen entry : screens) {
-				TileEntityScreen.Screen scr = tes.addScreen(entry.side, entry.size, entry.resolution, null, false);
-				scr.rotation = entry.rotation;
-				String webUrl;
-				
-				try {
-					webUrl = TileEntityScreen.url(entry.url);
-				} catch (IOException e) {
-					throw new RuntimeException(e);
+					if (!(te instanceof TileEntityScreen)) {
+						if (clear)
+							Log.error("CMessageAddScreen: Can't add screen to invalid tile entity at %s", pos.toString());
+						
+						return;
+					}
 				}
 				
-				scr.url = webUrl;
-				scr.owner = entry.owner;
-				scr.upgrades = entry.upgrades;
+				TileEntityScreen tes = (TileEntityScreen) te;
+				if (clear)
+					tes.clear();
 				
-				if (scr.browser != null)
-					scr.browser.loadURL(webUrl);
-			}
-		});
-		
-		ctx.setPacketHandled(true);
+				for (TileEntityScreen.Screen entry : screens) {
+					TileEntityScreen.Screen scr = tes.addScreen(entry.side, entry.size, entry.resolution, null, false);
+					scr.rotation = entry.rotation;
+					String webUrl;
+					
+					try {
+						webUrl = TileEntityScreen.url(entry.url);
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					}
+					
+					scr.url = webUrl;
+					scr.owner = entry.owner;
+					scr.upgrades = entry.upgrades;
+					
+					if (scr.browser != null)
+						scr.browser.loadURL(webUrl);
+				}
+			});
+			
+			ctx.setPacketHandled(true);
+		}
 	}
 }

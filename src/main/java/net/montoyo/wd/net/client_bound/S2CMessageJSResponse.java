@@ -80,16 +80,18 @@ public class S2CMessageJSResponse extends Packet {
     }
 
     public void handle(NetworkEvent.Context ctx) {
-        ctx.enqueueWork(() -> {
-            try {
-                if (success)
-                    WebDisplays.PROXY.handleJSResponseSuccess(id, type, data);
-                else
-                    WebDisplays.PROXY.handleJSResponseError(id, type, errCode, errString);
-            } catch (Throwable t) {
-                Log.warningEx("Could not handle JS response", t);
-            }
-        });
-        ctx.setPacketHandled(true);
+        if (checkClient(ctx)) {
+            ctx.enqueueWork(() -> {
+                try {
+                    if (success)
+                        WebDisplays.PROXY.handleJSResponseSuccess(id, type, data);
+                    else
+                        WebDisplays.PROXY.handleJSResponseError(id, type, errCode, errString);
+                } catch (Throwable t) {
+                    Log.warningEx("Could not handle JS response", t);
+                }
+            });
+            ctx.setPacketHandled(true);
+        }
     }
 }

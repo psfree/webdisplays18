@@ -491,7 +491,7 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     private static void checkLaserUserRights(Screen scr) {
-        if (scr.laserUser != null && (scr.rightsFor(scr.laserUser) & ScreenRights.CLICK) == 0)
+        if (scr.laserUser != null && (scr.rightsFor(scr.laserUser) & ScreenRights.INTERACT) == 0)
             scr.laserUser = null;
     }
 
@@ -586,7 +586,6 @@ public class TileEntityScreen extends BlockEntity {
     }
 
     public void handleJSRequest(ServerPlayer src, BlockSide side, int reqId, JSServerRequest req, Object[] data) {
-        // TODO:
         if (level.isClientSide) {
             Log.error("Called handleJSRequest client-side");
             return;
@@ -1058,7 +1057,7 @@ public class TileEntityScreen extends BlockEntity {
             return null;
         }
 
-        if ((scr.rightsFor(ply) & ScreenRights.CLICK) == 0)
+        if ((scr.rightsFor(ply) & ScreenRights.INTERACT) == 0)
             return null; //Don't output an error, it can 'legally' happen
 
         if (scr.upgrades.stream().noneMatch(DefaultUpgrade.LASERMOUSE::matchesLaserMouse)) {

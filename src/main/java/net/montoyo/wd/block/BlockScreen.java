@@ -194,13 +194,18 @@ public class BlockScreen extends BaseEntityBlock {
                     return InteractionResult.SUCCESS;
                 }
             } else {
-                if ((scr.rightsFor(player) & ScreenRights.CLICK) == 0) {
+                if ((scr.rightsFor(player) & ScreenRights.INTERACT) == 0) {
                     Util.toast(player, "restrictions");
                     return InteractionResult.SUCCESS;
                 }
 
                 Vector2i tmp = new Vector2i();
-                if (hit2pixels(side, hit.getBlockPos(), pos, scr, (float) hit.getLocation().x, (float) hit.getLocation().y, (float) hit.getLocation().z, tmp))
+                
+                float hitX = ((float) hit.getLocation().x) - (float) te.getBlockPos().getX();
+                float hitY = ((float) hit.getLocation().y) - (float) te.getBlockPos().getY();
+                float hitZ = ((float) hit.getLocation().z) - (float) te.getBlockPos().getZ();
+                
+                if (hit2pixels(side, hit.getBlockPos(), new Vector3i(hit.getBlockPos()), scr, hitX, hitY, hitZ, tmp))
                     te.click(side, tmp);
                 return InteractionResult.SUCCESS;
             }
@@ -258,67 +263,64 @@ public class BlockScreen extends BaseEntityBlock {
                 }
             }
         }
-
-        public static boolean hit2pixels (BlockSide side, BlockPos bpos, Vector3i pos, TileEntityScreen.Screen scr,
-        float hitX, float hitY, float hitZ, Vector2i dst){
-            if (side.right.x < 0)
-                hitX -= 1.f;
-
-            if (side.right.z < 0 || side == BlockSide.TOP || side == BlockSide.BOTTOM)
-                hitZ -= 1.f;
-
-            Vector3f rel = new Vector3f(hitX, hitY, hitZ);
-            rel.sub(pos.toBlock().getX(), pos.toBlock().getY(), pos.toBlock().getZ());
-
-            float cx = Math.abs(rel.dot(side.right.toFloat()) - 2.f / 16.f);
-            float cy = Math.abs(rel.dot(side.up.toFloat()) - 2.f / 16.f);
-            float sw = ((float) scr.size.x) - 4.f / 16.f;
-            float sh = ((float) scr.size.y) - 4.f / 16.f;
-
-            cx /= sw;
-            cy /= sh;
-
-            cx = cx - 0.05f;
-            cy = cy - 0.05f;
-
-            if (cx >= 0 && cx <= 1 && cy >= 0 && cy <= 1) {
-                if (side != BlockSide.BOTTOM)
-                    cy = 1.f - cy;
-
-                switch (scr.rotation) {
-                    case ROT_90:
-                        cy = 1.0f - cy;
-                        break;
-
-                    case ROT_180:
-                        cx = 1.0f - cx;
-                        cy = 1.0f - cy;
-                        break;
-
-                    case ROT_270:
-                        cx = 1.0f - cx;
-                        break;
-
-                    default:
-                        break;
-                }
-
-                cx *= (float) scr.resolution.x;
-                cy *= (float) scr.resolution.y;
-
-                if (scr.rotation.isVertical) {
-                    dst.x = (int) cy;
-                    dst.y = (int) cx;
-                } else {
-                    dst.x = (int) cx;
-                    dst.y = (int) cy;
-                }
-
-                return true;
+    
+    public static boolean hit2pixels(BlockSide side, BlockPos bpos, Vector3i pos, TileEntityScreen.Screen scr, float hitX, float hitY, float hitZ, Vector2i dst) {
+        if(side.right.x < 0)
+            hitX -= 1.f;
+        
+        if(side.right.z < 0 || side == BlockSide.TOP || side == BlockSide.BOTTOM)
+            hitZ -= 1.f;
+        
+        Vector3f rel = new Vector3f(bpos.getX(), bpos.getY(), bpos.getZ());
+        rel.sub((float) pos.x, (float) pos.y, (float) pos.z);
+        rel.add(hitX, hitY, hitZ);
+        
+        float cx = rel.dot(side.right.toFloat()) - 2.f / 16.f;
+        float cy = rel.dot(side.up.toFloat()) - 2.f / 16.f;
+        float sw = ((float) scr.size.x) - 4.f / 16.f;
+        float sh = ((float) scr.size.y) - 4.f / 16.f;
+        
+        cx /= sw;
+        cy /= sh;
+        
+        if(cx >= 0.f && cx <= 1.0 && cy >= 0.f && cy <= 1.f) {
+            if(side != BlockSide.BOTTOM)
+                cy = 1.f - cy;
+            
+            switch(scr.rotation) {
+                case ROT_90:
+                    cy = 1.0f - cy;
+                    break;
+                
+                case ROT_180:
+                    cx = 1.0f - cx;
+                    cy = 1.0f - cy;
+                    break;
+                
+                case ROT_270:
+                    cx = 1.0f - cx;
+                    break;
+                
+                default:
+                    break;
             }
-
-            return false;
+            
+            cx *= (float) scr.resolution.x;
+            cy *= (float) scr.resolution.y;
+            
+            if(scr.rotation.isVertical) {
+                dst.x = (int) cy;
+                dst.y = (int) cx;
+            } else {
+                dst.x = (int) cx;
+                dst.y = (int) cy;
+            }
+            
+            return true;
         }
+        
+        return false;
+    }
 
         @org.jetbrains.annotations.Nullable
         @Override

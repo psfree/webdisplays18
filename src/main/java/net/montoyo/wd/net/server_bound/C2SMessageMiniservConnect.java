@@ -42,11 +42,11 @@ public class C2SMessageMiniservConnect extends Packet {
 			try {
 				ClientManager cliMgr = Server.getInstance().getClientManager();
 				byte[] encKey = cliMgr.encryptClientKey(Objects.requireNonNull(ctx.getSender()).getGameProfile().getId(), modulus, exponent);
-
+				
 				if (encKey != null) {
 					respond(ctx, new S2CMessageMiniservKey(encKey));
 				}
-
+				
 				ctx.setPacketHandled(true);
 			} catch (Throwable err) {
 				err.printStackTrace();

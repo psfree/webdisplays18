@@ -133,17 +133,17 @@ public class GuiScreenConfig extends WDScreen {
         loadFrom(new ResourceLocation("webdisplays", "gui/screencfg.json"));
 
         friendBoxes = new CheckBox[] { boxFResolution, boxFUpgrades, boxFOthers, boxFFriends, boxFClick, boxFSetUrl };
-        boxFResolution.setUserdata(ScreenRights.CHANGE_RESOLUTION);
+        boxFResolution.setUserdata(ScreenRights.MODIFY_SCREEN);
         boxFUpgrades.setUserdata(ScreenRights.MANAGE_UPGRADES);
         boxFOthers.setUserdata(ScreenRights.MANAGE_OTHER_RIGHTS);
         boxFFriends.setUserdata(ScreenRights.MANAGE_FRIEND_LIST);
-        boxFClick.setUserdata(ScreenRights.CLICK);
+        boxFClick.setUserdata(ScreenRights.INTERACT);
         boxFSetUrl.setUserdata(ScreenRights.CHANGE_URL);
 
         otherBoxes = new CheckBox[] { boxOResolution, boxOUpgrades, boxOClick, boxOSetUrl };
-        boxOResolution.setUserdata(ScreenRights.CHANGE_RESOLUTION);
+        boxOResolution.setUserdata(ScreenRights.MODIFY_SCREEN);
         boxOUpgrades.setUserdata(ScreenRights.MANAGE_UPGRADES);
-        boxOClick.setUserdata(ScreenRights.CLICK);
+        boxOClick.setUserdata(ScreenRights.INTERACT);
         boxOSetUrl.setUserdata(ScreenRights.CHANGE_URL);
 
         TileEntityScreen.Screen scr = tes.getScreen(side);
@@ -201,7 +201,7 @@ public class GuiScreenConfig extends WDScreen {
                 throw new NumberFormatException(); //I'm lazy
 
             if(x != scr.resolution.x || y != scr.resolution.y)
-                WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.vec2(tes, side, C2SMessageScreenCtrl.CTRL_SET_RESOLUTION, new Vector2i(x, y)));
+                WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.resolution(tes, side, new Vector2i(x, y)));
         } catch(NumberFormatException ex) {
             //Roll back
             tfResX.setText("" + scr.resolution.x);
@@ -455,7 +455,7 @@ public class GuiScreenConfig extends WDScreen {
         flag = (myRights & ScreenRights.MANAGE_OTHER_RIGHTS) == 0;
         grpOthers.setDisabled(flag);
 
-        flag = (myRights & ScreenRights.CHANGE_RESOLUTION) == 0;
+        flag = (myRights & ScreenRights.MODIFY_SCREEN) == 0;
         tfResX.setDisabled(flag);
         tfResY.setDisabled(flag);
         btnChangeRot.setDisabled(flag);

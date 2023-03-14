@@ -36,10 +36,11 @@ public class S2CMessageACResult extends Packet {
     }
 
     public void handle(NetworkEvent.Context ctx) {
-        ctx.enqueueWork(() -> {
-            WebDisplays.PROXY.onAutocompleteResult(result);
-        });
-        ctx.setPacketHandled(true);
+        if (checkClient(ctx)) {
+            ctx.enqueueWork(() -> {
+                WebDisplays.PROXY.onAutocompleteResult(result);
+            });
+            ctx.setPacketHandled(true);
+        }
     }
-
 }

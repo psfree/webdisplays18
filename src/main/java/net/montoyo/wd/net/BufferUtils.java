@@ -3,6 +3,7 @@ package net.montoyo.wd.net;
 import net.minecraft.network.FriendlyByteBuf;
 import net.montoyo.wd.utilities.Vector3i;
 
+import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -54,9 +55,9 @@ public class BufferUtils {
 		for (T element : elements) writer.accept(element);
 	}
 	
-	public static <T> T[] readArray(FriendlyByteBuf buf, Supplier<T> reader) {
+	public static <T> T[] readArray(FriendlyByteBuf buf, T[] array, Supplier<T> reader) {
 		//noinspection unchecked
-		T[] ts = (T[]) new Object[readUShort(buf)];
+		T[] ts = (T[]) Arrays.copyOf(array, readUShort(buf), array.getClass());
 		for (int i = 0; i < ts.length; i++) ts[i] = reader.get();
 		return ts;
 	}

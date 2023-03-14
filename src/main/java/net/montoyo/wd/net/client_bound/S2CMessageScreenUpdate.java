@@ -234,22 +234,23 @@ public class S2CMessageScreenUpdate extends Packet  {
     }
 
     public void handle(NetworkEvent.Context ctx) {
-        ctx.enqueueWork(() -> {
-            BlockGetter level = WebDisplays.PROXY.getWorld(ctx);
-            if (level instanceof Level level1)
-                // ensure that the TE exists
-                level1.setBlock(
-                        pos.toBlock(),
-                        level.getBlockState(pos.toBlock()).setValue(BlockScreen.hasTE, true),11
-                );
-            BlockEntity te = level.getBlockEntity(pos.toBlock());
-            if(!(te instanceof TileEntityScreen)) {
-                Log.error("CMessageScreenUpdate: TileEntity at %s is not a screen!", pos.toString());
-                return;
-            }
-    
-            TileEntityScreen tes = (TileEntityScreen) te;
-    
+        if (checkClient(ctx)) {
+            ctx.enqueueWork(() -> {
+                BlockGetter level = WebDisplays.PROXY.getWorld(ctx);
+                if (level instanceof Level level1)
+                    // ensure that the TE exists
+                    level1.setBlock(
+                            pos.toBlock(),
+                            level.getBlockState(pos.toBlock()).setValue(BlockScreen.hasTE, true),11
+                    );
+                BlockEntity te = level.getBlockEntity(pos.toBlock());
+                if(!(te instanceof TileEntityScreen)) {
+                    Log.error("CMessageScreenUpdate: TileEntity at %s is not a screen!", pos.toString());
+                    return;
+                }
+        
+                TileEntityScreen tes = (TileEntityScreen) te;
+        
                 switch (action) {
                     case UPDATE_URL -> {
                         try {
@@ -274,8 +275,9 @@ public class S2CMessageScreenUpdate extends Packet  {
                     case UPDATE_AUTO_VOL -> tes.setAutoVolume(side, autoVolume);
                     default -> Log.warning("Caught invalid CMessageScreenUpdate with action ID %d", action);
                 }
-        });
-
-        ctx.setPacketHandled(true);
+            });
+    
+            ctx.setPacketHandled(true);
+        }
     }
 }

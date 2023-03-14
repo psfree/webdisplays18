@@ -35,7 +35,7 @@ public class S2CMessageServerInfo extends Packet {
 			try {
 				WebDisplays.PROXY.setMiniservClientPort(miniservPort);
 				C2SMessageMiniservConnect message = Client.getInstance().beginConnection();
-				respondLater(ctx, message);
+				respond(ctx, message);
 				ctx.setPacketHandled(true);
 			} catch (Throwable err) {
 				err.printStackTrace();

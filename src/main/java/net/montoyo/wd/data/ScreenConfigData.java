@@ -100,7 +100,7 @@ public class ScreenConfigData extends GuiData {
 		onlyUpdate = buf.readBoolean();
 		pos = BufferUtils.readVec3i(buf);
 		side = (BlockSide) BufferUtils.readEnum(buf, (v) -> BlockSide.values()[v], (byte) 1);
-		friends = BufferUtils.readArray(buf, () -> new NameUUIDPair(buf));
+		friends = BufferUtils.readArray(buf, new NameUUIDPair[0], () -> new NameUUIDPair(buf));
 		friendRights = buf.readInt();
 		otherRights = buf.readInt();
 	}

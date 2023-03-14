@@ -53,7 +53,7 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
         }
 
         TileEntityScreen.Screen scr = tes.getScreen(screenSide);
-        if((scr.rightsFor(player) & ScreenRights.CLICK) == 0) {
+        if((scr.rightsFor(player) & ScreenRights.INTERACT) == 0) {
             Util.toast(player, "restrictions");
             return InteractionResult.SUCCESS;
         }
@@ -71,9 +71,9 @@ public class TileEntityKeyboard extends TileEntityPeripheralBase {
                 boolean ok;
 
                 if(ent instanceof Player)
-                    ok = (scr.rightsFor((Player) ent) & ScreenRights.CLICK) != 0;
+                    ok = (scr.rightsFor((Player) ent) & ScreenRights.INTERACT) != 0;
                 else
-                    ok = (scr.otherRights & ScreenRights.CLICK) != 0;
+                    ok = (scr.otherRights & ScreenRights.INTERACT) != 0;
 
                 if(ok) {
                     char rnd = RANDOM_CHARS.charAt((int) (Math.random() * ((double) RANDOM_CHARS.length())));

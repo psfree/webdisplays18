@@ -89,7 +89,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
         switch(what) {
             case "click":
             case "type":
-                right = ScreenRights.CLICK;
+                right = ScreenRights.INTERACT;
                 break;
 
             case "seturl":
@@ -101,7 +101,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
 
             case "setresolution":
             case "setrotation":
-                right = ScreenRights.CHANGE_RESOLUTION;
+                right = ScreenRights.MODIFY_SCREEN;
                 break;
 
             default:
@@ -213,7 +213,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
         else {
             TileEntityScreen.Screen scrscr = scr.getScreen(screenSide);
 
-            if((scrscr.rightsFor(owner.uuid) & ScreenRights.CLICK) == 0)
+            if((scrscr.rightsFor(owner.uuid) & ScreenRights.INTERACT) == 0)
                 return err("restrictions");
             else {
                 switch(scrscr.rotation) {
@@ -249,7 +249,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
 
         if(owner == null || scr == null)
             return err("notlinked");
-        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.CLICK) == 0)
+        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.INTERACT) == 0)
             return err("restrictions");
         else {
             scr.type(screenSide, what, null);
@@ -350,7 +350,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
 
         if(owner == null || scr == null)
             return err("notlinked");
-        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.CHANGE_RESOLUTION) == 0)
+        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.MODIFY_SCREEN) == 0)
             return err("restrictions");
         else {
             scr.setResolution(screenSide, new Vector2i(rx, ry));
@@ -373,7 +373,7 @@ public abstract class TileEntityInterfaceBase extends TileEntityPeripheralBase {
 
         if(owner == null || scr == null)
             return err("notlinked");
-        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.CHANGE_RESOLUTION) == 0)
+        else if((scr.getScreen(screenSide).rightsFor(owner.uuid) & ScreenRights.MODIFY_SCREEN) == 0)
             return err("restrictions");
         else {
             scr.setRotation(screenSide, Rotation.values()[rot]);

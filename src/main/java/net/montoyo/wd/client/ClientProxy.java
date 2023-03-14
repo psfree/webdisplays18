@@ -630,8 +630,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
                             float hitY = ((float) result.getLocation().y) - (float) bpos.getY();
                             float hitZ = ((float) result.getLocation().z) - (float) bpos.getZ();
                             Vector2i tmp = new Vector2i();
-
-                            if(BlockScreen.hit2pixels(side, bpos, pos, scr, hitX, hitY, hitZ, tmp)) {
+    
+                            if(BlockScreen.hit2pixels(side, bpos, new Vector3i(result.getBlockPos()), scr, hitX, hitY, hitZ, tmp)) {
                                 laserClick(te, side, scr, tmp);
                             }
                         }
@@ -694,13 +694,13 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
 
             if(t - lastPointPacket >= 100) {
                 lastPointPacket = t;
-                WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.vec2(tes, side, C2SMessageScreenCtrl.CTRL_LASER_MOVE, hit));
+                WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.laserMove(tes, side, hit));
             }
         } else {
             deselectScreen();
             pointedScreen = tes;
             pointedScreenSide = side;
-            WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.vec2(tes, side, C2SMessageScreenCtrl.CTRL_LASER_DOWN, hit));
+            WDNetworkRegistry.INSTANCE.sendToServer(C2SMessageScreenCtrl.laserDown(tes, side, hit));
         }
     }
 
@@ -802,6 +802,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     
     @Override
     public BlockGetter getWorld(NetworkEvent.Context context) {
-        return Minecraft.getInstance().level;
+        BlockGetter senderLevel = super.getWorld(context);
+        if (senderLevel == null) return Minecraft.getInstance().level;
+        return senderLevel;
     }
 }

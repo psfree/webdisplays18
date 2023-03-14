@@ -41,6 +41,7 @@ import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.montoyo.wd.config.ModConfig;
+import net.montoyo.wd.controls.ScreenControlRegistry;
 import net.montoyo.wd.core.*;
 import net.montoyo.wd.init.BlockInit;
 import net.montoyo.wd.init.ItemInit;
@@ -185,6 +186,10 @@ public class WebDisplays {
                 t.printStackTrace();
             }
         } */
+        
+        if (!FMLEnvironment.production) {
+            ScreenControlRegistry.init();
+        }
     }
 
     @SubscribeEvent
