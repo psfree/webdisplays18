@@ -67,10 +67,10 @@ public class GuiLoader {
         if(ret == null) {
             Resource resource;
 
-            resource = Minecraft.getInstance().getResourceManager().getResource(resLoc).get();
+            resource = Minecraft.getInstance().getResourceManager().getResource(resLoc);
 
             JsonParser parser = new JsonParser();
-            ret = parser.parse(new InputStreamReader(resource.open())).getAsJsonObject();
+            ret = parser.parse(new InputStreamReader(resource.getInputStream())).getAsJsonObject();
 
             RESOURCES.put(resLoc, ret);
         }

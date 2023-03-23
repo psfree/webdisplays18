@@ -39,11 +39,12 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.event.ModelEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.level.LevelEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -142,8 +143,8 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @SubscribeEvent
-    public static void onModelRegistryEvent(ModelEvent.RegisterGeometryLoaders event) {
-        event.register(ScreenModelLoader.SCREEN_LOADER.getPath(), new ScreenModelLoader());
+    public static void onModelRegistryEvent(ModelRegistryEvent event) {
+    	ModelLoaderRegistry.registerLoader(ScreenModelLoader.SCREEN_LOADER, new ScreenModelLoader());
     }
 
     private static void registerBlockRenderLayers(RenderType layer, Block... blocks) {
@@ -675,9 +676,9 @@ public class ClientProxy extends SharedProxy implements IDisplayHandler, IJSQuer
     }
 
     @SubscribeEvent
-    public void onWorldUnload(LevelEvent.Unload ev) {
+    public void onWorldUnload(WorldEvent.Unload ev) {
         Log.info("World unloaded; killing screens...");
-        if(ev.getLevel() instanceof Level level) {
+        if(ev.getWorld() instanceof Level level) {
             ResourceLocation dim = level.dimension().location();
             for(int i = screenTracking.size() - 1; i >= 0; i--) {
                 if(screenTracking.get(i).getLevel().dimension().location().equals(dim)) //Could be world == ev.getWorld()

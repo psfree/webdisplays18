@@ -29,8 +29,8 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.ServerChatEvent;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.ModList;
@@ -211,12 +211,12 @@ public class WebDisplays {
     ArrayList<ResourceKey<Level>> serverStartedDimensions = new ArrayList<>();
 
     @SubscribeEvent
-    public void onWorldLoad(LevelEvent.Load ev) {
-        if (ev.getLevel() instanceof Level level) {
-            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldLoad(WorldEvent.Load ev) {
+        if (ev.getWorld() instanceof Level level) {
+            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
 
-            File worldDir = Objects.requireNonNull(ev.getLevel().getServer()).getServerDirectory();
+            File worldDir = Objects.requireNonNull(ev.getWorld().getServer()).getServerDirectory();
             File f = new File(worldDir, "wd_next.txt");
 
             if (f.exists()) {
@@ -252,9 +252,9 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public void onWorldLeave(LevelEvent.Unload ev) throws IOException {
-        if(ev.getLevel() instanceof Level level) {
-            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldLeave(WorldEvent.Unload ev) throws IOException {
+        if(ev.getWorld() instanceof Level level) {
+            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
             Server sw = Server.getInstance();
             sw.stopServer();
@@ -263,11 +263,11 @@ public class WebDisplays {
     }
 
     @SubscribeEvent
-    public void onWorldSave(LevelEvent.Save ev) {
-        if(ev.getLevel() instanceof Level level) {
-            if (ev.getLevel().isClientSide() || level.dimension() != Level.OVERWORLD)
+    public void onWorldSave(WorldEvent.Save ev) {
+        if(ev.getWorld() instanceof Level level) {
+            if (ev.getWorld().isClientSide() || level.dimension() != Level.OVERWORLD)
                 return;
-            File f = new File(Objects.requireNonNull(ev.getLevel().getServer()).getServerDirectory(), "wd_next.txt");
+            File f = new File(Objects.requireNonNull(ev.getWorld().getServer()).getServerDirectory(), "wd_next.txt");
 
             try {
                 BufferedWriter bw = new BufferedWriter(new FileWriter(f));
@@ -282,7 +282,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onToss(ItemTossEvent ev) {
         if(!ev.getEntity().getLevel().isClientSide) {
-            ItemStack is = ev.getEntity().getItem();
+            ItemStack is = ev.getEntityItem().getItem();
 
             if(is.getItem() == ItemInit.itemMinePad.get()) {
                 CompoundTag tag = is.getTag();
@@ -323,9 +323,9 @@ public class WebDisplays {
             IWDDCapability cap = ev.getEntity().getCapability(WDDCapability.Provider.cap, null).orElseThrow(RuntimeException::new);
 
             if(cap.isFirstRun()) {
-                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome1");
-                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome2");
-                Util.toast(ev.getEntity(), ChatFormatting.LIGHT_PURPLE, "welcome3");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome1");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome2");
+                Util.toast(ev.getPlayer(), ChatFormatting.LIGHT_PURPLE, "welcome3");
 
                 cap.clearFirstRun();
             }
@@ -343,7 +343,7 @@ public class WebDisplays {
     @SubscribeEvent
     public void onLogOut(PlayerEvent.PlayerLoggedOutEvent ev) {
         if(!ev.getEntity().getLevel().isClientSide)
-            Server.getInstance().getClientManager().revokeClientKey(ev.getEntity().getGameProfile().getId());
+            Server.getInstance().getClientManager().revokeClientKey(ev.getPlayer().getGameProfile().getId());
     }
 
     @SubscribeEvent
@@ -372,7 +372,7 @@ public class WebDisplays {
 
     @SubscribeEvent
     public void onServerChat(ServerChatEvent ev) {
-        String msg = ev.getMessage().getString().replaceAll("\\s+", " ").toLowerCase();
+        String msg = ev.getMessage().toString().replaceAll("\\s+", " ").toLowerCase();
         StringBuilder sb = new StringBuilder(msg.length());
         for(int i = 0; i < msg.length(); i++) {
             char chr = msg.charAt(i);

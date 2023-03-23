@@ -16,7 +16,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
+import net.minecraft.util.random.*;
 import net.montoyo.wd.WebDisplays;
 import net.montoyo.wd.miniserv.Constants;
 import net.montoyo.wd.miniserv.client.*;
@@ -169,7 +169,7 @@ public class GuiServer extends WDScreen {
                     accessTime = 20;
                 } else {
                     if(accessSound == null) {
-                        accessSound = new SimpleSoundInstance( WebDisplays.INSTANCE.soundServer.getLocation(), SoundSource.MASTER, 1.0f, 1.0f, RandomSource.create(),true, 0, SoundInstance.Attenuation.NONE, 0.0f, 0.0f, 0.0f, false);
+                        accessSound = new SimpleSoundInstance( WebDisplays.INSTANCE.soundServer.getLocation(), SoundSource.MASTER, 1.0f, 1.0f, true, 0, SoundInstance.Attenuation.NONE, 0.0f, 0.0f, 0.0f, false);
                         minecraft.getSoundManager().play(accessSound);
                     }
 

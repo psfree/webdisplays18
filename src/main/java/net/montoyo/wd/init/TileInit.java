@@ -14,7 +14,7 @@ import java.util.Locale;
 public class TileInit {
 
     public static final DeferredRegister<BlockEntityType<?>> TILE_TYPES = DeferredRegister
-            .create(ForgeRegistries.BLOCK_ENTITY_TYPES, "webdisplays");
+            .create(ForgeRegistries.BLOCK_ENTITIES, "webdisplays");
 
     //Register tile entities
     public static final RegistryObject<BlockEntityType<TileEntityScreen>> SCREEN_BLOCK_ENTITY = TILE_TYPES
