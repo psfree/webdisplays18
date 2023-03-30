@@ -75,7 +75,7 @@ dependencies {
     minecraft 'net.minecraftforge:forge:1.18.2-40.2.1'
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     
-    implementation fg.deobf("curse.maven:mcef-forge-636236:3855632")
+    implementation fg.deobf("com.github.psfree:mcef-forge18:d0a7c6537a")    
     implementation fg.deobf("curse.maven:cloth_config_forge-348521:3968030")
     implementation fg.deobf("curse.maven:SU-370704:4446926")
     implementation fg.deobf("curse.maven:spark-361579:3824951")
