@@ -12,15 +12,15 @@ modId="webdisplays" #mandatory
 
 version="1.0.0" #mandatory
 
-displayName="MCEF" #mandatory
+displayName="WebDisplays 1.18" #mandatory
 
-displayURL="https://github.com/Mysticpasta1/webdisplays" #optional
+displayURL="https://github.com/psfree/webdisplays18" #optional
 
 logoFile= "" #optional
 
 credits="" #optional
 
-authors="Mysticpasta1, WaterPicker, Montoyo" #optional
+authors="psfree, Mysticpasta1, WaterPicker, Montoyo" #optional
 
 description='''
 '''
