@@ -207,7 +207,7 @@ public class GuiKeyboard extends WDScreen {
 
     private boolean hasUserReadWarning() {
         try {
-            File f = new File(FMLPaths.GAMEDIR.name(), WARNING_FNAME);
+            File f = new File(FMLPaths.CONFIGDIR.get().toFile().getAbsoluteFile() + "/" + WARNING_FNAME);
 
             if(f.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(f));
@@ -225,7 +225,7 @@ public class GuiKeyboard extends WDScreen {
 
     private void writeUserAcknowledge() {
         try {
-            File f = new File(FMLPaths.GAMEDIR.name(), WARNING_FNAME);
+            File f = new File(FMLPaths.CONFIGDIR.get().toFile().getAbsoluteFile() + "/" + WARNING_FNAME);
 
             BufferedWriter bw = new BufferedWriter(new FileWriter(f));
             bw.write("read\n");
